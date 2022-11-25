@@ -14,12 +14,16 @@ class EloCalculations:
         for x in range (0,sailors):
             ratchange.append(0)
         for x in range(0,sailors-1):
-            for y in range(x+1,sailors-1):
+            for y in range(x+1,sailors):
                 Aloc = position.index(x+1)
                 Bloc = position.index(y+1)
                 Arat = currat[Aloc]
                 Brat = currat[Bloc]
-                kfac = 20
+                kfac = self.k(sailorid,sailors)
                 change = self.calc(Arat,Brat,1,kfac)
                 ratchange[Aloc] = ratchange[Aloc] + change
                 ratchange[Bloc] = ratchange[Bloc] - change
+        return ratchange
+
+    def k(self,sailorid,people):
+        k =
