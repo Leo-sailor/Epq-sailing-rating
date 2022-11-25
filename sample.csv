@@ -1,4 +1,4 @@
-﻿sailorId,champNum,sailNum,First name,Surname,region,nat,lightRating,midRating,heavyRating,overallRating,rank,events completed
+﻿sailorID,champNum,sailNum,First name,Surname,region,nat,lightRating,midRating,heavyRating,overallRating,rank,events
 gb8153-leoya,317,48153,Leo,Yates,LSE,gbr,1450,1675,1675,1600,1,20
 gb4036-joero,28,44036,Joe,Rowe,M,gbr,1700,1475,1600,1575,2,18
 gb7636-ed0sm,544,47636,Ed,Smith,LSE,gbr,1400,1450,1600,1475,4,15

@@ -19,11 +19,13 @@ class EloCalculations:
                 Bloc = position.index(y+1)
                 Arat = currat[Aloc]
                 Brat = currat[Bloc]
-                kfac = self.k(sailorid,sailors)
+                kfac = self.k(sailorid,sailors,20)
                 change = self.calc(Arat,Brat,1,kfac)
                 ratchange[Aloc] = ratchange[Aloc] + change
                 ratchange[Bloc] = ratchange[Bloc] - change
         return ratchange
 
-    def k(self,sailorid,people):
-        k =
+    def k(self,sailorid,people,k):
+        k = k/(people-1)
+        return k
+
