@@ -6,4 +6,4 @@ from ELO import EloCalculations
 elo = EloCalculations()
 
 
-print('new ratings are{}'.format(elo.calc(1500,16000,1,24)))
+print('the rating change for player 1 :{}'.format(elo.calc(1500,1600,0,20)))
