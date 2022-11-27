@@ -7,11 +7,17 @@ from General import General
 elo = EloCalculations()
 base = General()
 
-pos = [1, 2, 3, 4]
-currentrating = [1500, 1500, 1500, 1500]
+pos = []
+for x in range(0, 100):
+    pos.append(x+1)
+currentrating = [1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500 ]
 sailorid = [5, 3, 2, 4]
-
-print('the rating change for players are :{}'.format(elo.cycle(currentrating, sailorid, pos)))
+print(str(sum(currentrating)))
+for x in range(0, 10):
+    change = elo.cycle(currentrating, sailorid, pos)
+    currentrating = elo.updaterating(change,currentrating)
+print('the rating change for players are :{}'.format(currentrating))
+print(str(sum(currentrating)))
 
 nat = 'gbr'
 first = 'leo'
