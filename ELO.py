@@ -7,7 +7,7 @@ class EloCalculations:
         return change
 
     def pred(self, rata, ratb):
-        prediction = 1/(1+10**((ratb - rata)/300))
+        prediction = 1/(1+10**((ratb - rata)/400))
         return prediction
 
     def cycle(self, currat, sailorid, position):

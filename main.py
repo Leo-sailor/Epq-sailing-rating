@@ -1,23 +1,36 @@
 # imports
 from ELO import EloCalculations
 from General import General
-
+from csvcode import Csvcode
+import time
 
 # initzalizations
 elo = EloCalculations()
 base = General()
+hostcsv = Csvcode('host')
 
 pos = []
 for x in range(0, 100):
     pos.append(x+1)
-currentrating = [1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500 ]
+print('Universe selection tool:')
+print('Avalible universes are:')
+column = hostcsv.getcolumn(0)
+for x in range(1, len(column)):
+    print(column[x])
+universe = input('\nPlease enter the name of the universe you would like to acess (N for a new universe):')
+universecsv = Csvcode(universe)
+
+print('What would you like to do?')
+choice = input()
+
+# test cases
+time.sleep(0)
+currentrating = [1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500]
 sailorid = [5, 3, 2, 4]
-print(str(sum(currentrating)))
 for x in range(0, 10):
     change = elo.cycle(currentrating, sailorid, pos)
-    currentrating = elo.updaterating(change,currentrating)
+    currentrating = elo.updaterating(change, currentrating)
 print('the rating change for players are :{}'.format(currentrating))
-print(str(sum(currentrating)))
 
 nat = 'gbr'
 first = 'leo'
