@@ -15,7 +15,7 @@ print('the rating change for players are :{}'.format(elo.cycle(currentrating,sai
 
 nat = 'gbr'
 first = 'ed'
-sur = 'smith'
+sur = 'yates'
 sail = 4
 
 
