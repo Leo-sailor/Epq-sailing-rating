@@ -3,42 +3,7 @@
   <component name="CsvFileAttributes">
     <option name="attributeMap">
       <map>
-        <entry key="\4.2.csv">
-          <value>
-            <Attribute>
-              <option name="separator" value="," />
-            </Attribute>
-          </value>
-        </entry>
-        <entry key="\5.3.csv">
-          <value>
-            <Attribute>
-              <option name="separator" value="," />
-            </Attribute>
-          </value>
-        </entry>
-        <entry key="\5.3.csv.csv">
-          <value>
-            <Attribute>
-              <option name="separator" value="|" />
-            </Attribute>
-          </value>
-        </entry>
-        <entry key="\hi.csv">
-          <value>
-            <Attribute>
-              <option name="separator" value="|" />
-            </Attribute>
-          </value>
-        </entry>
-        <entry key="\sample.csv">
-          <value>
-            <Attribute>
-              <option name="separator" value="," />
-            </Attribute>
-          </value>
-        </entry>
-        <entry key="\universes.csv">
+        <entry key="\demo.csv">
           <value>
             <Attribute>
               <option name="separator" value="," />

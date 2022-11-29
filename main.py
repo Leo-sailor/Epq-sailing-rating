@@ -9,6 +9,7 @@ elo = EloCalculations()
 base = General()
 hostcsv = Csvcode('host')
 
+
 pos = []
 for x in range(0, 100):
     pos.append(x+1)
@@ -20,11 +21,15 @@ for x in range(1, len(column)):
 universe = input('\nPlease enter the name of the universe you would like to acess (N for a new universe):')
 universecsv = Csvcode(universe)
 
+index = universecsv.findsailor(2,'48153')
+print(index)
+universecsv.updatevalue(1700,10,1)
+
 print('What would you like to do?')
+base.help(2)
 choice = input()
 
 # test cases
-time.sleep(0)
 currentrating = [1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500]
 sailorid = [5, 3, 2, 4]
 for x in range(0, 10):

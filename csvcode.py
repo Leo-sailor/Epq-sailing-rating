@@ -1,7 +1,8 @@
 import sys
 import csv
-
-
+from General import General
+import pandas as pd
+base = General()
 class Csvcode:
     def __init__(self, universe):
         if universe.upper() == 'N':
@@ -33,7 +34,7 @@ class Csvcode:
 
         try:
             file = (universe, '.csv')
-
+            self.uniloc = file
             with open(''.join(file), newline='') as csvfile:
                 spamreader = csv.reader(csvfile, delimiter=' ', quotechar='|')
                 x = 0
@@ -44,7 +45,7 @@ class Csvcode:
                     rows[x] = rows[x].split(',')
                     x = x+1
 
-            print('\n{}.csv opened and running\n'.format(universe))
+            print('{}.csv opened and running\n'.format(universe))
 
         except:
             sys.exit('There was a error loading the file, the program will now exit ')
@@ -62,3 +63,28 @@ class Csvcode:
     def getcolumn(self, columnNum):
         oneColumn = self.column[columnNum]
         return oneColumn
+
+    def findsailor(self,fieldnum,term):
+        term = str(term)
+        locations = base.multiIndex(self.column[fieldnum],term)
+        if len(locations)== 0:
+            return 'Error: Term not found'
+        elif len(locations) == 1:
+            return int(str(locations[0]))
+        else:
+            names = []
+            for x in range(0, len(locations)):
+                nameparts = (self.column[3][locations[x]],self.column[4][locations[x]])
+                names.append(' '.join(nameparts))
+            print('That search term is ambiguous\nBelow is a list of names for that sailor')
+            for x in range(0, len(locations)):
+                string = (str(x+1),' - ',names[x])
+                print((''.join(string)))
+            finallocation = locations[int(input('Please enter the number of '
+                                                'the correct sailor you are searching for: ')) - 1]
+            return int(str(finallocation[0]))
+
+    def updatevalue(self,term, row, column):
+        db = pd.read_csv(self.uniloc)
+        db.loc[row,column] = term
+        db.to_csv(self.uniloc, index=False)

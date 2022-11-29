@@ -30,7 +30,7 @@ class EloCalculations:
         return ratchange
 
     def k(self, sailorid, people, k):
-        k = k/(people-1)
+        k = k/((people-1)/2)
         return k
 
     def updaterating(self,change,currat):

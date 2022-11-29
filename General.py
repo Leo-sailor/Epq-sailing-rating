@@ -2,7 +2,6 @@
 import requests
 from countryinfo import CountryInfo
 
-
 # class which contains basic funtions for the program not directly related to the elo calculations
 class General:
     def __init__(self):
@@ -100,3 +99,37 @@ class General:
     def ranksailor(self, ratings):
         ratings.sort(reverse=True)
         return ratings
+
+    def multiIndex(self,list,term):
+        indexs = []
+        start = -1
+        end = False
+        while end == False:
+            try:
+                indexs.append(list.index(term,start+1))
+                start = indexs[len(indexs)-1]
+            except ValueError:
+                end = True
+        return indexs
+
+    def help(self,amount):
+        if amount == 0:
+            # List of instructions for the user
+            print('1 - view a sailor'
+                  '\n2 - ')
+        elif amount == 1:
+            # Detailed instructions
+            print('Detailed instructions and more details')
+        elif amount == 2:
+            # developer instructions with methods locations objects and modes and other parameters and explainations
+            print('class: General method: help parameters: mode explaination: if the mode is 0 basic instructions '
+                  'will be printed, if its 1 detailed instructions will be printed, if its 2 developer '
+                  'instructions will be printed')
+            print('class: General method: multiindex parameters: list(list), term(str or int) explaination: will return '
+                  'the index of all the ocourances  of the term inside of the input list')
+            print('class: General method: Rank sailor parameters: ratings(list) explaination: will take a list of ratings and'
+                  'sort them from high to low ')
+            print('class: General method: generaterank parameters: rating(int) ratings(list) explaination: will find the '
+                  'rank of the rating in the unsorted list ratings')
+            print('class: General method: __firstcap parameters: word(string) explaination: first letter to a capital')
+            print('class: General method: Csvlinegenerate Parameters')
