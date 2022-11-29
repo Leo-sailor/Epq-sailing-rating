@@ -34,7 +34,7 @@ class Csvcode:
 
         try:
             file = (universe, '.csv')
-            self.uniloc = file
+            self.uniloc = ''.join(file)
             with open(''.join(file), newline='') as csvfile:
                 spamreader = csv.reader(csvfile, delimiter=' ', quotechar='|')
                 x = 0
@@ -84,7 +84,7 @@ class Csvcode:
                                                 'the correct sailor you are searching for: ')) - 1]
             return int(str(finallocation[0]))
 
-    def updatevalue(self,term, row, column):
-        db = pd.read_csv(self.uniloc)
-        db.loc[row,column] = term
+    def updatevalue(self, term, row, column):
+        db = pd.read_csv(self.uniloc, dtype=str)
+        db.iloc[row-1,column] = term
         db.to_csv(self.uniloc, index=False)

@@ -23,9 +23,9 @@ universecsv = Csvcode(universe)
 
 index = universecsv.findsailor(2,'48153')
 print(index)
-universecsv.updatevalue(1700,10,1)
+universecsv.updatevalue('1700',1, 10)
 
-print('What would you like to do?')
+print('\nWhat would you like to do?')
 base.help(2)
 choice = input()
 

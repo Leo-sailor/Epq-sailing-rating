@@ -122,7 +122,7 @@ class General:
             print('Detailed instructions and more details')
         elif amount == 2:
             # developer instructions with methods locations objects and modes and other parameters and explainations
-            print('class: General method: help parameters: mode explaination: if the mode is 0 basic instructions '
+            print('\nclass: General method: help parameters: mode explaination: if the mode is 0 basic instructions '
                   'will be printed, if its 1 detailed instructions will be printed, if its 2 developer '
                   'instructions will be printed')
             print('class: General method: multiindex parameters: list(list), term(str or int) explaination: will return '
