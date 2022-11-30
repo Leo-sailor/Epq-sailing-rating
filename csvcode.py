@@ -1,8 +1,8 @@
 import sys
 import csv
-from General import General
 import pandas as pd
-base = General()
+
+
 class Csvcode:
     def __init__(self, universe):
         if universe.upper() == 'N':
@@ -43,7 +43,7 @@ class Csvcode:
                 for row in spamreader:
                     rows.append(row[0])
                     rows[x] = rows[x].split(',')
-                    x = x+1
+                    x += 1
 
             print('{}.csv opened and running\n'.format(universe))
 
@@ -57,28 +57,46 @@ class Csvcode:
                 self.column[y].append(rows[x][y])
 
     def getinfo(self, findtype, finddata, resulttype):
-        result = 5
+        # what the fuck is this function doing here,
+        # i started it and didnt know why or what for, watch me code this identically somewhere else
+        findtype.lower().strip()
+        if findtype == 'name' or '2':
+            name = findtype.split(' ')
+            # run the whole thing in here but different
+        elif findtype == 'sail number' or '1':
+            findtypeloc = 2
+        elif findtype == 'champ number' or '3' or 'championship number':
+            findtypeloc = 1
+        elif findtype == 'sailorid' or '4' or 'sailor id':
+            findtypeloc = 0
+        elif findtype == 'region' or '5':
+            findtypeloc = 5
+        elif findtype == 'nat' or '6' or 'nation' or 'nationality':
+            findtypeloc = 6
         return result
 
-    def getcolumn(self, columnNum):
-        oneColumn = self.column[columnNum]
-        return oneColumn
+    def getcolumn(self, columnnum):
+        onecolumn = self.column[columnnum]
+        return onecolumn
 
-    def findsailor(self,fieldnum,term):
+    def findsailor(self, fieldnum, term):
+        from General import General
+        base = General()
+
         term = str(term)
-        locations = base.multiIndex(self.column[fieldnum],term)
-        if len(locations)== 0:
+        locations = base.multiindex(self.column[fieldnum], term)
+        if len(locations) == 0:
             return 'Error: Term not found'
         elif len(locations) == 1:
             return int(str(locations[0]))
         else:
             names = []
             for x in range(0, len(locations)):
-                nameparts = (self.column[3][locations[x]],self.column[4][locations[x]])
+                nameparts = (self.column[3][locations[x]], self.column[4][locations[x]])
                 names.append(' '.join(nameparts))
             print('That search term is ambiguous\nBelow is a list of names for that sailor')
             for x in range(0, len(locations)):
-                string = (str(x+1),' - ',names[x])
+                string = (str(x+1), ' - ', names[x])
                 print((''.join(string)))
             finallocation = locations[int(input('Please enter the number of '
                                                 'the correct sailor you are searching for: ')) - 1]
@@ -86,5 +104,5 @@ class Csvcode:
 
     def updatevalue(self, term, row, column):
         db = pd.read_csv(self.uniloc, dtype=str)
-        db.iloc[row-1,column] = term
+        db.iloc[row-1, column] = term
         db.to_csv(self.uniloc, index=False)
