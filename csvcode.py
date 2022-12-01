@@ -47,7 +47,7 @@ class Csvcode:
 
             print('{}.csv opened and running\n'.format(universe))
 
-        except:
+        except FileNotFoundError:
             sys.exit('There was a error loading the file, the program will now exit ')
 
         self.column = [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []]
@@ -58,11 +58,12 @@ class Csvcode:
 
     def getinfo(self, findtype, finddata, resulttype):
         # what the fuck is this function doing here,
-        # i started it and didnt know why or what for, watch me code this identically somewhere else
+        # I started it and didn't know why or what for, watch me code this identically somewhere else
         findtype.lower().strip()
         if findtype == 'name' or '2':
             name = findtype.split(' ')
             # run the whole thing in here but different
+            findtypeloc = 2
         elif findtype == 'sail number' or '1':
             findtypeloc = 2
         elif findtype == 'champ number' or '3' or 'championship number':
@@ -73,6 +74,9 @@ class Csvcode:
             findtypeloc = 5
         elif findtype == 'nat' or '6' or 'nation' or 'nationality':
             findtypeloc = 6
+        else:
+            findtypeloc = 8
+        result = findtypeloc
         return result
 
     def getcolumn(self, columnnum):
