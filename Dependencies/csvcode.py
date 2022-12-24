@@ -1,10 +1,10 @@
-from sys import path, exit
+from sys import path
 import csv
 from time import time
 import os
 from hashlib import md5, sha256
-import datetime
 from Dependencies.ELO import EloCalculations
+
 
 class Csvcode:
     def __init__(self):
@@ -29,11 +29,9 @@ class Csvcode:
 
         universeloc = column[0].index(universe)
         self.passhash = column[4][universeloc]
-        elo = EloCalculations(column[3][universeloc],column[6][universeloc])
-
+        self.elo = EloCalculations(column[3][universeloc], column[6][universeloc])
 
         self.adminrights()
-
 
     def __linkuniverse(self, universe):
         if universe.upper() == 'N':
@@ -41,7 +39,7 @@ class Csvcode:
 
         try:
             self.folder = ''.join((path[0], '\\universes\\', universe, '\\'))
-            self.hostfile = ''.join((self.folder,'host-', universe, '.csv'))
+            self.hostfile = ''.join((self.folder, 'host-', universe, '.csv'))
 
             rows = self.opencsv(self.hostfile)
 
@@ -51,7 +49,7 @@ class Csvcode:
             rows = self.opencsv(self.basefile)
 
         except FileNotFoundError:
-            exit('There was a error loading the file, the program will now exit ')
+            raise 'There was a error loading the file, the program will now exit '
 
         self.basecolumn = [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []]
 
@@ -148,15 +146,13 @@ class Csvcode:
 
 
     def getinfo(self, sailorid, resulttype):
-        # what the fuck is this function doing here,
-        # I started it and didn't know why or what for, watch me code this identically somewhere else
         try:
             row = self.currcolumn[0].index(sailorid)
         except ValueError:
             raise('the sailor id {} could not be found'.format(sailorid))
 
         resulttype.lower().strip()
-        done = False
+
         if resulttype == 'name' or '2':
             findtypeloc = -1
             result = ' '.join((self.currcolumn[3][row],self.currcolumn[4][row]))
@@ -199,7 +195,7 @@ class Csvcode:
         return hashed
 
     def getcolumn(self, columnnum):
-        onecolumn = self.column[columnnum]
+        onecolumn = self.currcolumn[columnnum]
         return onecolumn
 
     def findsailor(self, fieldnum, term):
