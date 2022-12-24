@@ -1,42 +1,70 @@
-import sys
+from sys import path,exit
 import csv
 import pandas as pd
+from time import time
 import os
+from hashlib import md5,sha256
+
 
 class Csvcode:
+
     def __init__(self, universe):
         if universe.upper() == 'N':
             name = input('please enter your new ranking universe name')
             name.lower().strip()
-            file = (sys.path[0], '\\universes\\', name, '.csv')
+            direc = ''.join((path[0], '\\universes\\', name,))
+            if os.path.exists(direc):
+                raise Exception('This universe already exists, please try again')
+            else:
+                os.mkdir(direc)
+            hostfile = (direc, '\\', 'host-', name, '.csv')
+            curtime = str(time())
+            firstfile = (direc, '\\', name, '-', curtime, '.csv')
             universe = name
 
-            with open(''.join(file), 'w', newline='') as csvfile:
+            with open(''.join(firstfile), 'w', newline='') as csvfile:
                 spamwriter = csv.writer(csvfile, delimiter=',',
                                         quotechar=',', quoting=csv.QUOTE_MINIMAL)
                 spamwriter.writerow(['sailorID', 'champNum', 'sailNo', 'Firstname', 'Surname', 'Region', 'nat',
-                                     'lightRating', 'midRating', 'heavyRating', 'overallRating', 'rank', 'events'])
+                                     'lightRating', 'midRating', 'heavyRating', 'overallRating',
+                                     'rank', 'events', 'lastEventDate'])
+
+            with open(''.join(hostfile), 'w', newline='') as csvfile:
+                spamwriter = csv.writer(csvfile, delimiter=',',
+                                        quotechar=',', quoting=csv.QUOTE_MINIMAL)
+                spamwriter.writerow(['versionNumber', 'creationDate', 'fileName', 'md5'])
+                spamwriter.writerow(['1', curtime, firstfile, self.hashfile(firstfile)])
 
             starting = int(input('\nWhat would you like the average rating of this '
                                  'universe to be?(450-3100)(default: 1500)'))
+
+            same = False
+            while not(same):
+                passwordA = ''
+                passwordB = ''
+                passwordA = input('\nPlease enter a password for this universe:')
+                passwordB = input('Please it again to confirm:')
+                same = passwordB == passwordA
+                if not(same):
+                    print('\nThose passwords did not match, Please try again')
 
             while starting > 3100 or starting < 450:
                 print('\nThat value was not accepted, Please Try Again')
                 starting = int(input('What would you like the average rating of this '
                                      'universe to be?(450-3100)(default: 1500)'))
 
-            with open('universes/host.csv', 'w', newline='') as csvfile:
+            with open('../universes/host.csv', 'w', newline='') as csvfile:
                 spamwriter = csv.writer(csvfile, delimiter=',',
                                         quotechar=',', quoting=csv.QUOTE_MINIMAL)
                 spamwriter.writerow([name, 0, starting, (starting/5+100)])
 
-            print('{}.csv has been created'.format(name))
+            print('{} universe has been created'.format(name))
 
         try:
-            file = (sys.path[0], '\\universes\\', universe, '.csv')
-            self.uniloc = ''.join(file)
+            self.folder = ''.join((path[0], '\\universes\\', universe, '\\'))
+            self.hostfile = ''.join((self.folder,'host-', universe, '.csv'))
 
-            with open(''.join(file), newline='') as csvfile:
+            with open(self.hostfile, newline='') as csvfile:
                 spamreader = csv.reader(csvfile, delimiter=' ', quotechar='|')
                 x = 0
                 rows = []
@@ -46,16 +74,29 @@ class Csvcode:
                     rows[x] = rows[x].split(',')
                     x += 1
 
-            print('{}.csv opened and running\n'.format(universe))
+            self.basefile = ''.join((self.folder, rows[1][2]))
+            print('{} universe opened and running\n'.format(universe))
+
+            with open(self.basefile, newline='') as csvfile:
+                spamreader = csv.reader(csvfile, delimiter=' ', quotechar='|')
+                x = 0
+                rows = []
+
+                for row in spamreader:
+                    rows.append(row[0])
+                    rows[x] = rows[x].split(',')
+                    x += 1
 
         except FileNotFoundError:
-            sys.exit('There was a error loading the file, the program will now exit ')
+            exit('There was a error loading the file, the program will now exit ')
 
-        self.column = [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []]
+        self.basecolumn = [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []]
 
         for x in range(0, len(rows)):
             for y in range(0, len(rows[0])):
-                self.column[y].append(rows[x][y])
+                self.basecolumn[y].append(rows[x][y])
+                
+        #self.cleanup - this will go through universe host and look for identical md5 hash and if there is delete the older one
 
     def getinfo(self, findtype, finddata, resulttype):
         # what the fuck is this function doing here,
@@ -79,6 +120,15 @@ class Csvcode:
             findtypeloc = 8
         result = findtypeloc
         return result
+
+    def hashfile(self, file):
+        str2hash = open(file).read()
+        result = md5(str2hash.encode()).hexdigest()
+        return result
+
+    def passwordhash(self, password):
+        hashed = sha256(password.encode()).hexdigest()
+        return hashed
 
     def getcolumn(self, columnnum):
         onecolumn = self.column[columnnum]

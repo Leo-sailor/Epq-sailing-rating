@@ -1,8 +1,7 @@
 # imports
-from ELO import EloCalculations
-from General import General
-from csvcode import Csvcode
-import time
+from Dependencies.ELO import EloCalculations
+from Dependencies.General import General
+from Dependencies.csvcode import Csvcode
 
 # initzalizations
 elo = EloCalculations()

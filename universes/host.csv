@@ -1,2 +1,2 @@
-Name,Sailornum,startrat,deviation90percentile
-demo,6,1500,400
+Name,Sailornum,startrat,deviation90percentile,editPsssword,hash,passsalt
+demo,6,1500,400,,,
