@@ -1,16 +1,19 @@
 class EloCalculations:
-    def __init__(self):
+    def __init__(self, deviation, multiplier):
         print('elo calculations are now imported and running')
+        self.deviation = deviation
+        self.changemultiplier = multiplier
 
     def calc(self, rat1, rat2, result, k):
         change = k*((result-self.pred(rat1, rat2)))# **(3))
         return change
 
     def pred(self, rata, ratb):
-        prediction = 1/(1+10**((ratb - rata)/400))
+        prediction = 1/(1+10**((ratb - rata)/self.deviation))
         return prediction
 
     def cycle(self, currat, sailorid, position):
+        # no idea whether this work if the positions are not in the right order, but it should
         sailors = len(currat)
         ratchange = []
         for x in range(0, sailors):
@@ -30,7 +33,8 @@ class EloCalculations:
         return ratchange
 
     def k(self, sailorid, people, k):
-        k = k/((people-1)/2)
+        k = k * self.changemultiplier
+        # will make this intresting later when i 'realise' its crap
         return k
 
     def updaterating(self,change,currat):

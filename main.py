@@ -1,26 +1,17 @@
 # imports
-from Dependencies.ELO import EloCalculations
 from Dependencies.General import General
 from Dependencies.csvcode import Csvcode
 
 # initzalizations
 elo = EloCalculations()
 base = General()
-hostcsv = Csvcode('host')
+universecsv = Csvcode()
 
 
-pos = []
-for x in range(0, 100):
-    pos.append(x+1)
-print('Universe selection tool:')
-print('Avalible universes are:')
-column = hostcsv.getcolumn(0)
-for x in range(1, len(column)):
-    print(column[x])
-universe = input('\nPlease enter the name of the universe you would like to acess (N for a new universe):')
-universecsv = Csvcode(universe)
 
-index = universecsv.findsailor(2,'48153')
+
+
+index = universecsv.findsailor(2,'44036')
 print(index)
 universecsv.updatevalue('1700',1, 10)
 
@@ -31,10 +22,7 @@ choice = input()
 # test cases
 currentrating = [1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500]
 sailorid = [5, 3, 2, 4]
-for x in range(0, 10):
-    change = elo.cycle(currentrating, sailorid, pos)
-    currentrating = elo.updaterating(change, currentrating)
-print('the rating change for players are :{}'.format(currentrating))
+
 
 nat = 'gbr'
 first = 'leo'

@@ -1,2 +1,3 @@
-Name,Sailornum,startrat,deviation90percentile,editPsssword,hash,passsalt
-demo,6,1500,400,,,
+Name,Sailornum,startrat,deviation90percentile,editPssswordhash,hash,kMultiplier
+demo,6,1500,400,5bc426e8d81e2f4136a562fac893c2229e3faa99d97df09ab604a2f8a0c0a60c,,1
+,,,,,
