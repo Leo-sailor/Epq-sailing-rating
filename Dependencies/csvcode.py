@@ -11,7 +11,7 @@ class Csvcode:
         print('\nUniverse selection tool:')
         print('Avalible universes are:')
 
-        column = self.opencsv(''.join((path[0], '\\universes\\', 'host.csv',)),transpose=True)
+        column = self.opencsv(''.join((path[0], '\\universes\\', 'host.csv',)), transpose=True)
 
         for x in range(1, len(column[0])):
             print(column[0][x])
@@ -63,14 +63,14 @@ class Csvcode:
                 self.basecolumn[y].append(rows[x][y])
         self.basecolumn = [x for x in self.basecolumn if x != []]
         self.currcolumn = self.basecolumn
-        #self.cleanup - this will go through universe host and look for identical md5 hash and if there is delete the older one
+        # self.cleanup - this will go through universe host and look for identical md5 hash and if there is, delete the older one
         return universe
 
     def __makeuniverse(self):
         name = input('please enter your new ranking universe name:').lower()
-        allowed = ['a','b','c','d','e','f','g','h','i','j','k',
-                   'l','m','n','o','p','q','r','s','t','u','v','w','x','y','z','0','1','2','3','4','5',
-                   '6','7','8','9','.','_','\'','(',')',':']
+        allowed = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k',
+                   'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5',
+                   '6', '7', '8', '9', '.', '_', '\'', '(', ')', ':']
         name = (x for x in name if x in allowed)
         name = ''.join(name)
         direc = ''.join((path[0], '\\universes\\', name,))
@@ -81,7 +81,7 @@ class Csvcode:
         hostfile = (direc, '\\', 'host-', name, '.csv')
         curtime = str(int(time()))
         firstfilename = ''.join((name, '-', curtime, '.csv'))
-        firstfile = ''.join((direc, '\\',firstfilename))
+        firstfile = ''.join((direc, '\\', firstfilename))
         universe = name
 
         with open(firstfile, 'w', newline='') as csvfile:
@@ -97,20 +97,19 @@ class Csvcode:
             spamwriter.writerow(['versionNumber', 'creationDate', 'fileName', 'md5'])
             spamwriter.writerow(['1', curtime, firstfilename, self.hashfile(firstfile)])
 
+        passwordB = ''
         same = False
-        while not (same):
-            passwordA = ''
-            passwordB = ''
+        while not same:
             passwordA = input('\nPlease enter a password for this universe:')
             passwordB = input('Please it again to confirm:')
             same = passwordB == passwordA
-            if not (same):
+            if not same:
                 print('\nThose passwords did not match, Please try again')
         self.passhash = self.passwordhash(passwordB)
 
         try:
             starting = int(input('\nWhat would you like the average rating of this '
-                             'universe to be?(450-3100)(default: 1500):'))
+                                 'universe to be?(450-3100)(default: 1500):'))
         except ValueError:
             print('\nThat input was not a integer')
             starting = 50000
@@ -118,14 +117,14 @@ class Csvcode:
             print('\nThat value was not accepted, Please Try Again')
             try:
                 starting = int(input('What would you like the average rating of this '
-                                 'universe to be?(450-3100)(default: 1500):'))
+                                     'universe to be?(450-3100)(default: 1500):'))
             except ValueError:
                 print('\nThat input was not a integer')
                 starting = 50000
 
         try:
             k = float(input('\nWhat would you like the speed of rating change '
-                             'to be?(0.3 - 4)(Recomended: 1):'))
+                            'to be?(0.3 - 4)(Recomended: 1):'))
         except ValueError:
             print('\nThat input was not a number')
             k = 100
@@ -138,7 +137,7 @@ class Csvcode:
                 print('\nThat input was not a number')
                 k = 500
 
-        with open(''.join((path[0],'\\universes\\host.csv')), 'a', newline='') as csvfile:
+        with open(''.join((path[0], '\\universes\\host.csv')), 'a', newline='') as csvfile:
             spamwriter = csv.writer(csvfile, delimiter=',',
                                     quotechar=',', quoting=csv.QUOTE_MINIMAL)
             spamwriter.writerow([name, starting, (starting / 5 + 100), self.passhash, k, ''])
@@ -146,7 +145,7 @@ class Csvcode:
         print('{} universe has been created'.format(name))
         return universe
 
-    def opencsv(self,fileloc,transpose=False):
+    def opencsv(self, fileloc, transpose=False):
         with open(fileloc, newline='') as csvfile:
             spamreader = csv.reader(csvfile, delimiter=' ', quotechar='|')
             x = 0
@@ -167,7 +166,7 @@ class Csvcode:
 
     def adminrights(self):
         done = False
-        while not(done):
+        while not done:
             print('press enter to skip entering a password')
             inp = input('or enter the admin password for the universe {}:'.format(self.universe))
             if inp == '':
@@ -187,9 +186,11 @@ class Csvcode:
 
         resulttype.lower().strip()
 
+        result = ''
+
         if resulttype == 'name' or '2':
             findtypeloc = -1
-            result = ' '.join((self.currcolumn[3][row],self.currcolumn[4][row]))
+            result = ' '.join((self.currcolumn[3][row], self.currcolumn[4][row]))
         elif resulttype == 'sail number' or '1' or 's':
             findtypeloc = 2
         elif resulttype == 'champ number' or '3' or 'championship number' or 'c':
@@ -263,34 +264,34 @@ class Csvcode:
     def autosavefile(self):
         filename = ''.join((self.universe, '-', str(self.sessiontime), '.csv'))
         file = ''.join((self.folder, filename))
-        with open(file, 'w', newline='') as csvfile: #saves the filr
+        with open(file, 'w', newline='') as csvfile:  # saves the filr
             spamwriter = csv.writer(csvfile, delimiter=',',
                                     quotechar=',', quoting=csv.QUOTE_MINIMAL)
             curr = []
             # print(len(self.currcolumn))
-            for x in range(0,len(self.currcolumn[0])): # number of rows
-                for y in range(0,len(self.currcolumn)): # number of columns
+            for x in range(0, len(self.currcolumn[0])):  # number of rows
+                for y in range(0, len(self.currcolumn)):  # number of columns
                     # print(f'y = {y}  x = {x}')
-                    curr.append(self.currcolumn[y][x]) # assembls the row
-                spamwriter.writerow(curr)  #writes the row
-                curr = [] #clears the row for the next one
+                    curr.append(self.currcolumn[y][x])  # assembls the row
+                spamwriter.writerow(curr)  # writes the row
+                curr = []  # clears the row for the next one
 
         hostfileold = self.opencsv(self.hostfile)
-        if hostfileold[1][0] == str((self.versionnumber + 1)): #checks how to record the temporry save
-            with open(self.hostfile, 'w', newline='') as csvfile: # works as if its a second or more auto save
+        if hostfileold[1][0] == str((self.versionnumber + 1)):  # checks how to record the temporry save
+            with open(self.hostfile, 'w', newline='') as csvfile:  # works as if its a second or more auto save
                 spamwriter = csv.writer(csvfile, delimiter=',',
                                         quotechar=',', quoting=csv.QUOTE_MINIMAL)
                 spamwriter.writerow(hostfileold[0])
                 spamwriter.writerow([hostfileold[1][0], hostfileold[1][1], hostfileold[1][2], self.hashfile(file)])
-                for x in range(2,len(hostfileold)):
+                for x in range(2, len(hostfileold)):
                     spamwriter.writerow(hostfileold[x])
         else:
-            with open(self.hostfile, 'w', newline='') as csvfile: # first auto save
+            with open(self.hostfile, 'w', newline='') as csvfile:  # first auto save
                 spamwriter = csv.writer(csvfile, delimiter=',',
                                         quotechar=',', quoting=csv.QUOTE_MINIMAL)
                 spamwriter.writerow(hostfileold[0])
                 spamwriter.writerow([self.versionnumber + 1, self.sessiontime, filename, self.hashfile(file)])
-                for x in range(1,len(hostfileold)):
+                for x in range(1, len(hostfileold)):
                     spamwriter.writerow(hostfileold[x])
 
     def mansavefile(self):

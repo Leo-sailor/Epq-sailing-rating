@@ -7,9 +7,7 @@ base = General()
 universecsv = Csvcode()
 
 
-
-
-index = universecsv.findsailor(2,'44036')
+index = universecsv.findsailor(2, '44036')
 print(index)
 
 
@@ -18,8 +16,8 @@ base.help(2)
 choice = input()
 
 # new test caases
-universecsv.updatesinglevalue(217,1,1)
-universecsv.updatesinglevalue(317,1,1)
+universecsv.updatesinglevalue(217, 1, 1)
+universecsv.updatesinglevalue(317, 1, 1)
 
 
 # old test cases

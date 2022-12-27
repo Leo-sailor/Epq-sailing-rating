@@ -1,16 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="AnalysisUIOptions">
+    <option name="ANALYZE_INJECTED_CODE" value="false" />
+    <option name="SCOPE_TYPE" value="3" />
+  </component>
   <component name="AutoImportSettings">
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="6f254959-93a0-4f8c-a890-d9cf01d0c753" name="Changes" comment="New host file layout to speed up all types of save">
-      <change afterPath="$PROJECT_DIR$/tests.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/csv-editor.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/csv-editor.xml" afterDir="false" />
+    <list default="true" id="6f254959-93a0-4f8c-a890-d9cf01d0c753" name="Changes" comment="fixed so much&#10;1. set of allowed charceters for univers names&#10;2. made the store of the host.csv renew itself after an update - done by doing a pass up and compare&#10;3. added error catching for bad inputs &#10;4. a whole bunch more small stuff">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Dependencies/csvcode.py" beforeDir="false" afterPath="$PROJECT_DIR$/Dependencies/csvcode.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/universes/host.csv" beforeDir="false" afterPath="$PROJECT_DIR$/universes/host.csv" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -68,7 +69,8 @@
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
     "node.js.selected.package.tslint": "(autodetect)",
-    "settings.editor.selected.configurable": "project.propVCSSupport.Confirmation",
+    "run.code.analysis.last.selected.profile": "aDefault",
+    "settings.editor.selected.configurable": "preferences.pluginManager",
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
@@ -159,7 +161,7 @@
       <workItem from="1672078219758" duration="139000" />
       <workItem from="1672149270308" duration="5407000" />
       <workItem from="1672155923621" duration="367000" />
-      <workItem from="1672156322024" duration="4445000" />
+      <workItem from="1672156322024" duration="5808000" />
     </task>
     <task id="LOCAL-00001" summary="here">
       <created>1669378575141</created>
@@ -287,7 +289,14 @@
       <option name="project" value="LOCAL" />
       <updated>1672157121622</updated>
     </task>
-    <option name="localTasksCounter" value="19" />
+    <task id="LOCAL-00019" summary="fixed so much&#10;1. set of allowed charceters for univers names&#10;2. made the store of the host.csv renew itself after an update - done by doing a pass up and compare&#10;3. added error catching for bad inputs &#10;4. a whole bunch more small stuff">
+      <created>1672160969543</created>
+      <option name="number" value="00019" />
+      <option name="presentableId" value="LOCAL-00019" />
+      <option name="project" value="LOCAL" />
+      <updated>1672160969543</updated>
+    </task>
+    <option name="localTasksCounter" value="20" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -323,18 +332,8 @@
     <MESSAGE value="new file system" />
     <MESSAGE value="changes to file system and small tweaks" />
     <MESSAGE value="New host file layout to speed up all types of save" />
-    <option name="LAST_COMMIT_MESSAGE" value="New host file layout to speed up all types of save" />
-  </component>
-  <component name="XDebuggerManager">
-    <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/main.py</url>
-          <line>24</line>
-          <option name="timeStamp" value="4" />
-        </line-breakpoint>
-      </breakpoints>
-    </breakpoint-manager>
+    <MESSAGE value="fixed so much&#10;1. set of allowed charceters for univers names&#10;2. made the store of the host.csv renew itself after an update - done by doing a pass up and compare&#10;3. added error catching for bad inputs &#10;4. a whole bunch more small stuff" />
+    <option name="LAST_COMMIT_MESSAGE" value="fixed so much&#10;1. set of allowed charceters for univers names&#10;2. made the store of the host.csv renew itself after an update - done by doing a pass up and compare&#10;3. added error catching for bad inputs &#10;4. a whole bunch more small stuff" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/Epq_sailing_ranking$main.coverage" NAME="main Coverage Results" MODIFIED="1672160710776" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
