@@ -14,4 +14,5 @@ e = registerd events completed
 d = date since last event  
 z = zone/ region
 t = territory / country
-
+## Secrets
+to get around data integrity checks go into the universe's host file and set the hash to 0

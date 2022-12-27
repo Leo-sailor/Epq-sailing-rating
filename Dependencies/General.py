@@ -6,7 +6,7 @@ from countryinfo import CountryInfo
 # class which contains basic funtions for the program not directly related to the elo calculations
 class General:
     def __init__(self):
-        print('basic functions are working')
+        # print('basic functions are working')
         self.basenat = ''
         self.validnat = {'ALG', 'ASA', 'AND', 'ANT', 'ARG', 'ARM', 'ARU', 'AUS', 'AUT', 'AZE', 'BAH', 'ARN', 'BAR',
                          'BLR', 'BEL', 'BIZ', 'BER', 'BRA', 'BOT', 'IVB', 'BRU', 'BUL', 'CAM', 'CAN', 'CAY', 'CHI',

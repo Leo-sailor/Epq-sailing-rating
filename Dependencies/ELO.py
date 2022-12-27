@@ -1,6 +1,5 @@
 class EloCalculations:
     def __init__(self, deviation, multiplier):
-        print('elo calculations are now imported and running')
         self.deviation = deviation
         self.changemultiplier = multiplier
 
