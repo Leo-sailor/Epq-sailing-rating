@@ -3,7 +3,28 @@
   <component name="CsvFileAttributes">
     <option name="attributeMap">
       <map>
+        <entry key="\universes\Topper 5.3\Topper 5.3-1672157135.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="\universes\Topper 5.3\host-Topper 5.3.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
         <entry key="\universes\demo\demo-1671888071.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="\universes\demo\demo-1672155368.csv">
           <value>
             <Attribute>
               <option name="separator" value="," />
@@ -18,6 +39,27 @@
           </value>
         </entry>
         <entry key="\universes\host.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="\universes\leo\host-leo.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="\universes\leo\leo-1672160716.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="\universes\topper5.3\topper5.3-1672157937.csv">
           <value>
             <Attribute>
               <option name="separator" value="," />

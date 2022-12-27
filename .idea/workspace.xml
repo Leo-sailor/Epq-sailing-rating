@@ -4,16 +4,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="6f254959-93a0-4f8c-a890-d9cf01d0c753" name="Changes" comment="new file system">
+    <list default="true" id="6f254959-93a0-4f8c-a890-d9cf01d0c753" name="Changes" comment="New host file layout to speed up all types of save">
+      <change afterPath="$PROJECT_DIR$/tests.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/csv-editor.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/csv-editor.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Dependencies/ELO.py" beforeDir="false" afterPath="$PROJECT_DIR$/Dependencies/ELO.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Dependencies/General.py" beforeDir="false" afterPath="$PROJECT_DIR$/Dependencies/General.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Dependencies/csvcode.py" beforeDir="false" afterPath="$PROJECT_DIR$/Dependencies/csvcode.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/universes/demo/demo-1671888071.csv" beforeDir="false" afterPath="$PROJECT_DIR$/universes/demo/demo-1671888071.csv" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/universes/demo/host-demo.csv" beforeDir="false" afterPath="$PROJECT_DIR$/universes/demo/host-demo.csv" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/universes/host.csv" beforeDir="false" afterPath="$PROJECT_DIR$/universes/host.csv" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -35,6 +31,19 @@
     <option name="PUSH_AUTO_UPDATE" value="true" />
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
+  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
+  "lastFilter": {
+    "state": "OPEN"
+  }
+}]]></component>
+  <component name="GithubPullRequestsUISettings">
+    <option name="selectedUrlAndAccountId">
+      <UrlAndAccount>
+        <option name="accountId" value="eb314e20-0876-4644-8ed8-8d4063f402b8" />
+        <option name="url" value="https://github.com/Leo-sailor/Epq-sailing-rating.git" />
+      </UrlAndAccount>
+    </option>
+  </component>
   <component name="MarkdownSettingsMigration">
     <option name="stateVersion" value="1" />
   </component>
@@ -43,26 +52,26 @@
   </component>
   <component name="ProjectId" id="2HzGtmJ9XLLRVxypinBt4pAbzm1" />
   <component name="ProjectLevelVcsManager" settingsEditedManually="true">
-    <ConfirmationsSetting value="1" id="Add" />
+    <ConfirmationsSetting value="2" id="Add" />
   </component>
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/LeoRe/PycharmProjects/Epq sailing ranking&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;reference.settings.project.statistic.project.settings&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "WebServerToolWindowFactoryState": "false",
+    "last_opened_file_path": "C:/Users/LeoRe/PycharmProjects/Epq sailing ranking",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "settings.editor.selected.configurable": "project.propVCSSupport.Confirmation",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
       <recent name="C:\Users\LeoRe\PycharmProjects\Epq sailing ranking" />
@@ -148,7 +157,9 @@
       <workItem from="1671879024956" duration="18423000" />
       <workItem from="1672077944100" duration="239000" />
       <workItem from="1672078219758" duration="139000" />
-      <workItem from="1672149270308" duration="4475000" />
+      <workItem from="1672149270308" duration="5407000" />
+      <workItem from="1672155923621" duration="367000" />
+      <workItem from="1672156322024" duration="4445000" />
     </task>
     <task id="LOCAL-00001" summary="here">
       <created>1669378575141</created>
@@ -262,7 +273,21 @@
       <option name="project" value="LOCAL" />
       <updated>1671896940289</updated>
     </task>
-    <option name="localTasksCounter" value="17" />
+    <task id="LOCAL-00017" summary="changes to file system and small tweaks">
+      <created>1672154058139</created>
+      <option name="number" value="00017" />
+      <option name="presentableId" value="LOCAL-00017" />
+      <option name="project" value="LOCAL" />
+      <updated>1672154058139</updated>
+    </task>
+    <task id="LOCAL-00018" summary="New host file layout to speed up all types of save">
+      <created>1672157121622</created>
+      <option name="number" value="00018" />
+      <option name="presentableId" value="LOCAL-00018" />
+      <option name="project" value="LOCAL" />
+      <updated>1672157121622</updated>
+    </task>
+    <option name="localTasksCounter" value="19" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -280,6 +305,8 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
+    <option name="CHECK_CODE_SMELLS_BEFORE_PROJECT_COMMIT" value="true" />
+    <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
     <MESSAGE value="here" />
     <MESSAGE value="update csv" />
     <MESSAGE value="update 25th nov" />
@@ -294,7 +321,9 @@
     <MESSAGE value="requirements update" />
     <MESSAGE value="pt1 of file clean" />
     <MESSAGE value="new file system" />
-    <option name="LAST_COMMIT_MESSAGE" value="new file system" />
+    <MESSAGE value="changes to file system and small tweaks" />
+    <MESSAGE value="New host file layout to speed up all types of save" />
+    <option name="LAST_COMMIT_MESSAGE" value="New host file layout to speed up all types of save" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -308,7 +337,7 @@
     </breakpoint-manager>
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/Epq_sailing_ranking$main.coverage" NAME="main Coverage Results" MODIFIED="1672153895004" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/Epq_sailing_ranking$main.coverage" NAME="main Coverage Results" MODIFIED="1672160710776" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/Epq_sailing_ranking$tests.coverage" NAME="tests Coverage Results" MODIFIED="1671896865627" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>
