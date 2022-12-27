@@ -7,7 +7,7 @@ base = General()
 universecsv = Csvcode()
 
 
-index = universecsv.findsailor(2, '44036')
+index = universecsv.getsailorid(2, '44036')
 print(index)
 
 

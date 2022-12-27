@@ -20,6 +20,9 @@ class General:
                          'SLO', 'RSA', 'ESP', 'SRI', 'SKN', 'LCA', 'SUD', 'SWE', 'SUI', 'TAH', 'TAN', 'THA', 'TLS',
                          'TTO', 'TUN', 'TUR', 'TKS', 'UGA', 'UKR', 'UAE', 'USA', 'URU', 'ISV', 'VAN', 'VEN', 'ZIM'}
 
+    def cleaninput(self,prompt, type, rangelow=0, rangehigh=0, charlevel=0):
+        # TODO make this
+
     def generatesailorid(self, nat, sailno, first, surname):
         iden = ''
 
@@ -93,11 +96,11 @@ class General:
         return word
 
     def generaterank(self, rating, ratings):
-        ratings = self.ranksailor(ratings)
+        ratings = self.__ranksailor(ratings)
         rank = ratings.index(rating) + 1
         return rank
 
-    def ranksailor(self, ratings):
+    def __ranksailor(self, ratings):
         ratings.sort(reverse=True)
         return ratings
 
@@ -108,7 +111,7 @@ class General:
         while not end:
             try:
                 indexs.append(inlist.index(term, start + 1))
-                start = indexs[len(indexs)-1]
+                start = indexs[-1]
             except ValueError:
                 end = True
         return indexs

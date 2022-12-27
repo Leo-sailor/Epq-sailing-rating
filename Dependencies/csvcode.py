@@ -31,6 +31,7 @@ class Csvcode:
         universeloc = column[0].index(self.universe)
         self.passhash = column[3][universeloc]
         self.elo = EloCalculations(column[2][universeloc], column[4][universeloc])
+        self.startingvalue = column[1][universeloc]
 
         self.adminrights()
 
@@ -56,18 +57,19 @@ class Csvcode:
         except FileNotFoundError:
             raise 'There was a error loading the file, the program will now exit '
 
-        self.basecolumn = [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []]
+        basecolumn = [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []]
 
         for x in range(0, len(rows)):
             for y in range(0, len(rows[0])):
-                self.basecolumn[y].append(rows[x][y])
-        self.basecolumn = [x for x in self.basecolumn if x != []]
-        self.currcolumn = self.basecolumn
+                basecolumn[y].append(rows[x][y])
+        basecolumn = [x for x in basecolumn if x != []]
+        self.currcolumn = basecolumn
         # self.cleanup - this will go through universe host and look for identical md5 hash and if there is, delete the older one
         return universe
 
     def __makeuniverse(self):
         name = input('please enter your new ranking universe name:').lower()
+        # TODO change to cleaner function
         allowed = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k',
                    'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5',
                    '6', '7', '8', '9', '.', '_', '\'', '(', ')', ':']
@@ -106,7 +108,7 @@ class Csvcode:
             if not same:
                 print('\nThose passwords did not match, Please try again')
         self.passhash = self.passwordhash(passwordB)
-
+        # TODO change to cleaner function
         try:
             starting = int(input('\nWhat would you like the average rating of this '
                                  'universe to be?(450-3100)(default: 1500):'))
@@ -115,13 +117,14 @@ class Csvcode:
             starting = 50000
         while starting > 3100 or starting < 450:
             print('\nThat value was not accepted, Please Try Again')
+            # TODO change to cleaner function
             try:
                 starting = int(input('What would you like the average rating of this '
                                      'universe to be?(450-3100)(default: 1500):'))
             except ValueError:
                 print('\nThat input was not a integer')
                 starting = 50000
-
+        # TODO change to cleaner function
         try:
             k = float(input('\nWhat would you like the speed of rating change '
                             'to be?(0.3 - 4)(Recomended: 1):'))
@@ -130,6 +133,7 @@ class Csvcode:
             k = 100
         while k > 4 or k < 0.3:
             print('\nThat value was not accepted, Please Try Again')
+            # TODO change to cleaner function
             try:
                 k = float(input('\nWhat would you like the speed of rating change '
                                 'to be?(0.3 - 4)(Recomended: 1):'))
@@ -233,33 +237,50 @@ class Csvcode:
         onecolumn = self.currcolumn[columnnum]
         return onecolumn
 
-    def findsailor(self, fieldnum, term):
+    def getsailorid(self, fieldnum, term, *data):
         from Dependencies.General import General
         base = General()
 
         term = str(term)
         locations = base.multiindex(self.currcolumn[fieldnum], term)
         if len(locations) == 0:
-            return 'Error: Term not found'
+            # TODO chnage this to make a sailor (call hosts
+            raise 'That term could not be found'
         elif len(locations) == 1:
-            return int(str(locations[0]))
+            index = int(str(locations[0]))
+            sailorid = self.currcolumn[0][index]
+            return sailorid
         else:
-            names = []
-            for x in range(0, len(locations)):
-                nameparts = (self.currcolumn[3][locations[x]], self.currcolumn[4][locations[x]])
-                names.append(' '.join(nameparts))
-            print('That search term is ambiguous'
-                  '\nBelow is a list of names for that sailor')
-            for x in range(0, len(locations)):
-                string = (str(x+1), ' - ', names[x])
-                print((''.join(string)))
-            finallocation = locations[int(input('Please enter the number of '
-                                                'the correct sailor you are searching for: ')) - 1]
-            return int(str(finallocation[0]))
+            if data = ():
+                names = []
+                for x in range(0, len(locations)):
+                    nameparts = (self.currcolumn[3][locations[x]], self.currcolumn[4][locations[x]])
+                    names.append(' '.join(nameparts))
+                print(f'The search term \'{term}\' is ambiguous'
+                      '\nBelow is a list of names for that sailor')
+                for x in range(0, len(locations)):
+                    string = (str(x+1), ' - ', names[x])
+                    print((''.join(string)))
+                finallocation = locations[int(input('Please enter the number of '
+                                                    'the correct sailor you are searching for: ')) - 1]
+                index = int(finallocation[0])
+                sailorid = self.currcolumn[0][index]
+                return sailorid
+            else:
+                pointstracker = []
+                sailorids = []
+                for x in range(len(locations)):
+                    pointstracker.append(0.0)
+                    sailorids.append(self.currcolumn[0][locations[x]])
+
+                # TODO finnish figureing out which sailor is which
+
+
 
     def updatesinglevalue(self, term, row, column):
         self.currcolumn[column][row] = term
         self.autosavefile()
+        # TODO protect from incorrect changes
 
     def autosavefile(self):
         filename = ''.join((self.universe, '-', str(self.sessiontime), '.csv'))
@@ -310,5 +331,9 @@ class Csvcode:
         self.sessiontime = time()
         self.versionnumber += 1
 
-    def __updatevalue(self, term, row, column):
+    def __updatevalue(self, term, row, column, bypass = False):
         self.currcolumn[column][row] = term
+        # TODO protect from incorrect changes
+
+    def addsailor(self):
+        self.elo.
