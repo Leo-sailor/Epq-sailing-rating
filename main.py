@@ -1,6 +1,6 @@
 # imports
-from Dependencies.General import General
-from Dependencies.csvcode import Csvcode
+from LocalDependencies.General import General
+from LocalDependencies.csvcode import Csvcode
 
 # initzalizations
 base = General()

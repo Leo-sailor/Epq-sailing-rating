@@ -1,4 +1,6 @@
 # Epq-sailing-rating
+[![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0.en.html)
+## Below is genral information used for developing the file soon to be adapted to full documentation
 the time used in file name is measured in seconds since the epoch and 
 the date of last event is in days since 1st of jan 2000 
 ## Data codes

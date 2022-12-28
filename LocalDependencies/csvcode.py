@@ -2,7 +2,7 @@ from sys import path
 import csv
 from time import time
 import os
-from Dependencies.ELO import EloCalculations
+from LocalDependencies.ELO import EloCalculations
 from General import General
 import datetime
 base = General()
