@@ -1,6 +1,7 @@
 # imports
 import requests
 from countryinfo import CountryInfo
+from hashlib import md5, sha256
 
 
 # class which contains basic funtions for the program not directly related to the elo calculations
@@ -20,8 +21,123 @@ class General:
                          'SLO', 'RSA', 'ESP', 'SRI', 'SKN', 'LCA', 'SUD', 'SWE', 'SUI', 'TAH', 'TAN', 'THA', 'TLS',
                          'TTO', 'TUN', 'TUR', 'TKS', 'UGA', 'UKR', 'UAE', 'USA', 'URU', 'ISV', 'VAN', 'VEN', 'ZIM'}
 
-    def cleaninput(self,prompt, type, rangelow=0, rangehigh=0, charlevel=0):
-        # TODO make this
+    def cleaninput(self, prompt, datatype, rangelow=0, rangehigh=500, charlevel=0, correcthash='', failhash=''):
+        """char lever 0: all characters allowed
+        char level 1: characters good for files allowed
+        char level 2: character good for sailor id
+        char level 3: character good for names
+        for range high and range low, its less than or equal"""
+        if datatype == 's':
+            if charlevel == 0 or charlevel == '0':
+                return input(prompt)
+            elif charlevel == 1 or charlevel == '1':
+                files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k',
+                         'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
+                         'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5',
+                         '6', '7', '8', '9', '.', '_', '\'', '(', ')', ':']
+                same = False
+                name = ''
+                while not same:
+                    name = input(prompt).lower()
+                    name = (x for x in name if x in files)
+                    name = ''.join(name)
+                    num = self.cleaninput((f'Your string is now {name} \nDo you want to change this'
+                                           f'\nPlease type 1 for yes\nPlease type 2 for no'),
+                                          'i', rangelow=1, rangehigh=2)
+                    if num == 2:
+                        same = True
+                return name
+            elif charlevel == 2 or charlevel == '2':
+                files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k',
+                         'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
+                         'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5',
+                         '6', '7', '8', '9', '-']
+                name = ''
+                same = False
+                while not same:
+                    name = input(prompt).lower()
+                    name = (x for x in name if x in files)
+                    name = ''.join(name)
+                    num = self.cleaninput((f'Your string is now {name} \nDo you want to change this'
+                                           f'\nPlease type 1 for yes\nPlease type 2 for no'),
+                                          'i', rangelow=1, rangehigh=2)
+                    if num == 2:
+                        same = True
+                return name
+            elif charlevel == 3 or charlevel == '3':
+                alphebet = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R',
+                            'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '-']
+                name = ''
+                same = False
+                while not same:
+                    name = input(prompt)
+                    name = (x for x in name if x.upper() in alphebet)
+                    name = ''.join(name)
+                    name = self.__firstcap(name)
+                    num = self.cleaninput((f'Your string is now {name} \nDo you want to change this'
+                                           f'\nPlease type 1 for yes\nPlease type 2 for no'),
+                                          'i', rangelow=1, rangehigh=2)
+                    if num == 2:
+                        same = True
+                return name
+
+        elif datatype == 'f':
+            try:
+                inp = float(input(prompt))
+            except ValueError:
+                print('\nThat input was not a number')
+                inp = 5000000000
+            while rangelow >= inp >= rangehigh:
+                print('\nThat value was not accepted, Please Try Again')
+                try:
+                    inp = float(input(prompt))
+                except ValueError:
+                    print('\nThat input was not a number')
+                    inp = 5000000000
+            return inp
+
+        elif datatype == 'i':
+            try:
+                inp = int(input(prompt))
+            except ValueError:
+                print('\nThat input was not a integer, please enter a whole number')
+                inp = 5000000000
+            while rangelow >= inp >= rangehigh:
+                print('\nThat value was not accepted, Please Try Again')
+
+                try:
+                    inp = int(input(prompt))
+                except ValueError:
+                    print('\nThat input was not a integer, please enter a whole number')
+                    inp = 5000000000
+            return inp
+
+        elif datatype == 'pn':
+            passwordB = ''
+            same = False
+            while not same:
+                passwordA = input(prompt)
+                passwordB = input('Please it again to confirm:')
+                same = passwordB == passwordA
+                if not same:
+                    print('\nThose passwords did not match, Please try again')
+            return self.passwordhash(passwordB)
+
+        elif datatype == 'pr':
+            done = False
+            while not done:
+                inp = input(prompt)
+                if self.passwordhash(inp) == correcthash:
+                    print('Password is correct')
+                    return True
+                elif self.passwordhash(inp) == failhash:
+                    print('Password entry is skipped')
+                    return False
+                else:
+                    print('\nThat password was incorrect, please try again')
+
+        else:
+            return ''
 
     def generatesailorid(self, nat, sailno, first, surname):
         iden = ''
@@ -68,11 +184,8 @@ class General:
         first = self.__firstcap(first)
         surname = self.__firstcap(surname)
         region = region[:3].upper().strip()
-        try:
-            champnum = champnum[:3]
-        except:
-            champnum = '000' + str(champnum)
-            champnum = champnum[-3:]
+        champnum = '000' + str(champnum)
+        champnum = champnum[-3:]
         if not(nat in self.validnat):
             nat.upper()
             nat.strip()
@@ -115,6 +228,15 @@ class General:
             except ValueError:
                 end = True
         return indexs
+
+    def passwordhash(self, password):
+        hashed = sha256(password.encode()).hexdigest()
+        return hashed
+
+    def hashfile(self, file):
+        str2hash = open(file).read()
+        result = md5(str2hash.encode()).hexdigest()
+        return str(result)
 
     def help(self, amount):
         if amount == 0:

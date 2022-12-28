@@ -1,12 +1,7 @@
-def calculateTotalSum(sum, *arguments):
-    if arguments == ():
-        print(True)
-    totalSum = 0
-    totalSum += sum
-    for number in arguments:
-        totalSum += number
-    print(totalSum)
+def thing():
+    return True,'hi'
 
 
-# function call
-calculateTotalSum(4)
+a = thing()
+if thing()[0]:
+    print('good')

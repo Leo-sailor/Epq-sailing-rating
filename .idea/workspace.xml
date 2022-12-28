@@ -8,12 +8,13 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="6f254959-93a0-4f8c-a890-d9cf01d0c753" name="Changes" comment="module updates and coding grammer fixes">
-      <change afterPath="$PROJECT_DIR$/Dependencies/Hosts.py" afterDir="false" />
+    <list default="true" id="6f254959-93a0-4f8c-a890-d9cf01d0c753" name="Changes" comment="Made the first host function and file&#10;i made the dependencys map &#10;fixed bugs&#10;also made the auto select between sailors feature&#10;made the clean string feature for input processing to avoid repeat code&#10;had to lean about optional arguments for sailor selection&#10;YET TO BE TESTED&#10;LOTS OF TODO TO GO">
+      <change beforePath="$PROJECT_DIR$/.idea/csv-editor.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/csv-editor.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Dependencies/General.py" beforeDir="false" afterPath="$PROJECT_DIR$/Dependencies/General.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dependencies/Hosts.py" beforeDir="false" afterPath="$PROJECT_DIR$/Dependencies/Hosts.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Dependencies/csvcode.py" beforeDir="false" afterPath="$PROJECT_DIR$/Dependencies/csvcode.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/tests.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/universes/demo/demo-1672155368.csv" beforeDir="false" afterPath="$PROJECT_DIR$/universes/demo/demo-1672155368.csv" afterDir="false" />
     </list>
@@ -41,11 +42,11 @@
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
-  "lastFilter": {
-    "state": "OPEN"
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;
   }
-}]]></component>
+}</component>
   <component name="GithubPullRequestsUISettings">
     <option name="selectedUrlAndAccountId">
       <UrlAndAccount>
@@ -58,7 +59,7 @@
     <option name="stateVersion" value="1" />
   </component>
   <component name="ProblemsViewState">
-    <option name="selectedTabId" value="CurrentFile" />
+    <option name="selectedTabId" value="ProjectErrors" />
   </component>
   <component name="ProjectId" id="2HzGtmJ9XLLRVxypinBt4pAbzm1" />
   <component name="ProjectLevelVcsManager" settingsEditedManually="true">
@@ -72,6 +73,7 @@
   "keyToString": {
     "RunOnceActivity.OpenProjectViewOnStart": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
+    "TODO_SCOPE": "All Places",
     "WebServerToolWindowFactoryState": "false",
     "last_opened_file_path": "C:/Users/LeoRe/PycharmProjects/Epq sailing ranking",
     "node.js.detected.package.eslint": "true",
@@ -170,7 +172,8 @@
       <workItem from="1672078219758" duration="139000" />
       <workItem from="1672149270308" duration="5407000" />
       <workItem from="1672155923621" duration="367000" />
-      <workItem from="1672156322024" duration="10554000" />
+      <workItem from="1672156322024" duration="10595000" />
+      <workItem from="1672217650432" duration="17512000" />
     </task>
     <task id="LOCAL-00001" summary="here">
       <created>1669378575141</created>
@@ -312,7 +315,14 @@
       <option name="project" value="LOCAL" />
       <updated>1672162432061</updated>
     </task>
-    <option name="localTasksCounter" value="21" />
+    <task id="LOCAL-00021" summary="did a but but lots to do">
+      <created>1672166999008</created>
+      <option name="number" value="00021" />
+      <option name="presentableId" value="LOCAL-00021" />
+      <option name="project" value="LOCAL" />
+      <updated>1672166999008</updated>
+    </task>
+    <option name="localTasksCounter" value="22" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -350,10 +360,12 @@
     <MESSAGE value="New host file layout to speed up all types of save" />
     <MESSAGE value="fixed so much&#10;1. set of allowed charceters for univers names&#10;2. made the store of the host.csv renew itself after an update - done by doing a pass up and compare&#10;3. added error catching for bad inputs &#10;4. a whole bunch more small stuff" />
     <MESSAGE value="module updates and coding grammer fixes" />
-    <option name="LAST_COMMIT_MESSAGE" value="module updates and coding grammer fixes" />
+    <MESSAGE value="did a but but lots to do" />
+    <MESSAGE value="Made the first host function and file&#10;i made the dependencys map &#10;fixed bugs&#10;also made the auto select between sailors feature&#10;made the clean string feature for input processing to avoid repeat code&#10;had to lean about optional arguments for sailor selection&#10;YET TO BE TESTED&#10;LOTS OF TODO TO GO" />
+    <option name="LAST_COMMIT_MESSAGE" value="Made the first host function and file&#10;i made the dependencys map &#10;fixed bugs&#10;also made the auto select between sailors feature&#10;made the clean string feature for input processing to avoid repeat code&#10;had to lean about optional arguments for sailor selection&#10;YET TO BE TESTED&#10;LOTS OF TODO TO GO" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/Epq_sailing_ranking$main.coverage" NAME="main Coverage Results" MODIFIED="1672164019693" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/Epq_sailing_ranking$tests.coverage" NAME="tests Coverage Results" MODIFIED="1672165208773" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/Epq_sailing_ranking$tests.coverage" NAME="tests Coverage Results" MODIFIED="1672225502029" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>

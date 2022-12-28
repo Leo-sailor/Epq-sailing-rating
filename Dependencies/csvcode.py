@@ -2,8 +2,10 @@ from sys import path
 import csv
 from time import time
 import os
-from hashlib import md5, sha256
 from Dependencies.ELO import EloCalculations
+from General import General
+import datetime
+base = General()
 
 
 class Csvcode:
@@ -49,32 +51,21 @@ class Csvcode:
             self.versionnumber = int(rows[1][0])
             mostrecentdatafilehash = rows[1][3]
             print('{} universe opened and running\n'.format(universe))
-
-            rows = self.opencsv(self.basefile)
-            if self.hashfile(self.basefile) != mostrecentdatafilehash and mostrecentdatafilehash != '0':
+            rows = self.opencsv(self.basefile, transpose=True)
+            if base.hashfile(self.basefile) != mostrecentdatafilehash and mostrecentdatafilehash != '0':
                 raise 'The most recent data file is not as expected'
 
         except FileNotFoundError:
             raise 'There was a error loading the file, the program will now exit '
 
-        basecolumn = [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []]
-
-        for x in range(0, len(rows)):
-            for y in range(0, len(rows[0])):
-                basecolumn[y].append(rows[x][y])
-        basecolumn = [x for x in basecolumn if x != []]
+        basecolumn = [x for x in rows if x != []]
         self.currcolumn = basecolumn
         # self.cleanup - this will go through universe host and look for identical md5 hash and if there is, delete the older one
         return universe
 
     def __makeuniverse(self):
-        name = input('please enter your new ranking universe name:').lower()
-        # TODO change to cleaner function
-        allowed = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k',
-                   'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5',
-                   '6', '7', '8', '9', '.', '_', '\'', '(', ')', ':']
-        name = (x for x in name if x in allowed)
-        name = ''.join(name)
+        name = base.cleaninput('please enter your new ranking universe name:', 's', charlevel=1)
+
         direc = ''.join((path[0], '\\universes\\', name,))
         if os.path.exists(direc):
             raise Exception('This universe already exists, please try again')
@@ -97,49 +88,15 @@ class Csvcode:
             spamwriter = csv.writer(csvfile, delimiter=',',
                                     quotechar=',', quoting=csv.QUOTE_MINIMAL)
             spamwriter.writerow(['versionNumber', 'creationDate', 'fileName', 'md5'])
-            spamwriter.writerow(['1', curtime, firstfilename, self.hashfile(firstfile)])
+            spamwriter.writerow(['1', curtime, firstfilename, base.hashfile(firstfile)])
 
-        passwordB = ''
-        same = False
-        while not same:
-            passwordA = input('\nPlease enter a password for this universe:')
-            passwordB = input('Please it again to confirm:')
-            same = passwordB == passwordA
-            if not same:
-                print('\nThose passwords did not match, Please try again')
-        self.passhash = self.passwordhash(passwordB)
-        # TODO change to cleaner function
-        try:
-            starting = int(input('\nWhat would you like the average rating of this '
-                                 'universe to be?(450-3100)(default: 1500):'))
-        except ValueError:
-            print('\nThat input was not a integer')
-            starting = 50000
-        while starting > 3100 or starting < 450:
-            print('\nThat value was not accepted, Please Try Again')
-            # TODO change to cleaner function
-            try:
-                starting = int(input('What would you like the average rating of this '
-                                     'universe to be?(450-3100)(default: 1500):'))
-            except ValueError:
-                print('\nThat input was not a integer')
-                starting = 50000
-        # TODO change to cleaner function
-        try:
-            k = float(input('\nWhat would you like the speed of rating change '
-                            'to be?(0.3 - 4)(Recomended: 1):'))
-        except ValueError:
-            print('\nThat input was not a number')
-            k = 100
-        while k > 4 or k < 0.3:
-            print('\nThat value was not accepted, Please Try Again')
-            # TODO change to cleaner function
-            try:
-                k = float(input('\nWhat would you like the speed of rating change '
-                                'to be?(0.3 - 4)(Recomended: 1):'))
-            except ValueError:
-                print('\nThat input was not a number')
-                k = 500
+        self.passhash = base.cleaninput('\nPlease enter a password for this universe:', 'pn')
+        starting = base.cleaninput('\nWhat would you like the average rating of this '
+                                   'universe to be?(450-3100)(default: 1500):',
+                                   'i', rangehigh=3100, rangelow=450)
+        k = base.cleaninput('\nWhat would you like the speed of rating change '
+                            'to be?(0.3 - 4)(Recomended: 1):',
+                            'f', rangelow=0.3, rangehigh=4)
 
         with open(''.join((path[0], '\\universes\\host.csv')), 'a', newline='') as csvfile:
             spamwriter = csv.writer(csvfile, delimiter=',',
@@ -169,18 +126,10 @@ class Csvcode:
             return rows
 
     def adminrights(self):
-        done = False
-        while not done:
-            print('press enter to skip entering a password')
-            inp = input('or enter the admin password for the universe {}:'.format(self.universe))
-            if inp == '':
-                self.admin = False
-                done = True
-            elif self.passwordhash(inp) == self.passhash:
-                self.admin = True
-                done = True
-            else:
-                print('\nThat password was incorrect, please try again')
+        self.admin = base.cleaninput(('press enter to skip entering a password'
+                                     '\nor enter the admin password for the universe {}:'.format(self.universe)),
+                                     'pr', correcthash=self.passhash,
+                                     failhash='e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855')
 
     def getinfo(self, sailorid, resulttype):
         try:
@@ -203,20 +152,26 @@ class Csvcode:
             findtypeloc = 5
         elif resulttype == 'nat' or '6' or 'nation' or 'nationality' or 't':
             findtypeloc = 6
-        elif resulttype == 'Light wind rating' or '7' or 'l':
+        elif resulttype == 'light wind rating' or '7' or 'l':
             findtypeloc = 7
         elif resulttype == 'medium wind rating' or '8' or 'm':
             findtypeloc = 8
-        elif resulttype == 'High wind rating' or '9' or 'h':
+        elif resulttype == 'high wind rating' or '9' or 'h':
             findtypeloc = 9
         elif resulttype == 'ranking' or '10' or 'r':
             findtypeloc = 11
-        elif resulttype == 'Overall rating' or '11' or 'o':
+        elif resulttype == 'overall rating' or '11' or 'o':
             findtypeloc = 10
-        elif resulttype == 'Events completed' or '12' or 'e':
+        elif resulttype == 'events completed' or '12' or 'e':
             findtypeloc = 12
-        elif resulttype == 'Date of last event' or '13' or 'd':
+        elif resulttype == 'date of last event' or '13' or 'd':
             findtypeloc = 13
+        elif resulttype == '14' or 'a':
+            findtypeloc = -1
+            i = []
+            for x in range(14):
+                i.append(self.currcolumn[x][row])
+            result = ', '.join(i)
         else:
             findtypeloc = 0
 
@@ -224,34 +179,43 @@ class Csvcode:
             result = self.currcolumn[findtypeloc][row]
         return result
 
-    def hashfile(self, file):
-        str2hash = open(file).read()
-        result = md5(str2hash.encode()).hexdigest()
-        return str(result)
-
-    def passwordhash(self, password):
-        hashed = sha256(password.encode()).hexdigest()
-        return hashed
-
     def getcolumn(self, columnnum):
         onecolumn = self.currcolumn[columnnum]
         return onecolumn
 
     def getsailorid(self, fieldnum, term, *data):
-        from Dependencies.General import General
-        base = General()
 
         term = str(term)
         locations = base.multiindex(self.currcolumn[fieldnum], term)
         if len(locations) == 0:
-            # TODO chnage this to make a sailor (call hosts
+            print(f'A sailor could not be found with {term} in field number {fieldnum}')
+            working = True
+            while working:
+                inp = base.cleaninput('Please type in a sailor id \nor press enter to make a new sailor '
+                                      '\nor press \'p\' to get a list of all sailor id\'s', 's', charlevel=2)
+                if inp == '':
+                    from Hosts import Hosts
+                    host = Hosts()
+                    a = host.makenewsailor()
+                    if not a[0]:
+                        working = True
+                    else:
+                        return a[1]
+                elif inp.lower() in self.currcolumn[0]:
+                    return inp
+                elif inp.lower().strip() == 'p':
+                    for line in self.currcolumn[0]:
+                        print(line)
+                else:
+                    print('\n That sailor id could not be found')
+
             raise 'That term could not be found'
         elif len(locations) == 1:
             index = int(str(locations[0]))
             sailorid = self.currcolumn[0][index]
             return sailorid
         else:
-            if data = ():
+            if data == ():
                 names = []
                 for x in range(0, len(locations)):
                     nameparts = (self.currcolumn[3][locations[x]], self.currcolumn[4][locations[x]])
@@ -269,18 +233,34 @@ class Csvcode:
             else:
                 pointstracker = []
                 sailorids = []
-                for x in range(len(locations)):
+                dates = []
+                sailorinfos = []
+                sailors = len(locations)
+
+                for x in range(sailors):
                     pointstracker.append(0.0)
                     sailorids.append(self.currcolumn[0][locations[x]])
+                    dates = self.getinfo(sailorids[x], 'd')
+                    sailorinfos.append(self.getinfo(sailorids[x], 'a'))
 
-                # TODO finnish figureing out which sailor is which
+                diff = (max(dates) - min(dates)) / 100
+                pointstracker[dates.index(max(dates))] += diff
+                pointstracker[dates.index(min(dates))] -= diff
 
+                for item in data:
+                    for x in range(sailors):
+                        if item in sailorinfos[x]:
+                            pointstracker[x] += 1
+                index = locations[pointstracker.index(max(pointstracker))]
+                sailorid = self.currcolumn[0][index]
+                return sailorid
 
-
-    def updatesinglevalue(self, term, row, column):
-        self.currcolumn[column][row] = term
-        self.autosavefile()
-        # TODO protect from incorrect changes
+    def updatesinglevalue(self, term, row, column, bypass=False):
+        if 1 <= column <= 6 or bypass or column == 13:
+            self.currcolumn[column][row] = term
+            self.autosavefile()
+        else:
+            print('this change is not allowed please try again')
 
     def autosavefile(self):
         filename = ''.join((self.universe, '-', str(self.sessiontime), '.csv'))
@@ -303,7 +283,7 @@ class Csvcode:
                 spamwriter = csv.writer(csvfile, delimiter=',',
                                         quotechar=',', quoting=csv.QUOTE_MINIMAL)
                 spamwriter.writerow(hostfileold[0])
-                spamwriter.writerow([hostfileold[1][0], hostfileold[1][1], hostfileold[1][2], self.hashfile(file)])
+                spamwriter.writerow([hostfileold[1][0], hostfileold[1][1], hostfileold[1][2], base.hashfile(file)])
                 for x in range(2, len(hostfileold)):
                     spamwriter.writerow(hostfileold[x])
         else:
@@ -311,7 +291,7 @@ class Csvcode:
                 spamwriter = csv.writer(csvfile, delimiter=',',
                                         quotechar=',', quoting=csv.QUOTE_MINIMAL)
                 spamwriter.writerow(hostfileold[0])
-                spamwriter.writerow([self.versionnumber + 1, self.sessiontime, filename, self.hashfile(file)])
+                spamwriter.writerow([self.versionnumber + 1, self.sessiontime, filename, base.hashfile(file)])
                 for x in range(1, len(hostfileold)):
                     spamwriter.writerow(hostfileold[x])
 
@@ -331,9 +311,43 @@ class Csvcode:
         self.sessiontime = time()
         self.versionnumber += 1
 
-    def __updatevalue(self, term, row, column, bypass = False):
-        self.currcolumn[column][row] = term
-        # TODO protect from incorrect changes
+    def __updatevalue(self, term, row, column, bypass=False):
+        if 1 <= column <= 6 or bypass or column == 13:
+            self.currcolumn[column][row] = term
 
-    def addsailor(self):
-        self.elo.
+    def addsailor(self, sailid, first, sur, champ, sailno, region, nat):
+        starting = (self.elo.deviation - 100 * 5)
+        thousand = datetime.date(2000, 1, 1)
+        now = datetime.date.today()
+        day = now - thousand
+        if not base.multiindex(self.currcolumn[0], sailid):
+            self.__addline([sailid, champ, sailno, first, sur, region, nat, starting, starting, starting, starting,
+                            (len(self.currcolumn[0])), 1, day.days])
+            return True
+        else:
+            print('That sailor id already exists')
+            print(f'The original sailors information is: {self.getinfo(sailid,"a")}')
+            print('\n1. Append "-1" to the new sailor id and proceed to add'
+                  '\n2. Abort adding new sailor id')
+            inp = base.cleaninput('Which of those options do you want to use:', 'i', rangelow=1, rangehigh=2)
+            if inp == 1:
+                sailid += '-1'
+                count = 1
+                unique = False
+                while not unique:
+                    if sailid in self.currcolumn[0]:
+                        sailid = sailid[:-(len(str(count)))]
+                        count += 1
+                        sailid += count
+                    else:
+                        unique = True
+                self.__addline([sailid, champ, sailno, first, sur, region, nat, starting, starting, starting, starting,
+                               (len(self.currcolumn[0])), 1, day.days])
+                return True, sailid
+            else:
+                return False, ''
+
+    def __addline(self, array):
+        for x in range(len(array)):
+            self.currcolumn[x].append(str(array[x]))
+        self.autosavefile()
