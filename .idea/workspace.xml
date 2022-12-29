@@ -9,7 +9,17 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="6f254959-93a0-4f8c-a890-d9cf01d0c753" name="Changes" comment="Researched and choose the correct license  for my project&#10;made file names clearer&#10;YET TO BE TESTED&#10;TODO done">
+      <change afterPath="$PROJECT_DIR$/universes/demo/demo-1672343636.csv" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/LocalDependencies/ELO.py" beforeDir="false" afterPath="$PROJECT_DIR$/LocalDependencies/ELO.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/LocalDependencies/General.py" beforeDir="false" afterPath="$PROJECT_DIR$/LocalDependencies/General.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/LocalDependencies/Hosts.py" beforeDir="false" afterPath="$PROJECT_DIR$/LocalDependencies/Hosts.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/LocalDependencies/csvcode.py" beforeDir="false" afterPath="$PROJECT_DIR$/LocalDependencies/csvcode.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/universes/demo/host-demo.csv" beforeDir="false" afterPath="$PROJECT_DIR$/universes/demo/host-demo.csv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/universes/host.csv" beforeDir="false" afterPath="$PROJECT_DIR$/universes/host.csv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/universes/leo/host-leo.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/universes/leo/leo-1672160716.csv" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -52,7 +62,7 @@
     <option name="stateVersion" value="1" />
   </component>
   <component name="ProblemsViewState">
-    <option name="selectedTabId" value="ProjectErrors" />
+    <option name="selectedTabId" value="CurrentFile" />
   </component>
   <component name="ProjectId" id="2HzGtmJ9XLLRVxypinBt4pAbzm1" />
   <component name="ProjectLevelVcsManager" settingsEditedManually="true">
@@ -74,7 +84,7 @@
     &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
     &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
     &quot;run.code.analysis.last.selected.profile&quot;: &quot;aDefault&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;reference.settings.project.statistic.project.settings&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;vcs.Git&quot;,
     &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
 }</component>
@@ -86,7 +96,7 @@
       <recent name="C:\Users\LeoRe\PycharmProjects\Epq sailing ranking\universes" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.tests">
+  <component name="RunManager" selected="Python.main">
     <configuration name="main" type="PythonConfigurationType" factoryName="Python" nameIsGenerated="true">
       <module name="Epq sailing ranking" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -138,6 +148,9 @@
     </recent_temporary>
   </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="SvnConfiguration">
+    <configuration>C:\Users\LeoRe\AppData\Roaming\Subversion</configuration>
+  </component>
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
       <changelist id="6f254959-93a0-4f8c-a890-d9cf01d0c753" name="Changes" comment="" />
@@ -167,7 +180,9 @@
       <workItem from="1672155923621" duration="367000" />
       <workItem from="1672156322024" duration="10595000" />
       <workItem from="1672217650432" duration="20340000" />
-      <workItem from="1672322985425" duration="434000" />
+      <workItem from="1672322985425" duration="911000" />
+      <workItem from="1672323932381" duration="32000" />
+      <workItem from="1672324829907" duration="8279000" />
     </task>
     <task id="LOCAL-00001" summary="here">
       <created>1669378575141</created>
@@ -330,7 +345,14 @@
       <option name="project" value="LOCAL" />
       <updated>1672249197869</updated>
     </task>
-    <option name="localTasksCounter" value="24" />
+    <task id="LOCAL-00024" summary="Researched and choose the correct license  for my project&#10;made file names clearer&#10;YET TO BE TESTED&#10;TODO done">
+      <created>1672323458785</created>
+      <option name="number" value="00024" />
+      <option name="presentableId" value="LOCAL-00024" />
+      <option name="project" value="LOCAL" />
+      <updated>1672323458785</updated>
+    </task>
+    <option name="localTasksCounter" value="25" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -349,6 +371,7 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="CHECK_CODE_SMELLS_BEFORE_PROJECT_COMMIT" value="true" />
+    <option name="CHECK_LOCALLY_CHANGED_CONFLICTS_IN_BACKGROUND" value="true" />
     <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
     <MESSAGE value="here" />
     <MESSAGE value="update csv" />
@@ -375,7 +398,7 @@
     <option name="LAST_COMMIT_MESSAGE" value="Researched and choose the correct license  for my project&#10;made file names clearer&#10;YET TO BE TESTED&#10;TODO done" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/Epq_sailing_ranking$main.coverage" NAME="main Coverage Results" MODIFIED="1672164019693" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/Epq_sailing_ranking$main.coverage" NAME="main Coverage Results" MODIFIED="1672346297290" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/Epq_sailing_ranking$tests.coverage" NAME="tests Coverage Results" MODIFIED="1672225502029" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>

@@ -1,6 +1,6 @@
 class EloCalculations:
     def __init__(self, deviation, multiplier):
-        self.deviation = deviation
+        self.deviation = int(deviation)
         self.changemultiplier = multiplier
 
     def calc(self, rat1, rat2, result, k):

@@ -1,8 +1,8 @@
 # imports
 import requests
 from countryinfo import CountryInfo
-from hashlib import md5, sha256
-
+from hashlib import md5
+from bcrypt import gensalt,hashpw
 
 # class which contains basic funtions for the program not directly related to the elo calculations
 class General:
@@ -21,7 +21,7 @@ class General:
                          'SLO', 'RSA', 'ESP', 'SRI', 'SKN', 'LCA', 'SUD', 'SWE', 'SUI', 'TAH', 'TAN', 'THA', 'TLS',
                          'TTO', 'TUN', 'TUR', 'TKS', 'UGA', 'UKR', 'UAE', 'USA', 'URU', 'ISV', 'VAN', 'VEN', 'ZIM'}
 
-    def cleaninput(self, prompt, datatype, rangelow=0, rangehigh=500, charlevel=0, correcthash='', failhash=''):
+    def cleaninput(self, prompt, datatype, rangelow=0, rangehigh=500, charlevel=0, correcthash='', salt=''.encode(),):
         """char lever 0: all characters allowed
         char level 1: characters good for files allowed
         char level 2: character good for sailor id
@@ -38,13 +38,15 @@ class General:
                 same = False
                 name = ''
                 while not same:
-                    name = input(prompt).lower()
-                    name = (x for x in name if x in files)
+                    origname = input(prompt).lower()
+                    name = (x for x in origname if x in files)
                     name = ''.join(name)
-                    num = self.cleaninput((f'Your string is now {name} \nDo you want to change this'
-                                           f'\nPlease type 1 for yes\nPlease type 2 for no'),
-                                          'i', rangelow=1, rangehigh=2)
-                    if num == 2:
+                    if origname.upper() != name.upper():
+                        num = input(f'\nYour string is {name}\nPlease press (enter) to continue or (1) to retype')
+
+                        if num == '':
+                            same = True
+                    else:
                         same = True
                 return name
             elif charlevel == 2 or charlevel == '2':
@@ -55,13 +57,17 @@ class General:
                 name = ''
                 same = False
                 while not same:
-                    name = input(prompt).lower()
-                    name = (x for x in name if x in files)
+                    origname = input(prompt).lower()
+                    name = (x for x in origname if x in files)
+                    # print(f'name =\'{name}\'')
                     name = ''.join(name)
-                    num = self.cleaninput((f'Your string is now {name} \nDo you want to change this'
-                                           f'\nPlease type 1 for yes\nPlease type 2 for no'),
-                                          'i', rangelow=1, rangehigh=2)
-                    if num == 2:
+                    # print(f'name =\'{name}\'')
+                    if origname.upper() != name.upper():
+                        num = input(f'\nYour string is {name}\nPlease press (enter) to continue or (1) to retype')
+
+                        if num == '':
+                            same = True
+                    else:
                         same = True
                 return name
             elif charlevel == 3 or charlevel == '3':
@@ -70,14 +76,16 @@ class General:
                 name = ''
                 same = False
                 while not same:
-                    name = input(prompt)
-                    name = (x for x in name if x.upper() in alphebet)
+                    origname = input(prompt)
+                    name = (x for x in origname if x.upper() in alphebet)
                     name = ''.join(name)
                     name = self.__firstcap(name)
-                    num = self.cleaninput((f'Your string is now {name} \nDo you want to change this'
-                                           f'\nPlease type 1 for yes\nPlease type 2 for no'),
-                                          'i', rangelow=1, rangehigh=2)
-                    if num == 2:
+                    if origname.upper() != name.upper():
+                        num = input(f'\nYour string is {name}\nPlease press (enter) to continue or (1) to retype')
+
+                        if num == '':
+                            same = True
+                    else:
                         same = True
                 return name
 
@@ -127,10 +135,10 @@ class General:
             done = False
             while not done:
                 inp = input(prompt)
-                if self.passwordhash(inp) == correcthash:
+                if self.passwordhash(inp,salt)[0] == correcthash:
                     print('Password is correct')
                     return True
-                elif self.passwordhash(inp) == failhash:
+                elif inp == '':
                     print('Password entry is skipped')
                     return False
                 else:
@@ -151,11 +159,12 @@ class General:
         sailno = str(sailno)
         newsailno = '0000' + sailno
         iden += nat[:2]
+        iden += '-'
         iden += newsailno[-4:]
         iden += '-'
         iden += first[:3]
         iden += surname[:2]
-        return iden.lower()
+        return iden.lower(), nat
 
     def getnat(self):
         if self.basenat == '':
@@ -229,9 +238,11 @@ class General:
                 end = True
         return indexs
 
-    def passwordhash(self, password):
-        hashed = sha256(password.encode()).hexdigest()
-        return hashed
+    def passwordhash(self, password, salt=None):
+        if salt == None:
+            salt = gensalt()
+        hashed = hashpw(password.encode(),salt).hex()
+        return hashed,salt.hex()
 
     def hashfile(self, file):
         str2hash = open(file).read()

@@ -3,8 +3,9 @@ import csv
 from time import time
 import os
 from LocalDependencies.ELO import EloCalculations
-from General import General
+from LocalDependencies.General import General
 import datetime
+from binascii import unhexlify
 base = General()
 
 
@@ -18,10 +19,10 @@ class Csvcode:
         for x in range(1, len(column[0])):
             print(column[0][x])
 
-        universe = input('\nPlease enter the name of the universe you would like to acess (N for a new universe):').lower()
+        universe = input('\nPlease enter the name of the universe you would like to acess or (n) for a new universe:').lower()
         while not(universe in column[0] or universe.upper() == 'N'):
             print('\nThat universe name was not valid, please try again')
-            universe = input('Please enter the name of the universe you would like to acess (N for a new universe):').lower()
+            universe = input('\nPlease enter the name of the universe you would like to acess or (n) for a new universe:').lower()
 
         self.universe = self.__linkuniverse(universe)
         self.sessiontime = int(time())
@@ -32,6 +33,7 @@ class Csvcode:
 
         universeloc = column[0].index(self.universe)
         self.passhash = column[3][universeloc]
+        self.passsalt = unhexlify(column[5][universeloc])
         self.elo = EloCalculations(column[2][universeloc], column[4][universeloc])
         self.startingvalue = column[1][universeloc]
 
@@ -52,8 +54,11 @@ class Csvcode:
             mostrecentdatafilehash = rows[1][3]
             print('{} universe opened and running\n'.format(universe))
             rows = self.opencsv(self.basefile, transpose=True)
+            # print(self.basefile)
+            # print(mostrecentdatafilehash)
+            # print(base.hashfile(self.basefile))
             if base.hashfile(self.basefile) != mostrecentdatafilehash and mostrecentdatafilehash != '0':
-                raise 'The most recent data file is not as expected'
+                raise ValueError('The most recent data file is not as expected')
 
         except FileNotFoundError:
             raise 'There was a error loading the file, the program will now exit '
@@ -64,7 +69,7 @@ class Csvcode:
         return universe
 
     def __makeuniverse(self):
-        name = base.cleaninput('please enter your new ranking universe name:', 's', charlevel=1)
+        name = base.cleaninput('\nPlease enter your new ranking universe name:', 's', charlevel=1)
 
         direc = ''.join((path[0], '\\universes\\', name,))
         if os.path.exists(direc):
@@ -89,8 +94,9 @@ class Csvcode:
                                     quotechar=',', quoting=csv.QUOTE_MINIMAL)
             spamwriter.writerow(['versionNumber', 'creationDate', 'fileName', 'md5'])
             spamwriter.writerow(['1', curtime, firstfilename, base.hashfile(firstfile)])
-
-        self.passhash = base.cleaninput('\nPlease enter a password for this universe:', 'pn')
+        temp = base.cleaninput('\nPlease enter a password for this universe:', 'pn')
+        self.passhash = temp[0]
+        self.passsalt = temp[1]
         starting = base.cleaninput('\nWhat would you like the average rating of this '
                                    'universe to be?(450-3100)(default: 1500):',
                                    'i', rangehigh=3100, rangelow=450)
@@ -101,7 +107,7 @@ class Csvcode:
         with open(''.join((path[0], '\\universes\\host.csv')), 'a', newline='') as csvfile:
             spamwriter = csv.writer(csvfile, delimiter=',',
                                     quotechar=',', quoting=csv.QUOTE_MINIMAL)
-            spamwriter.writerow([name, starting, (starting / 5 + 100), self.passhash, k, ''])
+            spamwriter.writerow([name, starting, (starting / 5 + 100), self.passhash, k, self.passsalt,''])
 
         print('{} universe has been created'.format(name))
         return universe
@@ -126,10 +132,10 @@ class Csvcode:
             return rows
 
     def adminrights(self):
-        self.admin = base.cleaninput(('press enter to skip entering a password'
+        self.admin = base.cleaninput(('Press (enter) to skip entering a password'
                                      '\nor enter the admin password for the universe {}:'.format(self.universe)),
                                      'pr', correcthash=self.passhash,
-                                     failhash='e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855')
+                                     salt=self.passsalt)
 
     def getinfo(self, sailorid, resulttype):
         try:
@@ -188,15 +194,16 @@ class Csvcode:
         term = str(term)
         locations = base.multiindex(self.currcolumn[fieldnum], term)
         if len(locations) == 0:
-            print(f'A sailor could not be found with {term} in field number {fieldnum}')
+            print(f'\nA sailor could not be found with {term} in field number {fieldnum}')
             working = True
             while working:
-                inp = base.cleaninput('Please type in a sailor id \nor press enter to make a new sailor '
-                                      '\nor press \'p\' to get a list of all sailor id\'s', 's', charlevel=2)
+                inp = base.cleaninput('\nPlease type in a sailor id \nor press (enter) to make a new sailor '
+                                      '\nor press (p) to get a list of all sailor id\'s:', 's', charlevel=2)
                 if inp == '':
-                    from Hosts import Hosts
+                    from LocalDependencies.Hosts import Hosts
                     host = Hosts()
                     a = host.makenewsailor()
+                    # print(a)
                     if not a[0]:
                         working = True
                     else:
@@ -204,6 +211,7 @@ class Csvcode:
                 elif inp.lower() in self.currcolumn[0]:
                     return inp
                 elif inp.lower().strip() == 'p':
+                    print('')
                     for line in self.currcolumn[0]:
                         print(line)
                 else:
@@ -323,7 +331,7 @@ class Csvcode:
         if not base.multiindex(self.currcolumn[0], sailid):
             self.__addline([sailid, champ, sailno, first, sur, region, nat, starting, starting, starting, starting,
                             (len(self.currcolumn[0])), 1, day.days])
-            return True
+            return True, sailid
         else:
             print('That sailor id already exists')
             print(f'The original sailors information is: {self.getinfo(sailid,"a")}')
