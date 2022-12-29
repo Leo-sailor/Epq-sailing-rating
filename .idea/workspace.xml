@@ -8,9 +8,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="6f254959-93a0-4f8c-a890-d9cf01d0c753" name="Changes" comment="Made the first host function and file&#10;i made the dependencys map &#10;fixed bugs&#10;also made the auto select between sailors feature&#10;made the clean string feature for input processing to avoid repeat code&#10;had to lean about optional arguments for sailor selection&#10;YET TO BE TESTED&#10;LEVEL ONE OF TODO DONE">
+    <list default="true" id="6f254959-93a0-4f8c-a890-d9cf01d0c753" name="Changes" comment="Researched and choose the correct license  for my project&#10;made file names clearer&#10;YET TO BE TESTED&#10;TODO done">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Dependencies/ELO.py" beforeDir="false" afterPath="$PROJECT_DIR$/Dependencies/ELO.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -53,7 +52,7 @@
     <option name="stateVersion" value="1" />
   </component>
   <component name="ProblemsViewState">
-    <option name="selectedTabId" value="CurrentFile" />
+    <option name="selectedTabId" value="ProjectErrors" />
   </component>
   <component name="ProjectId" id="2HzGtmJ9XLLRVxypinBt4pAbzm1" />
   <component name="ProjectLevelVcsManager" settingsEditedManually="true">
@@ -63,22 +62,22 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "RunOnceActivity.OpenProjectViewOnStart": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "TODO_SCOPE": "All Places",
-    "WebServerToolWindowFactoryState": "false",
-    "last_opened_file_path": "C:/Users/LeoRe/PycharmProjects/Epq sailing ranking",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "run.code.analysis.last.selected.profile": "aDefault",
-    "settings.editor.selected.configurable": "reference.settings.project.statistic.project.settings",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;TODO_SCOPE&quot;: &quot;All Places&quot;,
+    &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/LeoRe/PycharmProjects/Epq sailing ranking&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;run.code.analysis.last.selected.profile&quot;: &quot;aDefault&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;reference.settings.project.statistic.project.settings&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
       <recent name="C:\Users\LeoRe\PycharmProjects\Epq sailing ranking" />
@@ -167,7 +166,8 @@
       <workItem from="1672149270308" duration="5407000" />
       <workItem from="1672155923621" duration="367000" />
       <workItem from="1672156322024" duration="10595000" />
-      <workItem from="1672217650432" duration="18477000" />
+      <workItem from="1672217650432" duration="20340000" />
+      <workItem from="1672322985425" duration="434000" />
     </task>
     <task id="LOCAL-00001" summary="here">
       <created>1669378575141</created>
@@ -323,7 +323,14 @@
       <option name="project" value="LOCAL" />
       <updated>1672244435555</updated>
     </task>
-    <option name="localTasksCounter" value="23" />
+    <task id="LOCAL-00023" summary="Researched and choose the correct license  for my project&#10;made file names clearer&#10;YET TO BE TESTED&#10;TODO done">
+      <created>1672249197869</created>
+      <option name="number" value="00023" />
+      <option name="presentableId" value="LOCAL-00023" />
+      <option name="project" value="LOCAL" />
+      <updated>1672249197869</updated>
+    </task>
+    <option name="localTasksCounter" value="24" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -364,7 +371,8 @@
     <MESSAGE value="did a but but lots to do" />
     <MESSAGE value="Made the first host function and file&#10;i made the dependencys map &#10;fixed bugs&#10;also made the auto select between sailors feature&#10;made the clean string feature for input processing to avoid repeat code&#10;had to lean about optional arguments for sailor selection&#10;YET TO BE TESTED&#10;LOTS OF TODO TO GO" />
     <MESSAGE value="Made the first host function and file&#10;i made the dependencys map &#10;fixed bugs&#10;also made the auto select between sailors feature&#10;made the clean string feature for input processing to avoid repeat code&#10;had to lean about optional arguments for sailor selection&#10;YET TO BE TESTED&#10;LEVEL ONE OF TODO DONE" />
-    <option name="LAST_COMMIT_MESSAGE" value="Made the first host function and file&#10;i made the dependencys map &#10;fixed bugs&#10;also made the auto select between sailors feature&#10;made the clean string feature for input processing to avoid repeat code&#10;had to lean about optional arguments for sailor selection&#10;YET TO BE TESTED&#10;LEVEL ONE OF TODO DONE" />
+    <MESSAGE value="Researched and choose the correct license  for my project&#10;made file names clearer&#10;YET TO BE TESTED&#10;TODO done" />
+    <option name="LAST_COMMIT_MESSAGE" value="Researched and choose the correct license  for my project&#10;made file names clearer&#10;YET TO BE TESTED&#10;TODO done" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/Epq_sailing_ranking$main.coverage" NAME="main Coverage Results" MODIFIED="1672164019693" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
