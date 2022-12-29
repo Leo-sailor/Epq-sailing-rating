@@ -17,6 +17,27 @@
             </Attribute>
           </value>
         </entry>
+        <entry key="\universes\demo\demo-1672345448.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="\universes\demo\demo-1672345778.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="\universes\demo\demo-1672346306.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
         <entry key="\universes\demo\host-demo.csv">
           <value>
             <Attribute>
