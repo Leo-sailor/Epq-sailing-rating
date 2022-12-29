@@ -324,7 +324,7 @@ class Csvcode:
             self.currcolumn[column][row] = term
 
     def addsailor(self, sailid, first, sur, champ, sailno, region, nat):
-        starting = (self.elo.deviation - 100 * 5)
+        starting = ((self.elo.deviation - 100) * 5)
         thousand = datetime.date(2000, 1, 1)
         now = datetime.date.today()
         day = now - thousand
