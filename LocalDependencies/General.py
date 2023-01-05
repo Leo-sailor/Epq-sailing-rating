@@ -2,7 +2,8 @@
 import requests
 from countryinfo import CountryInfo
 from hashlib import md5
-from bcrypt import gensalt,hashpw
+from bcrypt import gensalt, hashpw
+
 
 # class which contains basic funtions for the program not directly related to the elo calculations
 class General:
@@ -21,8 +22,11 @@ class General:
                          'SLO', 'RSA', 'ESP', 'SRI', 'SKN', 'LCA', 'SUD', 'SWE', 'SUI', 'TAH', 'TAN', 'THA', 'TLS',
                          'TTO', 'TUN', 'TUR', 'TKS', 'UGA', 'UKR', 'UAE', 'USA', 'URU', 'ISV', 'VAN', 'VEN', 'ZIM'}
 
-    def cleaninput(self, prompt, datatype, rangelow=0, rangehigh=500, charlevel=0, correcthash='', salt=''.encode(),):
-        """char lever 0: all characters allowed
+    def cleaninput(self, prompt: str, datatype: str, rangelow: float = 0, rangehigh: float = 500, charlevel: int = 0,
+                   correcthash='', salt=''.encode(),):
+        """This function takes a prompt and a type and keeps taking an input from the user until it furfills the
+        requirmetns attached
+        char lever 0: all characters allowed
         char level 1: characters good for files allowed
         char level 2: character good for sailor id
         char level 3: character good for names
@@ -121,21 +125,21 @@ class General:
             return inp
 
         elif datatype == 'pn':
-            passwordB = ''
+            passwordb = ''
             same = False
             while not same:
-                passwordA = input(prompt)
-                passwordB = input('Please it again to confirm:')
-                same = passwordB == passwordA
+                passworda = input(prompt)
+                passwordb = input('Please it again to confirm:')
+                same = passwordb == passworda
                 if not same:
                     print('\nThose passwords did not match, Please try again')
-            return self.passwordhash(passwordB)
+            return self.passwordhash(passwordb)
 
         elif datatype == 'pr':
             done = False
             while not done:
                 inp = input(prompt)
-                if self.passwordhash(inp,salt)[0] == correcthash:
+                if self.passwordhash(inp, salt)[0] == correcthash:
                     print('Password is correct')
                     return True
                 elif inp == '':
@@ -147,12 +151,20 @@ class General:
         else:
             return ''
 
-    def generatesailorid(self, nat, sailno, first, surname):
+    def generatesailorid(self, nat: str, sailno: str, first: str, surname: str) -> tuple:
+        """
+        This function generates a sailorid from its components
+        :param nat: 3 letter sting or none
+        :param sailno: 5 number string
+        :param first: string
+        :param surname: string
+        :return: string
+        """
         iden = ''
 
         nat = nat.upper()
 
-        if not(nat in self.validnat):
+        if nat not in self.validnat:
             nat = self.getnat()
         first += '000'
         surname += '000'
@@ -167,6 +179,10 @@ class General:
         return iden.lower(), nat
 
     def getnat(self):
+        """
+        This function gets the current computer's adress and uses that to generate a suggested 3 letter country code
+        :return: 3 letter country code
+        """
         if self.basenat == '':
             ip = requests.get('https://geolocation-db.com/json').json()
             natname = ip['country_name']
@@ -186,7 +202,18 @@ class General:
         else:
             return self.basenat
 
-    def csvlinegenerate(self, sailorid, nat, sailno, first, surname, region, champnum):
+    def csvlinegenerate(self, sailorid: str, nat: str, sailno: str, first: str, surname: str, region: str, champnum: str) -> str:
+        """
+        This function generates a csv line from its components ready to be appended to a csv
+        :param sailorid: sailorid
+        :param nat: 3 letter sting
+        :param sailno: 5 number string
+        :param first: string
+        :param surname: string
+        :param region: 2 letter number string or ''
+        :param champnum: 3 number stinf or ''
+        :return:
+        """
         line = ''
         rank = self.generaterank(1500, [1700, 1600, 1500, 1400])
 
@@ -195,38 +222,56 @@ class General:
         region = region[:3].upper().strip()
         champnum = '000' + str(champnum)
         champnum = champnum[-3:]
-        if not(nat in self.validnat):
+        if nat not in self.validnat:
             nat.upper()
             nat.strip()
 
         parts = [sailorid, champnum, sailno, first, surname, region, nat, 1500, 1500, 1500, 1500, rank, 0]
 
-        for x in range(0, 12):
-            line += str(parts[x])
-            line += ','
+        line = ','.join(parts)
 
-        line += str(parts[12])
-
-        print('{}'.format(line))
+        # print('{}'.format(line))
 
         return line
 
-    def __firstcap(self, word):
+    def __firstcap(self, word: str):
+        """
+        This function takes a string and returns that string with a capitalized first letter
+        :param word:
+        :return: string with capitalized first letter
+        """
         word = word.lower()
         word = word.strip()
         word = word[0].upper() + word[1:]
         return word
 
-    def generaterank(self, rating, ratings):
+    def generaterank(self, rating: float, ratings: list):
+        """
+        This function finds a sailors rank inside a list of ratings sorted or unsorted
+        :param rating: the rating which needs to be ranked
+        :param ratings: a list of ratings of sailors for the ranks to be determined from
+        :return: int of the rank (lowest is 1)
+        """
         ratings = self.__ranksailor(ratings)
         rank = ratings.index(rating) + 1
         return rank
 
-    def __ranksailor(self, ratings):
+    def __ranksailor(self, ratings: list):
+        """
+        This function sorts a list of sailors in from highest to lowest ready to be indexed in the generate rank function
+        :param ratings: a list to be reverse sorted
+        :return: a list of reverse sorted floats
+        """
         ratings.sort(reverse=True)
         return ratings
 
-    def multiindex(self, inlist, term):
+    def multiindex(self, inlist: list, term) -> list:
+        """
+        This function takes a list and finds all occourences of the term inside of that list
+        :param inlist: the list to be searched through
+        :param term: the term to be searched for
+        :return: all indexes of the term inside of that list
+        """
         indexs = []
         start = -1
         end = False
@@ -239,10 +284,10 @@ class General:
         return indexs
 
     def passwordhash(self, password, salt=None):
-        if salt == None:
+        if salt is None:
             salt = gensalt()
-        hashed = hashpw(password.encode(),salt).hex()
-        return hashed,salt.hex()
+        hashed = hashpw(password.encode(), salt).hex()
+        return hashed, salt.hex()
 
     def hashfile(self, file):
         str2hash = open(file).read()
@@ -250,6 +295,11 @@ class General:
         return str(result)
 
     def help(self, amount):
+        """
+        This function prints a help message
+        :param amount: the type of help messages to be printed
+        :return:
+        """
         if amount == 0:
             # List of instructions for the user
             print('1 - view a sailor'
