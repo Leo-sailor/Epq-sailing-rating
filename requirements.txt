@@ -2,7 +2,7 @@
 certifi==2022.12.7
 charset-normalizer==2.1.1
 countryinfo==0.1.2
-future==0.18.2
+future==0.18.3
 idna==3.4
 IP2Location==8.9.0
 mpmath==1.2.1
