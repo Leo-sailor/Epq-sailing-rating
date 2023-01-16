@@ -104,7 +104,7 @@ class Csvcode:
                                    'i', rangehigh=3100, rangelow=450)
         k = base.cleaninput('\nWhat would you like the speed of rating change '
                             'to be?(0.3 - 4)(Recomended: 1):',
-                            'f', rangelow=0.3, rangehigh=4)
+                            'f', rangelow=0.3, rangehigh=4) # random comment
         # generic input collecting
 
         with open(''.join((path[0], '\\universes\\host.csv')), 'a', newline='') as csvfile:  # writes all the inputs to the master host file
