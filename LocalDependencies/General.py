@@ -114,7 +114,7 @@ class General:
             except ValueError:
                 print('\nThat input was not a integer, please enter a whole number')
                 inp = 5000000000
-            while rangelow >= inp >= rangehigh:
+            while inp < rangelow or inp > rangehigh:  # is it wrong
                 print('\nThat value was not accepted, Please Try Again')
 
                 try:
@@ -178,7 +178,7 @@ class General:
         iden += surname[:2]
         return iden.lower(), nat
 
-    def getnat(self):
+    def getnat(self) -> str:
         """
         This function gets the current computer's adress and uses that to generate a suggested 3 letter country code
         :return: 3 letter country code
@@ -214,7 +214,6 @@ class General:
         :param champnum: 3 number stinf or ''
         :return:
         """
-        line = ''
         rank = self.generaterank(1500, [1700, 1600, 1500, 1400])
 
         first = self.__firstcap(first)
@@ -284,12 +283,23 @@ class General:
         return indexs
 
     def passwordhash(self, password, salt=None):
+        """
+        This function will hash a password using the password and a salt and will generate a salt if it is put in without one
+        :param password:
+        :param salt:
+        :return:
+        """
         if salt is None:
             salt = gensalt()
         hashed = hashpw(password.encode(), salt).hex()
         return hashed, salt.hex()
 
     def hashfile(self, file):
+        """
+        This function takes a file adress and opens it as a text file and produces a md5 hash of it
+        :param file: the file address of the file to be hashed
+        :return: the string of the md5 hash
+        """
         str2hash = open(file).read()
         result = md5(str2hash.encode()).hexdigest()
         return str(result)
@@ -298,7 +308,7 @@ class General:
         """
         This function prints a help message
         :param amount: the type of help messages to be printed
-        :return:
+        :return: prints the help
         """
         if amount == 0:
             # List of instructions for the user

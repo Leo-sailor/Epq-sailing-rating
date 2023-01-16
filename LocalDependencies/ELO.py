@@ -1,7 +1,7 @@
 class EloCalculations:
     def __init__(self, deviation, multiplier):
-        self.deviation = int(deviation)
-        self.changemultiplier = multiplier
+        self.deviation = float(deviation)  # sets the rating difference that will deliver a 90% win chance
+        self.changemultiplier = multiplier # sets the k factor multiplier
 
     def calc(self, rat1, rat2, result, k):
         """
