@@ -3,6 +3,7 @@ import requests
 from countryinfo import CountryInfo
 from hashlib import md5
 from bcrypt import gensalt, hashpw
+from datetime import date
 
 
 # class which contains basic funtions for the program not directly related to the elo calculations
@@ -21,6 +22,12 @@ class General:
                          'POL', 'POR', 'PUR', 'QAT', 'ROM', 'RUS', 'SAM', 'SMR', 'SEN', 'SRB', 'SEY', 'SGP', 'SVK',
                          'SLO', 'RSA', 'ESP', 'SRI', 'SKN', 'LCA', 'SUD', 'SWE', 'SUI', 'TAH', 'TAN', 'THA', 'TLS',
                          'TTO', 'TUN', 'TUR', 'TKS', 'UGA', 'UKR', 'UAE', 'USA', 'URU', 'ISV', 'VAN', 'VEN', 'ZIM'}
+
+    def dayssincetwothousand(self) -> int:
+        thousand = date(2000, 1, 1)
+        now = date.today()
+        day = now - thousand
+        return day.days
 
     def cleaninput(self, prompt: str, datatype: str, rangelow: float = 0, rangehigh: float = 500, charlevel: int = 0,
                    correcthash='', salt=''.encode(),):
@@ -151,7 +158,7 @@ class General:
         else:
             return ''
 
-    def generatesailorid(self, nat: str, sailno: str, first: str, surname: str) -> tuple:
+    def generatesailorid(self, nat: str, sailno: str, first: str, surname: str) -> tuple[str, str]:
         """
         This function generates a sailorid from its components
         :param nat: 3 letter sting or none
@@ -214,7 +221,7 @@ class General:
         :param champnum: 3 number stinf or ''
         :return:
         """
-        rank = self.generaterank(1500, [1700, 1600, 1500, 1400])
+        rank = 0
 
         first = self.__firstcap(first)
         surname = self.__firstcap(surname)
@@ -244,25 +251,9 @@ class General:
         word = word[0].upper() + word[1:]
         return word
 
-    def generaterank(self, rating: float, ratings: list):
-        """
-        This function finds a sailors rank inside a list of ratings sorted or unsorted
-        :param rating: the rating which needs to be ranked
-        :param ratings: a list of ratings of sailors for the ranks to be determined from
-        :return: int of the rank (lowest is 1)
-        """
-        ratings = self.__ranksailor(ratings)
-        rank = ratings.index(rating) + 1
-        return rank
-
-    def __ranksailor(self, ratings: list):
-        """
-        This function sorts a list of sailors in from highest to lowest ready to be indexed in the generate rank function
-        :param ratings: a list to be reverse sorted
-        :return: a list of reverse sorted floats
-        """
-        ratings.sort(reverse=True)
-        return ratings
+    def SortOnElement(self, sub_li, element):
+        sub_li.sort(reverse=True, key=lambda x: x[element])
+        return sub_li
 
     def multiindex(self, inlist: list, term) -> list:
         """

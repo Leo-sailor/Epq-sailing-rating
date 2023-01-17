@@ -4,7 +4,6 @@ from time import time
 import os
 from LocalDependencies.ELO import EloCalculations
 from LocalDependencies.General import General
-import datetime
 from binascii import unhexlify
 base = General()
 
@@ -104,7 +103,7 @@ class Csvcode:
                                    'i', rangehigh=3100, rangelow=450)
         k = base.cleaninput('\nWhat would you like the speed of rating change '
                             'to be?(0.3 - 4)(Recomended: 1):',
-                            'f', rangelow=0.3, rangehigh=4) # random comment
+                            'f', rangelow=0.3, rangehigh=4)  # random comment
         # generic input collecting
 
         with open(''.join((path[0], '\\universes\\host.csv')), 'a', newline='') as csvfile:  # writes all the inputs to the master host file
@@ -328,18 +327,19 @@ class Csvcode:
         self.sessiontime = time()
         self.versionnumber += 1
 
-    def __updatevalue(self, term, row, column, bypass=False):
+    def __updatevalue(self, term: float | str | int | bool | bytes, row: str | int, column: int, bypass=False):
+        term = str(term)
+        if type(row) == str:
+            row = self.currcolumn[0].index(row)
         if 1 <= column <= 6 or bypass or column == 13:
             self.currcolumn[column][row] = term
 
-    def addsailor(self, sailid, first, sur, champ, sailno, region, nat):
+    def addsailor(self, sailid, first, sur, champ, sailno, region, nat) -> tuple[bool, str]:
         starting = ((self.elo.deviation - 100) * 5)
-        thousand = datetime.date(2000, 1, 1)
-        now = datetime.date.today()
-        day = now - thousand
+        day = base.dayssincetwothousand()
         if not base.multiindex(self.currcolumn[0], sailid):
             self.__addline([sailid, champ, sailno, first, sur, region, nat, starting, starting, starting, starting,
-                            (len(self.currcolumn[0])), 1, day.days])
+                            (len(self.currcolumn[0])), 0, day])
             return True, sailid
         else:
             print('That sailor id already exists')
@@ -359,7 +359,7 @@ class Csvcode:
                     else:
                         unique = True
                 self.__addline([sailid, champ, sailno, first, sur, region, nat, starting, starting, starting, starting,
-                               (len(self.currcolumn[0])), 1, day.days])
+                               (len(self.currcolumn[0])), 1, day])
                 return True, sailid
             else:
                 return False, ''
@@ -367,4 +367,68 @@ class Csvcode:
     def __addline(self, array):
         for x in range(len(array)):
             self.currcolumn[x].append(str(array[x]))
+        self.autosavefile()
+
+    def addrace(self, wind: int, sailorids: list, postitions: list,):
+        emptylist = [['', 50, 50]]
+
+        for x in range(0, 2):
+            currats = []
+            if x == 0:
+                if wind == 1:
+                    infocode = 'l'
+                    columnnum = 7
+                elif wind == 2:
+                    infocode = 'm'
+                    columnnum = 8
+                else:
+                    infocode = 'h'
+                    columnnum = 9
+            else:
+                infocode = 'o'
+                columnnum = 10
+            for sailor in sailorids:
+                currats.append(self.getinfo(sailor, infocode))
+            newrat = self.elo.cycle(currats, emptylist, postitions)
+            for z in range(0, len(newrat)):
+                self.__updatevalue(newrat[z], sailorids[z], columnnum, bypass=True)
+            self.autosavefile()
+
+    def endevent(self, sailorids: list, daysago: int):
+        eventday = base.dayssincetwothousand() - daysago
+        eventreward = 10
+        totalsailors = len(self.currcolumn[0]) - 1
+        totalcost = eventreward * len(sailorids)
+        individualcost = totalcost / (totalsailors - len(sailorids))
+        if individualcost > 50:
+            individualcost = 50
+        for sailor in sailorids:
+            curr = int(self.getinfo(sailor, 'e'))
+            curr += 1
+            temp = float(self.getinfo(sailor, 'o'))
+            temp += eventreward
+            self.__updatevalue(curr, sailor, 12, bypass=True)
+            self.__updatevalue(eventday, sailor, 13, bypass=True)
+            self.__updatevalue(temp, sailor, 10, bypass=True)
+        for othersailor in self.currcolumn[0]:
+            if othersailor not in sailorids:
+                temp = float(self.getinfo(othersailor, 'o'))
+                temp -= individualcost
+                self.__updatevalue(temp, othersailor, 10, bypass=True)
+        self.autosavefile()
+        self.ranksailors()
+        direc = ''.join((path[0], '\\universes\\', self.universe,'\\events'))  # figures out the path of the new universe
+        if os.path.exists(direc):  # checks whether that universe exists
+            raise Exception('This universe already exists, please try again')
+        else:
+            os.mkdir(direc)
+
+    def ranksailors(self):
+        valid = self.currcolumn
+        for x in range((len(valid)-1), 0, -1):  # goes through backwards
+            if valid[x][12] < 5:
+                valid.pop(x)
+        valid = base.SortOnElement(valid, 10)
+        for x in range(0, len(valid)):
+            self.__updatevalue((x+1), valid[x][0], 11, bypass=True)
         self.autosavefile()
