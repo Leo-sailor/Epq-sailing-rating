@@ -74,7 +74,5 @@ class EloCalculations:
         """
         for y in range(0, len(change)):
             currat[y] += change[y]
-            if currat[y] <= 0:
-                currat[y] = 0.1
             currat[y] = round(currat[y], 1)
         return currat

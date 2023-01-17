@@ -190,6 +190,7 @@ class Csvcode:
 
     def getcolumn(self, columnnum):  # no idea why this is here
         onecolumn = self.currcolumn[columnnum]
+        onecolumn.pop(0)
         return onecolumn
 
     def getsailorid(self, fieldnum, term, *data):
@@ -333,6 +334,8 @@ class Csvcode:
             row = self.currcolumn[0].index(row)
         if 1 <= column <= 6 or bypass or column == 13:
             self.currcolumn[column][row] = term
+        else:
+            raise PermissionError
 
     def addsailor(self, sailid, first, sur, champ, sailno, region, nat) -> tuple[bool, str]:
         starting = ((self.elo.deviation - 100) * 5)
@@ -393,6 +396,23 @@ class Csvcode:
             for z in range(0, len(newrat)):
                 self.__updatevalue(newrat[z], sailorids[z], columnnum, bypass=True)
             self.autosavefile()
+        direc = ''.join((path[0], '\\universes\\', self.universe, '\\events'))  # figures out the path of the new universe
+        if not (os.path.exists(direc)):  # checks whether that universe exists
+            os.mkdir(direc)
+        made = False
+        count = 0
+        while not made:
+            newdirec = ''.join((direc, '\\', str(base.dayssincetwothousand()), '-', str(count), '.csv'))
+            if os.path.exists(newdirec):
+                count += 1
+            else:
+                with open(newdirec, 'w', newline='') as csvfile:
+                    spamwriter = csv.writer(csvfile, delimiter=',',
+                                            quotechar=',', quoting=csv.QUOTE_MINIMAL)
+                    spamwriter.writerow(['sailor-id', 'position'])
+                    for x in range(len(sailorids)):
+                        spamwriter.writerow([sailorids[x], postitions[x]])
+                made = True
 
     def endevent(self, sailorids: list, daysago: int):
         eventday = base.dayssincetwothousand() - daysago
@@ -410,23 +430,29 @@ class Csvcode:
             self.__updatevalue(curr, sailor, 12, bypass=True)
             self.__updatevalue(eventday, sailor, 13, bypass=True)
             self.__updatevalue(temp, sailor, 10, bypass=True)
-        for othersailor in self.currcolumn[0]:
+        for othersailor in self.getcolumn(0):
             if othersailor not in sailorids:
                 temp = float(self.getinfo(othersailor, 'o'))
                 temp -= individualcost
                 self.__updatevalue(temp, othersailor, 10, bypass=True)
+            if float(self.getinfo(othersailor, 'o')) < 0.1:
+                self.__updatevalue(0.1, othersailor, 10, bypass=True)
+            if float(self.getinfo(othersailor, 'h')) < 0.1:
+                self.__updatevalue(0.1, othersailor, 9, bypass=True)
+            if float(self.getinfo(othersailor, 'm')) < 0.1:
+                self.__updatevalue(0.1, othersailor, 8, bypass=True)
+            if float(self.getinfo(othersailor, 'l')) < 0.1:
+                self.__updatevalue(0.1, othersailor, 7, bypass=True)
         self.autosavefile()
         self.ranksailors()
-        direc = ''.join((path[0], '\\universes\\', self.universe,'\\events'))  # figures out the path of the new universe
-        if os.path.exists(direc):  # checks whether that universe exists
-            raise Exception('This universe already exists, please try again')
-        else:
-            os.mkdir(direc)
 
     def ranksailors(self):
         valid = self.currcolumn
         for x in range((len(valid)-1), 0, -1):  # goes through backwards
-            if valid[x][12] < 5:
+            try:
+                if int(valid[x][12]) < 5:
+                    valid.pop(x)
+            except:
                 valid.pop(x)
         valid = base.SortOnElement(valid, 10)
         for x in range(0, len(valid)):

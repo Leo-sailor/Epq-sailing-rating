@@ -1,9 +1,9 @@
 sailorID,champNum,sailNum,Firstname,Surname,region,nat,lightRating,midRating,heavyRating,overallRating,rank,events,lastEventDate
 gb-8153-leoya,317,48153,Leo,Yates,SE,gbr,1450,1675,1675,1600,1,20,8000
 gb-4036-joero,028,44036,Joe,Rowe,MD,gbr,1700,1475,1600,1575,2,18,8391
-gb-7636-ed0sm,544,47636,Ed,Smith,SE,gbr,1400,1450,1600,1475,4,15,8200
-ir-7583-bobdr,431,47583,Bobby,Driscoll,NA,irl,1450,1600,1500,1525,3,2,7995
-gb-8433-alejo,114,48433,Alex,Jones,SW,gbr,1650,1350,1200,1400,6,22,8225
-gb-7676-sebda,091,47676,Seb,Davis,SO,gbr,1350,1450,1425,1425,5,29,8225
-gb-8153-barwi,317,48153,Barker,Williams,SE,gbr,1200,1100,800,1033,7,4,8391
-gb-7863-rorcl,574,47863,Roru,Clow,SE,GBR,-100,-100,-100,-100,9,1,8398
+gb-7636-ed0sm,544,47636,Ed,Smith,SE,gbr,1400,1450,1600,1475,3,15,8200
+ir-7583-bobdr,431,47583,Bobby,Driscoll,NA,irl,1450,1600,1500,1525,0,2,7995
+gb-8433-alejo,114,48433,Alex,Jones,SW,gbr,1650,1350,1200,1400,5,22,8225
+gb-7676-sebda,091,47676,Seb,Davis,SO,gbr,1350,1450,1425,1425,4,29,8225
+gb-8153-barwi,317,48153,Barker,Williams,SE,gbr,1200,1100,800,1033,0,4,8391
+gb-7863-rorcl,574,47863,Roru,Clow,SE,GBR,1500,1500,1500,1500,0,1,8398
