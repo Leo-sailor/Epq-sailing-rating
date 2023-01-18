@@ -43,7 +43,7 @@ class Csvcode:
             universe = self.__makeuniverse()  # checks whether to make a universe and makes it if needed
 
         try:  # used to cath any file opening erros, probable to much inside of the 'try' tho
-            self.folder = ''.join((path[0], '\\universes\\', universe, '\\'))  # TODO comments from here
+            self.folder = ''.join((path[0], '\\universes\\', universe, '\\'))
             self.hostfile = ''.join((self.folder, 'host-', universe, '.csv'))  # TODO make admin rights work
 
             rows = self.opencsv(self.hostfile)  # opens the csv with the [rows][columns]
@@ -146,13 +146,29 @@ class Csvcode:
         except ValueError:
             raise('the sailor id {} could not be found'.format(sailorid))
 
-        resulttype.lower().strip()  # turns the result type sting into the best format
+        findtypeloc = self.getfieldnumber(resulttype)
 
-        result = ''  # pycharm doesnt like me if i dont put this
+        if findtypeloc == -1:
+            result = ' '.join((self.currcolumn[3][row], self.currcolumn[4][row]))  # adds the 2 names with a space in the middle
+        elif findtypeloc == -2:
+            i = []
+            for x in range(14):
+                i.append(self.currcolumn[x][row])
+            result = ', '.join(i)  # bassicly outputs the raw csv line
+        elif findtypeloc > -1:  # pull the data from the row and column decided earlier
+            result = self.currcolumn[findtypeloc][row]
+        else:
+            result = ''
+        return result
 
+    def getcolumn(self, columnnum):  # no idea why this is here
+        onecolumn = self.currcolumn[columnnum]
+        onecolumn.pop(0)
+        return onecolumn
+
+    def getfieldnumber(self, resulttype):
         if resulttype == 'name' or '2':
             findtypeloc = -1  # makes sure the next bit will be bypassed
-            result = ' '.join((self.currcolumn[3][row], self.currcolumn[4][row]))  # adds the 2 names with a space in the middle
         elif resulttype == 'sail number' or '1' or 's':
             findtypeloc = 2  # the column location of the data
         elif resulttype == 'champ number' or '3' or 'championship number' or 'c':
@@ -176,40 +192,40 @@ class Csvcode:
         elif resulttype == 'date of last event' or '13' or 'd':
             findtypeloc = 13
         elif resulttype == '14' or 'a' or 'all':
-            findtypeloc = -1  # bypasses next stage
-            i = []
-            for x in range(14):
-                i.append(self.currcolumn[x][row])
-            result = ', '.join(i)  # bassicly outputs the raw csv line
+            findtypeloc = -2  # bypasses next stage
         else:
             findtypeloc = 0
-
-        if findtypeloc > -1:  # pull the data from the row and column decided earlier
-            result = self.currcolumn[findtypeloc][row]
-        return result
-
-    def getcolumn(self, columnnum):  # no idea why this is here
-        onecolumn = self.currcolumn[columnnum]
-        onecolumn.pop(0)
-        return onecolumn
-
+        return findtypeloc
     def getsailorid(self, fieldnum, term, *data):
 
         term = str(term)  # makes sure the term to be searched for is a string
-
-        locations = base.multiindex(self.currcolumn[fieldnum], term)  # finds all instances of the term in the data
+        if type(fieldnum) == str:
+            fieldnum = self.getfieldnumber(fieldnum)
+        if fieldnum == -1:
+            locationsnew = []
+            newterm = term.split(' ',1)
+            locations = base.multiindex(self.currcolumn[3], newterm[0])
+            if len(locations) == 0:
+                pass
+            else:
+                for location in locations:
+                    if term[1] == self.currcolumn[4][location]:
+                        locationsnew.append(location)
+                locations = locationsnew
+        else:
+            locations = base.multiindex(self.currcolumn[fieldnum], term)  # finds all instances of the term in the data
 
         if len(locations) == 0:  # deals with no sailor being found with that data
             print(f'\nA sailor could not be found with {term} in field number {fieldnum}')
             working = True
             while working:
                 inp = base.cleaninput('\nPlease type in a sailor id \nor press (enter) to make a new sailor'
-                                      '\n or press (t) to try again '  # TODO code the try again mode
+                                      '\n or press (t) to try again ' 
                                       '\nor press (p) to get a list of all sailor id\'s:', 's', charlevel=2)
                 if inp == '':
-                    from LocalDependencies.Hosts import Hosts  # yes this is really bad becuse this is a dependency for the thing i imported so potential for circular reference
-                    host = Hosts()  # initzalises a new object of it
-                    a = host.makenewsailor()  # makes a new sailor
+                    from LocalDependencies.Hosts import hostscript  # yes this is really bad becuse this is a dependency for the thing i imported so potential for circular reference
+                    a = hostscript.makenewsailor()  # makes a new sailor
+                    del hostscript
                     # print(a)  # debug line
                     if not a[0]:  # checks whether the sailor was sucessfully made
                         working = True  # makes the user try again
@@ -222,7 +238,8 @@ class Csvcode:
                     for line in self.currcolumn[0]:
                         print(line)
                 elif inp.lower().strip() == 't':
-                    pass
+                    inp = input('Please enter that term again')
+                    return self.getsailorid(fieldnum, inp, data)
                 else:
                     print('\n That sailor id could not be found')
 
@@ -347,8 +364,8 @@ class Csvcode:
         else:
             print('That sailor id already exists')
             print(f'The original sailors information is: {self.getinfo(sailid,"a")}')
-            print('\n1. Append "-1" to the new sailor id and proceed to add'
-                  '\n2. Abort adding new sailor id')
+            print('\n(1). Append "-1" to the new sailor id and proceed to add'
+                  '\n(2). Abort adding new sailor id')
             inp = base.cleaninput('Which of those options do you want to use:', 'i', rangelow=1, rangehigh=2)
             if inp == 1:
                 sailid += '-1'
@@ -361,8 +378,8 @@ class Csvcode:
                         sailid += count
                     else:
                         unique = True
-                self.__addline([sailid, champ, sailno, first, sur, region, nat, starting, starting, starting, starting,
-                               (len(self.currcolumn[0])), 1, day])
+                    self.__addline([sailid, champ, sailno, first, sur, region, nat, starting, starting, starting, starting,
+                                   (len(self.currcolumn[0])), 1, day])
                 return True, sailid
             else:
                 return False, ''
@@ -452,7 +469,7 @@ class Csvcode:
             try:
                 if int(valid[x][12]) < 5:
                     valid.pop(x)
-            except:
+            except ValueError:
                 valid.pop(x)
         valid = base.SortOnElement(valid, 10)
         for x in range(0, len(valid)):

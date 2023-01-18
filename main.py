@@ -1,5 +1,5 @@
 # imports
-from LocalDependencies.Hosts import Hosts
+from LocalDependencies.Hosts import hostscript
 
 # initzalizations
 host = Hosts()

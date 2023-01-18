@@ -15,15 +15,15 @@ o = overall rating
 r = rank  
 e = registerd events completed  
 d = date of last event  
-z = zone/ region
-t = territory / country
-a = all
+z = zone/ region  
+t = territory / country  
+a = all  
 s = sailor info (not including rating rank or events)
 ## Secrets
 to get around data integrity checks go into the universe's host file and set the hash to 0
 ## Clean input type codes
 i = integar  
 s = string  
-pn = for creating a password
-pr = for getting a password
+pn = for creating a password  
+pr = for getting a password  
 f = float  

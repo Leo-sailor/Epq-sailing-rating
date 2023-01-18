@@ -158,7 +158,7 @@ class General:
         else:
             return ''
 
-    def generatesailorid(self, nat: str, sailno: str, first: str, surname: str) -> tuple[str, str]:
+    def generatesailorid(self, nat: str, sailno: str | int, first: str, surname: str) -> tuple[str, str]:
         """
         This function generates a sailorid from its components
         :param nat: 3 letter sting or none
@@ -184,6 +184,15 @@ class General:
         iden += first[:3]
         iden += surname[:2]
         return iden.lower(), nat
+
+    def ordinal(self, num):
+        SUFFIXES = {1: 'st', 2: 'nd', 3: 'rd'}
+        if 10 <= num % 100 <= 20:
+            suffix = 'th'
+        else:
+            # the second parameter is a default.
+            suffix = SUFFIXES.get(num % 10, 'th')
+        return str(num) + suffix
 
     def getnat(self) -> str:
         """
@@ -257,13 +266,14 @@ class General:
 
     def multiindex(self, inlist: list, term) -> list:
         """
-        This function takes a list and finds all occourences of the term inside of that list
+        This function takes a list and finds all occourences of the term inside of that list,
+        will not return the first one
         :param inlist: the list to be searched through
         :param term: the term to be searched for
         :return: all indexes of the term inside of that list
         """
         indexs = []
-        start = -1
+        start = 0
         end = False
         while not end:
             try:

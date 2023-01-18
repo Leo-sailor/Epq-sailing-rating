@@ -4,7 +4,11 @@ base = General()
 universecsv = Csvcode()
 
 
-class Hosts:
+class hostscript:
+    def __init__(self):
+        self.inpmethod = ''
+        self.inputmethodname = ''
+
     def torun(self):
         index = universecsv.getsailorid(2, '4036')
         print(index)
@@ -33,7 +37,9 @@ class Hosts:
 
         # print('csv line is: {}'.format(base.csvlinegenerate(sailorid[0], nat, sail, first, sur, 'LSE', 317)))
         # print('it should be: gb-8153-leoya,317,48153,Leo,Yates,LSE,gbr,1500,1500,1500,1500,5,0')
-    def makenewsailor(self):
+
+    @staticmethod
+    def makenewsailor():
         print('\n NEW SAILOR WIZZARD')
         first = base.cleaninput('Please enter the sailor\'s first name:', 's', charlevel=3)
         sur = base.cleaninput('Please enter the sailor\'s surname:', 's', charlevel=3)
@@ -55,3 +61,75 @@ class Hosts:
         else:
             region = 'NA'
         return universecsv.addsailor(sailorid, first, sur, champ, sailno, region, nat)
+
+    def addeventlazy(self):
+        pass
+
+    def addeventproper(self):
+        pass
+
+    def __getranking(self):
+        inpmethod = self.__getinputmethod()
+        working = True
+        position = 0
+        positions = []
+        sailorids = []
+        rawinps = []
+        speedprint = []
+        print("Press (d) when you are done\n"
+              "Press (b) if you want to remove the last sailor")
+        while working:
+            if not speedprint == []:
+                print("Position:    {}:    Sailor-id:".format(self.inputmethodname))
+                for line in speedprint:
+                    print(line)
+            position += 1
+            inp = base.cleaninput("Please enter the {} of {} place:".format(self.inputmethodname, base.ordinal(position)),
+                                  's',charlevel=2).lower()
+            if inp == 'd':
+                working = False
+            elif inp == 'b':
+                position -= 1
+                positions.pop(-1)
+                speedprint.pop(-1)
+                sailorids.pop(-1)
+                rawinps.pop(-1)
+            else:
+                universecsv.getsailorid()
+    def __getinputmethod(self):
+        inpmethods = ['c', 'n', 'i', 's']
+        if self.inpmethod in inpmethods:
+            if self.inpmethod == 'c':
+                self.inputmethodname = 'Championship Number'
+            elif self.inpmethod == 'n':
+                self.inputmethodname = 'Name'
+            elif self.inpmethod == 'i':
+                self.inputmethodname = 'Sailor-id'
+            else:
+                self.inputmethodname = 'Sail Number'
+            inp = base.cleaninput((''.join(('Your current selected input method is: ', self.inputmethodname,
+                                           '\nWould you like to change it?\n(1) for yes\n(0) for no:'))),
+                                  'i', rangehigh=2, rangelow=1)
+            if inp == 1:
+                ip = ''
+            else:
+                ip = self.inpmethod
+        else:
+            ip = ''
+        while ip not in inpmethods:
+            ip = base.cleaninput('How would you like to enter sailors information?\n'
+                                 '(c) for Championship Number\n'
+                                 '(i) for Sailor-id\n'
+                                 '(n) for Name\n'
+                                 '(s) for Sail Number:', 's').lower()
+        self.inpmethod = ip
+        return ip
+
+    def addevent(self):
+        inp = base.cleaninput('Please enter (1) for entering event results(less accurate - quicker)\n'
+                              'Please enter (2) for entering individual race results (higher accuracy - slower)',
+                              'i', rangehigh=2, rangelow=1)
+        if inp == 1:
+            self.addeventlazy()
+        else:
+            self.addeventproper()
