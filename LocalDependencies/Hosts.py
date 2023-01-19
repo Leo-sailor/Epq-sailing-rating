@@ -1,5 +1,6 @@
 from LocalDependencies.csvcode import Csvcode
 from LocalDependencies.General import General
+import os
 base = General()
 universecsv = Csvcode()
 
@@ -10,27 +11,15 @@ class HostScript:
         self.inputmethodname = ''
 
     def torun(self):
-        index = universecsv.getsailorid(2, '4036')
-        print(index)
-
+        try:
+            os.system('cls')
+        except:
+            pass
         print('\nWhat would you like to do?')
         base.help(1)
         choice = input()
-
-        # new test caases
-        universecsv.updatesinglevalue(217, 1, 1)
-        universecsv.updatesinglevalue(317, 1, 1)
-
-        # old test cases
-        currentrating = [1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500]
-        sailorid = [5, 3, 2, 4]
-
-        nat = 'gbr'
-        first = 'leo'
-        sur = 'yates'
-        sail = 48153
-
-        sailorid[0] = base.generatesailorid(nat, sail, first, sur)
+        if choice == '1':
+            self.addevent()
 
         # print('nationality: {}\nFist name: {}\nSurname: {}\nsail number {}'.format(nat, first, sur, sail))
         # print('\nsailor id is: {}'.format(sailorid[0]))
@@ -49,14 +38,14 @@ class HostScript:
         sailno = str(base.cleaninput('Please enter the sailor\'s Sail number '
                                      '\n(Please ignore any letters):',
                                      'i', rangehigh=99999))
-        nat = base.cleaninput('Please enter the sailor\'s 3 letter country code:', 's', charlevel=3).upper()[:3]
+        nat = base.cleaninput('\n(enter) for automatic\nPlease enter the sailor\'s 3 letter country code:', 's', charlevel=3).upper()[:3]
         out = base.generatesailorid(nat, sailno, first, sur)
         sailorid = out[0]
         nat = out[1]
         if nat == 'GBR':
             region = base.cleaninput('\n SC - Scotland\n SE - London and South-east\n SW - South-west\n SO - South'
                                      '\n MD - Midlands\n NO - North\n NI - Northen Ireland\n WL - Wales\n EA - East'
-                                     '\nPlease enter the sailor\'s 2 letter RYA region code:',
+                                     '\n NA - Unknown\nPlease enter {} {}\'s\'s 2 letter RYA region code:'.format(first, sur),
                                      's', charlevel=3).upper()[:2]
         else:
             region = 'NA'
@@ -91,16 +80,17 @@ class HostScript:
             universecsv.addrace(3, info[0], info[1])
         universecsv.endevent(info[0], days)
     def addeventproper(self):
-        racenum = base.cleaninput('Please enter the number of races in the event (1-20):', 'i', rangelow=1, rangehigh=20)
-        days = base.cleaninput(f'How many days ago was the final race of the event(0-30):', 'i', rangehigh=30, rangelow=0)
+        racenum = base.cleaninput('\nPlease enter the number of races in the event (1-20):', 'i', rangelow=1, rangehigh=20)
+        days = base.cleaninput(f'\nHow many days ago was the final race of the event(0-500):', 'i', rangehigh=500, rangelow=0)
         allsailors = []
         info = []
         for x in range(racenum):
             racetext = ' '.join(['Race', str(x+1)])
-            wind = base.cleaninput(f'Please enter the wind strength for {racetext}\n'
+            print(f'\n{racetext.upper()} ENTRY WIZZARD')
+            wind = base.cleaninput(f'\nPlease enter the wind strength for {racetext}\n'
                                    f'(1) for light wind - 0-8kts\n'
                                    f'(2) for medium wind - 9-16kts\n'
-                                   f'(3) for strong wind - 17+ kts', 'i', rangehigh=3, rangelow=1)
+                                   f'(3) for strong wind - 17+ kts:', 'i', rangehigh=3, rangelow=1)
             info = self.__getranking(racetext)
             universecsv.addrace(wind, info[0], info[1])
             for item in info[0]:
@@ -116,16 +106,16 @@ class HostScript:
         sailorids = []
         rawinps = []
         speedprint = []
-        print("Press (d) when you are done\n"
-              "Press (b) if you want to remove the last sailor\n"
-              "Please do not include sailors that DNC but all other codes")
+        print("\nPlease do not include sailors that DNC but all other codes"
+              "\nPress (d) when you are done\n"
+              "Press (b) if you want to remove the last sailor\n")
         while working:
             if not speedprint == []:
-                print("Position:    {}:    Sailor-id:".format(self.inputmethodname))
+                print("\nPosition:    {}:    Sailor-id:".format(self.inputmethodname))
                 toprint = '\n'.join(speedprint)
                 print(toprint)
             position += 1
-            inp = base.cleaninput("Please enter the {} of {} place in {}:".format(self.inputmethodname, base.ordinal(position),eventname),
+            inp = base.cleaninput("\nPlease enter the {} of {} place in {}:".format(self.inputmethodname, base.ordinal(position),eventname),
                                   's',charlevel=2).lower()
             if inp == 'd':
                 working = False
@@ -136,15 +126,16 @@ class HostScript:
                 sailorids.pop(-1)
                 rawinps.pop(-1)
             else:
-                inp.trim().lower()
+                inp.lower().strip()
                 sailor = universecsv.getsailorid(self.inpmethod, inp)
                 sailorids.append(sailor)
                 positions.append(position)
                 rawinps.append(inp)
-                speedprint.append(f'{position}     {inp}    {sailor}')
+                speedprint.append(f'{position}             {inp}                {sailor}')
         return (sailorids,positions)
 
     def __getinputmethod(self):
+        print('\n INPUT METHOD SELECTION')
         inpmethods = ['c', 'n', 'i', 's']
         if self.inpmethod in inpmethods:
             if self.inpmethod == 'c':
@@ -155,7 +146,7 @@ class HostScript:
                 self.inputmethodname = 'Sailor-id'
             else:
                 self.inputmethodname = 'Sail Number'
-            inp = base.cleaninput((''.join(('Your current selected input method is: ', self.inputmethodname,
+            inp = base.cleaninput((''.join(('\nYour current selected input method is: ', self.inputmethodname,
                                            '\nWould you like to change it?\n(1) for yes\n(0) for no:'))),
                                   'i', rangehigh=2, rangelow=1)
             if inp == 1:
@@ -165,17 +156,26 @@ class HostScript:
         else:
             ip = ''
         while ip not in inpmethods:
-            ip = base.cleaninput('How would you like to enter sailors information?\n'
+            ip = base.cleaninput('\nHow would you like to enter sailors information?\n'
                                  '(c) for Championship Number\n'
                                  '(i) for Sailor-id\n'
                                  '(n) for Name\n'
                                  '(s) for Sail Number:', 's').lower()
         self.inpmethod = ip
+        if self.inpmethod == 'c':
+            self.inputmethodname = 'Championship Number'
+        elif self.inpmethod == 'n':
+            self.inputmethodname = 'Name'
+        elif self.inpmethod == 'i':
+            self.inputmethodname = 'Sailor-id'
+        else:
+            self.inputmethodname = 'Sail Number'
         return ip
 
     def addevent(self):
-        inp = base.cleaninput('Please enter (1) for entering event results(less accurate - quicker)\n'
-                              'Please enter (2) for entering individual race results (higher accuracy - slower)',
+        print("EVENT ENTRY WIZZARD")
+        inp = base.cleaninput('\n(1) for entering overall event results (less accurate - quicker)\n'
+                              '(2) for entering individual race results (higher accuracy - slower):',
                               'i', rangehigh=2, rangelow=1)
         if inp == 1:
             self.addeventlazy()

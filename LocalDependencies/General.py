@@ -257,8 +257,11 @@ class General:
         """
         word = word.lower()
         word = word.strip()
-        word = word[0].upper() + word[1:]
-        return word
+        try:
+            newword = word[0].upper() + word[1:]
+            return newword
+        except IndexError:
+            return word
 
     def SortOnElement(self, sub_li, element):
         sub_li.sort(reverse=True, key=lambda x: x[element])
@@ -277,7 +280,7 @@ class General:
             if type(inlist[x]) != str:
                 inlist[x] = str(inlist[x])
 
-            inlist[x] = inlist[x].lower().trim()
+            inlist[x] = inlist[x].lower().strip()
 
         indexs = []
         start = 0

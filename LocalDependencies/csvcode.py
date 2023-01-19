@@ -10,7 +10,7 @@ base = General()
 
 class Csvcode:
     def __init__(self):
-        print('\nUniverse selection tool:')
+        print('\n UNIVERSE SELECTION TOOL:')
         print('Avalible universes are:')
 
         column = self.opencsv(''.join((path[0], '\\universes\\', 'host.csv',)), transpose=True)  # imports the universes file and stores it in [column][row]
@@ -135,6 +135,7 @@ class Csvcode:
             return rows
 
     def adminrights(self):
+        print('\n ADMIN RIGHTS')
         self.admin = base.cleaninput(('Press (enter) to skip entering a password'
                                      '\nor enter the admin password for the universe {}:'.format(self.universe)),
                                      'pr', correcthash=self.passhash,
@@ -167,40 +168,44 @@ class Csvcode:
         return onecolumn
 
     def getfieldnumber(self, resulttype):
-        if resulttype == 'name' or '2':
+        resulttype.lower()
+        if resulttype == 'name' or resulttype == 'n':
             findtypeloc = -1  # makes sure the next bit will be bypassed
-        elif resulttype == 'sail number' or '1' or 's':
+        elif resulttype == 'sail number' or resulttype == 's':
             findtypeloc = 2  # the column location of the data
-        elif resulttype == 'champ number' or '3' or 'championship number' or 'c':
+        elif resulttype == 'champ number'  or resulttype == 'championship number' or resulttype == 'c':
             findtypeloc = 1
-        elif resulttype == 'region' or '5' or 'z':
+        elif resulttype == 'region'  or resulttype == 'z':
             findtypeloc = 5
-        elif resulttype == 'nat' or '6' or 'nation' or 'nationality' or 't':
+        elif resulttype == 'nat'  or resulttype == 'nation' or resulttype == 'nationality' or resulttype == 't':
             findtypeloc = 6
-        elif resulttype == 'light wind rating' or '7' or 'l':
+        elif resulttype == 'light wind rating' or resulttype == 'l':
             findtypeloc = 7
-        elif resulttype == 'medium wind rating' or '8' or 'm':
+        elif resulttype == 'medium wind rating' or resulttype == 'm':
             findtypeloc = 8
-        elif resulttype == 'high wind rating' or '9' or 'h':
+        elif resulttype == 'high wind rating' or resulttype == 'h':
             findtypeloc = 9
-        elif resulttype == 'ranking' or '10' or 'r':
+        elif resulttype == 'ranking' or resulttype == 'r':
             findtypeloc = 11
-        elif resulttype == 'overall rating' or '11' or 'o':
+        elif resulttype == 'overall rating' or resulttype == 'o':
             findtypeloc = 10
-        elif resulttype == 'events completed' or '12' or 'e':
+        elif resulttype == 'events completed' or resulttype == 'e':
             findtypeloc = 12
-        elif resulttype == 'date of last event' or '13' or 'd':
+        elif resulttype == 'date of last event' or resulttype == 'd':
             findtypeloc = 13
-        elif resulttype == '14' or 'a' or 'all':
+        elif resulttype == '14' or resulttype == 'a' or resulttype == 'all':
             findtypeloc = -2  # bypasses next stage
         else:
             findtypeloc = 0
         return findtypeloc
+
     def getsailorid(self, fieldnum: str | int, term: str | int, *data) -> str:
 
         term = str(term)  # makes sure the term to be searched for is a string
         if type(fieldnum) == str:
+            # print(fieldnum)
             fieldnum = self.getfieldnumber(fieldnum)
+            # print(fieldnum)
         if fieldnum == -1:
             locationsnew = []
             newterm = term.split(' ',1)
@@ -329,7 +334,7 @@ class Csvcode:
                 for x in range(1, len(hostfileold)):
                     spamwriter.writerow(hostfileold[x])
 
-    def mansavefile(self):
+    def mansavefile(self):  # useful but i dont think is used
         self.autosavefile()
         newfilename = ''.join((self.folder, self.universe, '-', str(self.sessiontime - 1), '.csv'))
         os.rename(''.join((self.folder, self.universe, '-', str(self.sessiontime), '.csv')), newfilename)
@@ -356,10 +361,10 @@ class Csvcode:
 
     def addsailor(self, sailid, first, sur, champ, sailno, region, nat) -> tuple[bool, str]:
         starting = ((self.elo.deviation - 100) * 5)
-        day = base.dayssincetwothousand()
+        day = 0
         if not base.multiindex(self.currcolumn[0], sailid):
             self.__addline([sailid, champ, sailno, first, sur, region, nat, starting, starting, starting, starting,
-                            (len(self.currcolumn[0])), 0, day])
+                            0, 0, day])
             return True, sailid
         else:
             print('That sailor id already exists')
@@ -379,7 +384,7 @@ class Csvcode:
                     else:
                         unique = True
                     self.__addline([sailid, champ, sailno, first, sur, region, nat, starting, starting, starting, starting,
-                                   (len(self.currcolumn[0])), 1, day])
+                                   0, 0, day])
                 return True, sailid
             else:
                 return False, ''
@@ -445,7 +450,8 @@ class Csvcode:
             temp = float(self.getinfo(sailor, 'o'))
             temp += eventreward
             self.__updatevalue(curr, sailor, 12, bypass=True)
-            self.__updatevalue(eventday, sailor, 13, bypass=True)
+            if eventday > int(self.getinfo(sailor,'d')):
+                self.__updatevalue(eventday, sailor, 13, bypass=True)
             self.__updatevalue(temp, sailor, 10, bypass=True)
         for othersailor in self.getcolumn(0):
             if othersailor not in sailorids:
