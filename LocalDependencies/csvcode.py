@@ -120,7 +120,7 @@ class Csvcode:
             x = 0
             rows = []
 
-            for line in spamreader:  # for each line in the csv
+            for line in spamreader:# for each line in the csv
                 rows.append(line[0])  # append the raw string of the line to the output
                 rows[x] = rows[x].split(',')  # takes the raw string and splits itnto an array
                 x += 1
@@ -157,16 +157,11 @@ class Csvcode:
             for x in range(14):
                 i.append(self.currcolumn[x][row])
             result = ', '.join(i)  # bassicly outputs the raw csv line
-        elif findtypeloc > -1:  # pull the data from the row and column decided earlier
+        elif findtypeloc > -1: # pull the data from the row and column decided earlier
             result = self.currcolumn[findtypeloc][row]
         else:
-            result = ''
+            result = '0.1'
         return result
-
-    def getcolumn(self, columnnum):  # no idea why this is here
-        onecolumn = self.currcolumn[columnnum]
-        onecolumn.pop(0)
-        return onecolumn
 
     def getfieldnumber(self, resulttype):
         resulttype.lower()
@@ -315,8 +310,8 @@ class Csvcode:
 
     def autosavefile(self):
         filename = ''.join((self.universe, '-', str(self.sessiontime), '.csv'))
-        file = ''.join((self.folder, filename))
-        with open(file, 'w', newline='') as csvfile:  # saves the filr
+        self.cfile = ''.join((self.folder, filename))
+        with open(self.cfile, 'w', newline='') as csvfile:  # saves the filr
             spamwriter = csv.writer(csvfile, delimiter=',',
                                     quotechar=',', quoting=csv.QUOTE_MINIMAL)
             curr = []
@@ -334,7 +329,7 @@ class Csvcode:
                 spamwriter = csv.writer(csvfile, delimiter=',',
                                         quotechar=',', quoting=csv.QUOTE_MINIMAL)
                 spamwriter.writerow(hostfileold[0])
-                spamwriter.writerow([hostfileold[1][0], hostfileold[1][1], hostfileold[1][2], base.hashfile(file)])
+                spamwriter.writerow([hostfileold[1][0], hostfileold[1][1], hostfileold[1][2], base.hashfile(self.cfile)])
                 for x in range(2, len(hostfileold)):
                     spamwriter.writerow(hostfileold[x])
         else:
@@ -342,7 +337,7 @@ class Csvcode:
                 spamwriter = csv.writer(csvfile, delimiter=',',
                                         quotechar=',', quoting=csv.QUOTE_MINIMAL)
                 spamwriter.writerow(hostfileold[0])
-                spamwriter.writerow([self.versionnumber + 1, self.sessiontime, filename, base.hashfile(file)])
+                spamwriter.writerow([self.versionnumber + 1, self.sessiontime, filename, base.hashfile(self.cfile)])
                 for x in range(1, len(hostfileold)):
                     spamwriter.writerow(hostfileold[x])
 
@@ -468,10 +463,12 @@ class Csvcode:
             if eventday > int(self.getinfo(sailor,'d')):
                 self.__updatevalue(eventday, sailor, 13, bypass=True)
             self.__updatevalue(temp, sailor, 10, bypass=True)
-        for othersailor in self.getcolumn(0):
+        for x in range(1,len(self.currcolumn[0])):
+            othersailor = self.currcolumn[0][x]
             if othersailor not in sailorids:
                 temp = float(self.getinfo(othersailor, 'o'))
                 temp -= individualcost
+                temp = round(temp, 1)
                 self.__updatevalue(temp, othersailor, 10, bypass=True)
             if float(self.getinfo(othersailor, 'o')) < 0.1:
                 self.__updatevalue(0.1, othersailor, 10, bypass=True)
@@ -484,9 +481,9 @@ class Csvcode:
         self.autosavefile()
         self.ranksailors()
 
-    def ranksailors(self):
-        valid = self.currcolumn
-        for x in range((len(valid)-1), 0, -1):  # goes through backwards
+    def ranksailors(self): # got some issues with list dimensions here
+        valid = self.opencsv(self.cfile)
+        for x in range((len(valid)-1), -1, -1):  # goes through backwards
             try:
                 if int(valid[x][12]) < 5:
                     valid.pop(x)

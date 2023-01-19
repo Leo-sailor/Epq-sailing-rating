@@ -12,7 +12,8 @@ class HostScript:
 
     def torun(self):
         try:
-            os.system('cls')
+            #  os.system('cls')
+            pass
         except:
             pass
         print('\nWhat would you like to do?')
