@@ -54,8 +54,8 @@ class EloCalculations:
                 change = self.calc(arat, brat, 1, kfac)
                 ratchange[aloc] += change
                 ratchange[bloc] -= change
-        self.__updaterating(ratchange, currat)
-        return ratchange
+        newratings = self.__updaterating(ratchange, currat)
+        return newratings
 
     def __k(self, sailorid, people, k):
         """
