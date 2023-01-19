@@ -196,7 +196,7 @@ class Csvcode:
         else:
             findtypeloc = 0
         return findtypeloc
-    def getsailorid(self, fieldnum, term, *data):
+    def getsailorid(self, fieldnum: str | int, term: str | int, *data) -> str:
 
         term = str(term)  # makes sure the term to be searched for is a string
         if type(fieldnum) == str:
@@ -223,9 +223,9 @@ class Csvcode:
                                       '\n or press (t) to try again ' 
                                       '\nor press (p) to get a list of all sailor id\'s:', 's', charlevel=2)
                 if inp == '':
-                    from LocalDependencies.Hosts import hostscript  # yes this is really bad becuse this is a dependency for the thing i imported so potential for circular reference
-                    a = hostscript.makenewsailor()  # makes a new sailor
-                    del hostscript
+                    from LocalDependencies.Hosts import HostScript  # yes this is really bad becuse this is a dependency for the thing i imported so potential for circular reference
+                    a = HostScript.makenewsailor()  # makes a new sailor
+                    del HostScript
                     # print(a)  # debug line
                     if not a[0]:  # checks whether the sailor was sucessfully made
                         working = True  # makes the user try again

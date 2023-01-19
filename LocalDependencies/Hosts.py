@@ -4,7 +4,7 @@ base = General()
 universecsv = Csvcode()
 
 
-class hostscript:
+class HostScript:
     def __init__(self):
         self.inpmethod = ''
         self.inputmethodname = ''
@@ -63,12 +63,52 @@ class hostscript:
         return universecsv.addsailor(sailorid, first, sur, champ, sailno, region, nat)
 
     def addeventlazy(self):
-        pass
-
+        inp = 2
+        light = 0
+        med = 0
+        heavy = 0
+        while inp != 1:
+            racenum = base.cleaninput('Please enter the number of races in the event (1-20):', 'i', rangelow=1,
+                                      rangehigh=20)
+            light = base.cleaninput('Please enter the number of light wind (0-8kts) races in the event (0-{}):'.format(racenum), 'i', rangelow=0,
+                                      rangehigh=racenum)
+            racenum -= light
+            med = base.cleaninput('Please enter the number of medium wind (9-16kts) races in the event (0-{}):'.format(racenum), 'i',
+                                   rangelow=0, rangehigh=racenum)
+            racenum -= med
+            heavy = racenum
+            inp = base.cleaninput(f'That means there were\n{light} light wind races\n{med}  medium wind races\n{heavy} strong wind races\n'
+                                  f'press (1) to confirm or press (2) to try again:', 'i',
+                                   rangelow=1, rangehigh=2)
+        days = base.cleaninput(f'How many days ago was the final race of the event(0-30):', 'i', rangehigh=30,
+                               rangelow=0)
+        info = self.__getranking('the event')
+        for x in range(light):
+            universecsv.addrace(1, info[0], info[1])
+        for x in range(med):
+            universecsv.addrace(2, info[0], info[1])
+        for x in range(heavy):
+            universecsv.addrace(3, info[0], info[1])
+        universecsv.endevent(info[0], days)
     def addeventproper(self):
-        pass
+        racenum = base.cleaninput('Please enter the number of races in the event (1-20):', 'i', rangelow=1, rangehigh=20)
+        days = base.cleaninput(f'How many days ago was the final race of the event(0-30):', 'i', rangehigh=30, rangelow=0)
+        allsailors = []
+        info = []
+        for x in range(racenum):
+            racetext = ' '.join(['Race', str(x+1)])
+            wind = base.cleaninput(f'Please enter the wind strength for {racetext}\n'
+                                   f'(1) for light wind - 0-8kts\n'
+                                   f'(2) for medium wind - 9-16kts\n'
+                                   f'(3) for strong wind - 17+ kts', 'i', rangehigh=3, rangelow=1)
+            info = self.__getranking(racetext)
+            universecsv.addrace(wind, info[0], info[1])
+            for item in info[0]:
+                if item not in allsailors:
+                    allsailors.append(item)
+        universecsv.endevent(allsailors, days)
 
-    def __getranking(self):
+    def __getranking(self,eventname: str):
         inpmethod = self.__getinputmethod()
         working = True
         position = 0
@@ -77,14 +117,15 @@ class hostscript:
         rawinps = []
         speedprint = []
         print("Press (d) when you are done\n"
-              "Press (b) if you want to remove the last sailor")
+              "Press (b) if you want to remove the last sailor\n"
+              "Please do not include sailors that DNC but all other codes")
         while working:
             if not speedprint == []:
                 print("Position:    {}:    Sailor-id:".format(self.inputmethodname))
-                for line in speedprint:
-                    print(line)
+                toprint = '\n'.join(speedprint)
+                print(toprint)
             position += 1
-            inp = base.cleaninput("Please enter the {} of {} place:".format(self.inputmethodname, base.ordinal(position)),
+            inp = base.cleaninput("Please enter the {} of {} place in {}:".format(self.inputmethodname, base.ordinal(position),eventname),
                                   's',charlevel=2).lower()
             if inp == 'd':
                 working = False
@@ -95,7 +136,14 @@ class hostscript:
                 sailorids.pop(-1)
                 rawinps.pop(-1)
             else:
-                universecsv.getsailorid()
+                inp.trim().lower()
+                sailor = universecsv.getsailorid(self.inpmethod, inp)
+                sailorids.append(sailor)
+                positions.append(position)
+                rawinps.append(inp)
+                speedprint.append(f'{position}     {inp}    {sailor}')
+        return (sailorids,positions)
+
     def __getinputmethod(self):
         inpmethods = ['c', 'n', 'i', 's']
         if self.inpmethod in inpmethods:

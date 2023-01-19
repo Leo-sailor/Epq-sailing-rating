@@ -264,7 +264,7 @@ class General:
         sub_li.sort(reverse=True, key=lambda x: x[element])
         return sub_li
 
-    def multiindex(self, inlist: list, term) -> list:
+    def multiindex(self, inlist: list, term: int | str) -> list:
         """
         This function takes a list and finds all occourences of the term inside of that list,
         will not return the first one
@@ -272,6 +272,13 @@ class General:
         :param term: the term to be searched for
         :return: all indexes of the term inside of that list
         """
+        term = str(term)
+        for x in range(len(inlist)):
+            if type(inlist[x]) != str:
+                inlist[x] = str(inlist[x])
+
+            inlist[x] = inlist[x].lower().trim()
+
         indexs = []
         start = 0
         end = False
