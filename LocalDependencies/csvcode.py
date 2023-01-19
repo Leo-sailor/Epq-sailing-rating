@@ -139,7 +139,8 @@ class Csvcode:
         self.admin = base.cleaninput(('Press (enter) to skip entering a password'
                                      '\nor enter the admin password for the universe {}:'.format(self.universe)),
                                      'pr', correcthash=self.passhash,
-                                     salt=self.passsalt)  # checks whether the user should have admin eights
+                                     salt=self.passsalt)
+        return self.admin  # checks whether the user should have admin eights
 
     def getinfo(self, sailorid: str, resulttype: str):
         try:
@@ -202,6 +203,8 @@ class Csvcode:
     def getsailorid(self, fieldnum: str | int, term: str | int, *data) -> str:
 
         term = str(term)  # makes sure the term to be searched for is a string
+        while term[0] == '0':
+            term = term[1:]
         if type(fieldnum) == str:
             # print(fieldnum)
             fieldnum = self.getfieldnumber(fieldnum)
@@ -210,11 +213,13 @@ class Csvcode:
             locationsnew = []
             newterm = term.split(' ',1)
             locations = base.multiindex(self.currcolumn[3], newterm[0])
+            print(newterm)
+            print(locations)
             if len(locations) == 0:
                 pass
             else:
                 for location in locations:
-                    if term[1] == self.currcolumn[4][location]:
+                    if newterm[1] == (self.currcolumn[4][location].lower()):
                         locationsnew.append(location)
                 locations = locationsnew
         else:
@@ -225,11 +230,18 @@ class Csvcode:
             working = True
             while working:
                 inp = base.cleaninput('\nPlease type in a sailor id \nor press (enter) to make a new sailor'
-                                      '\n or press (t) to try again ' 
+                                      '\nor press (t) to try again ' 
                                       '\nor press (p) to get a list of all sailor id\'s:', 's', charlevel=2)
                 if inp == '':
                     from LocalDependencies.Hosts import HostScript  # yes this is really bad becuse this is a dependency for the thing i imported so potential for circular reference
-                    a = HostScript.makenewsailor()  # makes a new sailor
+                    if fieldnum == -1:
+                        a = HostScript.makenewsailor(name=term)
+                    elif fieldnum == 1:
+                        a = HostScript.makenewsailor(champ=term)
+                    elif fieldnum == 2:
+                        a = HostScript.makenewsailor(sailno=term)
+                    else:
+                        a = HostScript.makenewsailor()
                     del HostScript
                     # print(a)  # debug line
                     if not a[0]:  # checks whether the sailor was sucessfully made
@@ -243,7 +255,7 @@ class Csvcode:
                     for line in self.currcolumn[0]:
                         print(line)
                 elif inp.lower().strip() == 't':
-                    inp = input('Please enter that term again')
+                    inp = input('\nPlease enter the search term again:')
                     return self.getsailorid(fieldnum, inp, data)
                 else:
                     print('\n That sailor id could not be found')
@@ -259,14 +271,14 @@ class Csvcode:
                 for x in range(0, len(locations)):
                     nameparts = (self.currcolumn[3][locations[x]], self.currcolumn[4][locations[x]])
                     names.append(' '.join(nameparts))
-                print(f'The search term \'{term}\' is ambiguous'
+                print(f'\nThe search term \'{term}\' is ambiguous'
                       '\nBelow is a list of names for that sailor')
                 for x in range(0, len(locations)):
                     string = (str(x+1), ' - ', names[x])
                     print((''.join(string)))
-                finallocation = locations[int(input('Please enter the number of '
-                                                    'the correct sailor you are searching for: ')) - 1]
-                index = int(finallocation[0])
+                finallocation = locations[(base.cleaninput('\nPlease enter the number of the correct sailor you are '
+                                                          'searching for: ', 'i',  1,len(locations))) - 1]
+                index = int(finallocation)
                 sailorid = self.currcolumn[0][index]
                 return sailorid
             else:
@@ -413,7 +425,7 @@ class Csvcode:
                 infocode = 'o'
                 columnnum = 10
             for sailor in sailorids:
-                currats.append(self.getinfo(sailor, infocode))
+                currats.append(float(self.getinfo(sailor, infocode)))
             newrat = self.elo.cycle(currats, emptylist, postitions)
             for z in range(0, len(newrat)):
                 self.__updatevalue(newrat[z], sailorids[z], columnnum, bypass=True)
@@ -441,7 +453,10 @@ class Csvcode:
         eventreward = 10
         totalsailors = len(self.currcolumn[0]) - 1
         totalcost = eventreward * len(sailorids)
-        individualcost = totalcost / (totalsailors - len(sailorids))
+        try:
+            individualcost = totalcost / (totalsailors - len(sailorids))
+        except ZeroDivisionError:
+            individualcost = 10
         if individualcost > 50:
             individualcost = 50
         for sailor in sailorids:

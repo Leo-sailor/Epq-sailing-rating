@@ -1,9 +1,9 @@
 class EloCalculations:
     def __init__(self, deviation, multiplier):
         self.deviation = float(deviation)  # sets the rating difference that will deliver a 90% win chance
-        self.changemultiplier = multiplier  # sets the k factor multiplier
+        self.changemultiplier = float(multiplier)  # sets the k factor multiplier
 
-    def calc(self, rat1, rat2, result, k):
+    def calc(self, rat1: float, rat2: float, result: float, k: float) -> float:
         """
         Calculates the Elo change for sailor 1 (sailor 2's is inverted) after an event based
         off of the ratings going in and their results
@@ -13,20 +13,24 @@ class EloCalculations:
         :param k: the k factor used for caluclation
         :return: sailor 1 rating chnage
         """
-        change = k*(result - self.pred(rat1, rat2))  # **(3))
+        prediction = self.pred(rat1, rat2)
+        # print(type(result))
+        # print(type(prediction))
+        # print(type(k))
+        change = k * (result - prediction)  # **(3))
         return change
 
-    def pred(self, rata, ratb):
+    def pred(self, rata: float, ratb: float) -> float:
         """
         Calculate the predicted result of a mini event
         :param rata: rating of sailor 1
         :param ratb: rating of sailor 2
         :return:
         """
-        prediction = 1/(1 + 10 ** ((ratb - rata) / self.deviation))
+        prediction = 1 / (1 + 10 ** ((ratb - rata) / self.deviation))
         return prediction
 
-    def cycle(self, currat: list[float], kinfluences: list[list[str , int]], position: list[int]):
+    def cycle(self, currat: list[float], kinfluences: list[list[str, int]], position: list[int]):
         """
         note: nth position's must be = to nth currat = nth sailor id (more like a 2d table)
         This function take a list of ratings and their positions and returns thier updated ratings after an event
@@ -48,8 +52,8 @@ class EloCalculations:
                 brat = currat[bloc]
                 kfac = self.__k(kinfluences, sailors, 50)
                 change = self.calc(arat, brat, 1, kfac)
-                ratchange[aloc] = ratchange[aloc] + change
-                ratchange[bloc] = ratchange[bloc] - change
+                ratchange[aloc] += change
+                ratchange[bloc] -= change
         self.__updaterating(ratchange, currat)
         return ratchange
 

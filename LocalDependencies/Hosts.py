@@ -28,16 +28,23 @@ class HostScript:
         # print('it should be: gb-8153-leoya,317,48153,Leo,Yates,LSE,gbr,1500,1500,1500,1500,5,0')
 
     @staticmethod
-    def makenewsailor():
+    def makenewsailor(name=None, sailno=None, champ=None):
         print('\n NEW SAILOR WIZZARD')
-        first = base.cleaninput('Please enter the sailor\'s first name:', 's', charlevel=3)
-        sur = base.cleaninput('Please enter the sailor\'s surname:', 's', charlevel=3)
-        champ = str(base.cleaninput('Please enter the sailor\'s Championship number '
-                                    '\n(Please enter (000) if the sailor does not have a Champ number):',
-                                    'i', rangehigh=999))
-        sailno = str(base.cleaninput('Please enter the sailor\'s Sail number '
-                                     '\n(Please ignore any letters):',
-                                     'i', rangehigh=99999))
+        if name is None:
+            first = base.cleaninput('Please enter the sailor\'s first name:', 's', charlevel=3)
+            sur = base.cleaninput('Please enter the sailor\'s surname:', 's', charlevel=3)
+        else:
+            name = name.split(' ', 1)
+            first = name[0]
+            sur = name[1]
+        if champ is None:
+            champ = str(base.cleaninput('Please enter the sailor\'s Championship number '
+                                        '\n(Please enter (000) if the sailor does not have a Champ number):',
+                                        'i', rangehigh=999))
+        if sailno is None:
+            sailno = str(base.cleaninput('Please enter the sailor\'s Sail number '
+                                         '\n(Please ignore any letters):',
+                                         'i', rangehigh=99999))
         nat = base.cleaninput('\n(enter) for automatic\nPlease enter the sailor\'s 3 letter country code:', 's', charlevel=3).upper()[:3]
         out = base.generatesailorid(nat, sailno, first, sur)
         sailorid = out[0]
@@ -116,7 +123,7 @@ class HostScript:
                 print(toprint)
             position += 1
             inp = base.cleaninput("\nPlease enter the {} of {} place in {}:".format(self.inputmethodname, base.ordinal(position),eventname),
-                                  's',charlevel=2).lower()
+                                  's',charlevel=0).lower()
             if inp == 'd':
                 working = False
             elif inp == 'b':
@@ -128,10 +135,14 @@ class HostScript:
             else:
                 inp.lower().strip()
                 sailor = universecsv.getsailorid(self.inpmethod, inp)
-                sailorids.append(sailor)
-                positions.append(position)
-                rawinps.append(inp)
-                speedprint.append(f'{position}             {inp}                {sailor}')
+                if sailor in sailorids:
+                    print('\nThis sailor has already been entered, please try again')
+                    position -= 1
+                else:
+                    sailorids.append(sailor)
+                    positions.append(position)
+                    rawinps.append(inp)
+                    speedprint.append(f'{position}            {inp}           {sailor}')
         return (sailorids,positions)
 
     def __getinputmethod(self):
@@ -147,8 +158,8 @@ class HostScript:
             else:
                 self.inputmethodname = 'Sail Number'
             inp = base.cleaninput((''.join(('\nYour current selected input method is: ', self.inputmethodname,
-                                           '\nWould you like to change it?\n(1) for yes\n(0) for no:'))),
-                                  'i', rangehigh=2, rangelow=1)
+                                           '\nWould you like to change it?\n(0) for no\n(1) for yes:'))),
+                                  'i', rangehigh=1, rangelow=0)
             if inp == 1:
                 ip = ''
             else:
@@ -173,11 +184,19 @@ class HostScript:
         return ip
 
     def addevent(self):
+        if not universecsv.admin:
+            print('\nTo add an event you need admin rights')
+            if not universecsv.adminrights():
+                print('\nAdd event failed, please try with admin rights')
+                return ''
+
         print("EVENT ENTRY WIZZARD")
         inp = base.cleaninput('\n(1) for entering overall event results (less accurate - quicker)\n'
                               '(2) for entering individual race results (higher accuracy - slower):',
                               'i', rangehigh=2, rangelow=1)
         if inp == 1:
             self.addeventlazy()
-        else:
+        elif inp == 2:
             self.addeventproper()
+        else:
+            pass
