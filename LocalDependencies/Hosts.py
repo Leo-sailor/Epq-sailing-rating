@@ -1,6 +1,5 @@
 from LocalDependencies.csvcode import Csvcode
 from LocalDependencies.General import General
-import os
 base = General()
 universecsv = Csvcode()
 
@@ -11,11 +10,6 @@ class HostScript:
         self.inputmethodname = ''
 
     def torun(self):
-        try:
-            #  os.system('cls')
-            pass
-        except:
-            pass
         print('\nWhat would you like to do?')
         base.help(1)
         choice = input()
@@ -32,12 +26,10 @@ class HostScript:
     def makenewsailor(name=None, sailno=None, champ=None):
         print('\n NEW SAILOR WIZZARD')
         if name is None:
-            first = base.cleaninput('Please enter the sailor\'s first name:', 's', charlevel=3)
-            sur = base.cleaninput('Please enter the sailor\'s surname:', 's', charlevel=3)
-        else:
-            name = name.split(' ', 1)
-            first = name[0]
-            sur = name[1]
+            name = base.cleaninput('Please enter the sailor\'s name:', 's', charlevel=3)
+        name = name.split(' ', 1)
+        first = name[0]
+        sur = name[1]
         if champ is None:
             champ = str(base.cleaninput('Please enter the sailor\'s Championship number '
                                         '\n(Please enter (000) if the sailor does not have a Champ number):',
@@ -68,15 +60,15 @@ class HostScript:
             racenum = base.cleaninput('Please enter the number of races in the event (1-20):', 'i', rangelow=1,
                                       rangehigh=20)
             light = base.cleaninput('Please enter the number of light wind (0-8kts) races in the event (0-{}):'.format(racenum), 'i', rangelow=0,
-                                      rangehigh=racenum)
+                                    rangehigh=racenum)
             racenum -= light
             med = base.cleaninput('Please enter the number of medium wind (9-16kts) races in the event (0-{}):'.format(racenum), 'i',
-                                   rangelow=0, rangehigh=racenum)
+                                  rangelow=0, rangehigh=racenum)
             racenum -= med
             heavy = racenum
             inp = base.cleaninput(f'That means there were\n{light} light wind races\n{med}  medium wind races\n{heavy} strong wind races\n'
                                   f'press (1) to confirm or press (2) to try again:', 'i',
-                                   rangelow=1, rangehigh=2)
+                                  rangelow=1, rangehigh=2)
         days = base.cleaninput(f'How many days ago was the final race of the event(0-30):', 'i', rangehigh=30,
                                rangelow=0)
         info = self.__getranking('the event')
@@ -87,11 +79,11 @@ class HostScript:
         for x in range(heavy):
             universecsv.addrace(3, info[0], info[1])
         universecsv.endevent(info[0], days)
+
     def addeventproper(self):
         racenum = base.cleaninput('\nPlease enter the number of races in the event (1-20):', 'i', rangelow=1, rangehigh=20)
         days = base.cleaninput(f'\nHow many days ago was the final race of the event(0-500):', 'i', rangehigh=500, rangelow=0)
         allsailors = []
-        info = []
         for x in range(racenum):
             racetext = ' '.join(['Race', str(x+1)])
             print(f'\n{racetext.upper()} ENTRY WIZZARD')
@@ -106,8 +98,8 @@ class HostScript:
                     allsailors.append(item)
         universecsv.endevent(allsailors, days)
 
-    def __getranking(self,eventname: str):
-        inpmethod = self.__getinputmethod()
+    def __getranking(self, eventname: str):
+        self.__getinputmethod()
         working = True
         position = 0
         positions = []
@@ -123,8 +115,8 @@ class HostScript:
                 toprint = '\n'.join(speedprint)
                 print(toprint)
             position += 1
-            inp = base.cleaninput("\nPlease enter the {} of {} place in {}:".format(self.inputmethodname, base.ordinal(position),eventname),
-                                  's',charlevel=0).lower()
+            inp = base.cleaninput("\nPlease enter the {} of {} place in {}:".format(self.inputmethodname, base.ordinal(position), eventname),
+                                  's', charlevel=0).lower()
             if inp == 'd':
                 working = False
             elif inp == 'b':
@@ -144,7 +136,7 @@ class HostScript:
                     positions.append(position)
                     rawinps.append(inp)
                     speedprint.append(f'{position}            {inp}           {sailor}')
-        return (sailorids,positions)
+        return sailorids, positions
 
     def __getinputmethod(self):
         print('\n INPUT METHOD SELECTION')

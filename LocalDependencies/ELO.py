@@ -1,3 +1,6 @@
+from numpy import sqrt
+
+
 class EloCalculations:
     def __init__(self, deviation, multiplier):
         self.deviation = float(deviation)  # sets the rating difference that will deliver a 90% win chance
@@ -30,12 +33,12 @@ class EloCalculations:
         prediction = 1 / (1 + 10 ** ((ratb - rata) / self.deviation))
         return prediction
 
-    def cycle(self, currat: list[float], kinfluences: list[list[str, int]], position: list[int]):
+    def cycle(self, currat: list[float], events: list[int], position: list[int]):
         """
         note: nth position's must be = to nth currat = nth sailor id (more like a 2d table)
         This function take a list of ratings and their positions and returns thier updated ratings after an event
         :param currat:
-        :param kinfluences:
+        :param events:
         :param position:
         :return:
         """
@@ -50,22 +53,24 @@ class EloCalculations:
                 bloc = position.index(y + 1)
                 arat = currat[aloc]
                 brat = currat[bloc]
-                kfac = self.__k(kinfluences, sailors, 50)
+                kfac = self.__k(events[x], events[y], 30, sailors)
                 change = self.calc(arat, brat, 1, kfac)
                 ratchange[aloc] += change
                 ratchange[bloc] -= change
         newratings = self.__updaterating(ratchange, currat)
         return newratings
 
-    def __k(self, sailorid, people, k):
+    def __k(self, eventsailor1: int, eventsailor2: int, kbase: int, totalsailor: int):
         """
         A function which returns the correct k factor for the sailors involved in the comparison
-        :param sailorid: list of the 2 sailors IDs of the sailors in the mnin event
-        :param people:
-        :param k:
+        :param eventsailor1
+        :param eventsailor2
+        :param totalsailor
+        :param kbase:
         :return:
         """
-        k = k * self.changemultiplier
+        k = (((15 / (eventsailor1 + 1)) + (15 / (eventsailor2 + 1))) * (1/(sqrt(totalsailor)))) + kbase
+        k *= self.changemultiplier
         # will make this intresting later when i 'realise' its crap
         return k
 

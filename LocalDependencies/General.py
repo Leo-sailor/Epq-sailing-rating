@@ -186,12 +186,12 @@ class General:
         return iden.lower(), nat
 
     def ordinal(self, num):
-        SUFFIXES = {1: 'st', 2: 'nd', 3: 'rd'}
+        suffixes = {1: 'st', 2: 'nd', 3: 'rd'}
         if 10 <= num % 100 <= 20:
             suffix = 'th'
         else:
             # the second parameter is a default.
-            suffix = SUFFIXES.get(num % 10, 'th')
+            suffix = suffixes.get(num % 10, 'th')
         return str(num) + suffix
 
     def getnat(self) -> str:
