@@ -1,5 +1,6 @@
-from LocalDependencies.csvcode import Csvcode
+from LocalDependencies.Main_core import Csvcode
 from LocalDependencies.General import General
+from LocalDependencies.Csv_custom import Csvnew
 base = General()
 universecsv = Csvcode()
 
@@ -10,11 +11,14 @@ class HostScript:
         self.inputmethodname = ''
 
     def torun(self):
-        print('\nWhat would you like to do?')
         base.help(1)
-        choice = input()
-        if choice == '1':
-            self.addevent()
+        choice = base.cleaninput('\nWhat would you like to do?','i',rangelow=1,rangehigh=2)
+        match choice:
+            case 1:
+                self.addevent()
+            case 2:
+                self.makenewsailor()
+
 
         # print('nationality: {}\nFist name: {}\nSurname: {}\nsail number {}'.format(nat, first, sur, sail))
         # print('\nsailor id is: {}'.format(sailorid[0]))
@@ -73,11 +77,11 @@ class HostScript:
                                rangelow=0)
         info = self.__getranking('the event')
         for x in range(light):
-            universecsv.addrace(1, info[0], info[1])
+            universecsv.addrace(1, info[0], info[1], days)
         for x in range(med):
-            universecsv.addrace(2, info[0], info[1])
+            universecsv.addrace(2, info[0], info[1], days)
         for x in range(heavy):
-            universecsv.addrace(3, info[0], info[1])
+            universecsv.addrace(3, info[0], info[1], days)
         universecsv.endevent(info[0], days)
 
     def addeventproper(self):
@@ -92,11 +96,38 @@ class HostScript:
                                    f'(2) for medium wind - 9-16kts\n'
                                    f'(3) for strong wind - 17+ kts:', 'i', rangehigh=3, rangelow=1)
             info = self.__getranking(racetext)
-            universecsv.addrace(wind, info[0], info[1])
+            universecsv.addrace(wind, info[0], info[1], days)
             for item in info[0]:
                 if item not in allsailors:
                     allsailors.append(item)
         universecsv.endevent(allsailors, days)
+
+    def addeventcsv(self):
+        racenum = base.cleaninput('\nPlease enter the number of races in the event (1-20):', 'i', rangelow=1,
+                                  rangehigh=20)
+        days = base.cleaninput(f'\nHow many days ago was the final race of the event(0-500):', 'i', rangehigh=500,
+                               rangelow=0)
+        allsailors = []
+        oldsailorids = []
+        currsailorids = []
+        wind = 0
+        currfile = None
+        for x in range(racenum):
+            racetext = ' '.join(['Race', str(x + 1)])
+            print(f'\n{racetext.upper()} ENTRY WIZZARD')
+            while currsailorids == oldsailorids:
+                fileloc = base.cleaninput(f'Please enter the full file location of the file for {racetext}:','s',charlevel=0)
+                currfile = Csvnew(fileloc)
+                wind = int(currfile.getcell(0, 1))
+                currsailorids = currfile.getcolumn(0, [0, 1])
+                if currsailorids == oldsailorids:
+                    print('That race result was the same as the last one, please enter a new file')
+            positions = currfile.getcolumn(1, [0, 1])
+            for item in currsailorids:
+                if item not in allsailors:
+                    allsailors.append(item)
+            universecsv.addrace(wind, currsailorids, positions, days)
+            oldsailorids = currsailorids
 
     def __getranking(self, eventname: str):
         self.__getinputmethod()
@@ -185,11 +216,14 @@ class HostScript:
 
         print("EVENT ENTRY WIZZARD")
         inp = base.cleaninput('\n(1) for entering overall event results (less accurate - quicker)\n'
-                              '(2) for entering individual race results (higher accuracy - slower):',
+                              '(2) for entering individual race results (higher accuracy - slower)\n'
+                              '(3) for importing previous race (needs previously entered csv):',
                               'i', rangehigh=2, rangelow=1)
         if inp == 1:
             self.addeventlazy()
         elif inp == 2:
             self.addeventproper()
+        elif inp == 3:
+            self.addeventcsv()
         else:
             pass

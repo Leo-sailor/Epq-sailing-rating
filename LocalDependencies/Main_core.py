@@ -31,29 +31,29 @@ class Csvcode:
             host = Csvnew(''.join((path[0], '\\universes\\', 'host.csv',)))  # if a new universe has been created, reopen the hist csv file
         # print(column) #--debuging line
 
-        universeloc = host.getrownum(self.universe,0)  # gets the location of the universe inside of the host file
-        self.passhash = host.getcell(universeloc,3)  # saves the universe password hash to the object
-        self.passsalt = unhexlify(host.getcell(universeloc,5))  # saves the universe password salt to the object
-        self.elo = EloCalculations(host.getcell(universeloc,2), host.getcell(universeloc,4))  # initzallises the elo object with the universes numbers
-        self.deviation = host.getcell(universeloc,1)  # saves the deviation
+        universeloc = host.getrownum(self.universe, 0)  # gets the location of the universe inside of the host file
+        self.passhash = host.getcell(universeloc, 3)  # saves the universe password hash to the object
+        self.passsalt = unhexlify(host.getcell(universeloc, 5))  # saves the universe password salt to the object
+        self.elo = EloCalculations(host.getcell(universeloc, 2), host.getcell(universeloc, 4))  # initzallises the elo object with the universes numbers
+        self.deviation = host.getcell(universeloc, 1)  # saves the deviation
 
         self.adminrights()  # sees whether the user should have admin rights
 
-    def __linkuniverse(self, universe):
-        if universe.upper() == 'N':
-            universe = self.__makeuniverse()  # checks whether to make a universe and makes it if needed
+    def __linkuniverse(self, universename):
+        if universename.upper() == 'N':
+            universename = self.__makeuniverse()  # checks whether to make a universe and makes it if needed
 
         try:  # used to cath any file opening erros, probable to much inside of the 'try' tho
-            self.folder = ''.join((path[0], '\\universes\\', universe, '\\'))
-            self.hostfile = ''.join((self.folder, 'host-', universe, '.csv'))  # TODO make admin rights work
+            self.folder = ''.join((path[0], '\\universes\\', universename, '\\'))
+            self.hostfile = ''.join((self.folder, 'host-', universename, '.csv'))  # TODO make admin rights work
 
             universehost = Csvnew(self.hostfile)  # opens the csv with the [rows][columns]
 
             self.basefile = ''.join((self.folder, universehost.getcell(1, 2)))  # sets the objects current file location
             self.versionnumber = int(universehost.getcell(1, 0))  # sets the version number for the current open file
             mostrecentdatafilehash = universehost.getcell(1, 3)  # gets the hash of the most current file
-            print('{} universe opened and running\n'.format(universe))
-            self.file = Csvnew(self.basefile)  # imports the current file
+            print('{} universe opened and running\n'.format(universename))
+            self.file = Csvnew(self.basefile, universe=universename)  # imports the current file
             # print(self.basefile) # debugging line
             # print(mostrecentdatafilehash) # debugging line
             # print(base.hashfile(self.basefile)) # debugging line
@@ -64,7 +64,7 @@ class Csvcode:
             raise 'There was a error loading the file, the program will now exit '
         # filters through the current file and ignores empty lines
         # self.cleanup - this will go through universe host and look for identical md5 hash and if there is, delete the older one TODO make this
-        return universe
+        return universename
 
     def __makeuniverse(self):
         name = base.cleaninput('\nPlease enter your new ranking universe name:', 's', charlevel=1)  # gets the universe name
@@ -123,21 +123,21 @@ class Csvcode:
 
     def getinfo(self, sailorid: str, resulttype: str):
         try:
-            row = self.file.getrownum(sailorid,0) # figures out what row the sailor id it
+            row = self.file.getrownum(sailorid, 0)  # figures out what row the sailor id it
         except ValueError:
             raise('the sailor id {} could not be found'.format(sailorid))
 
         findtypeloc = self.getfieldnumber(resulttype)
 
         if findtypeloc == -1:
-            result = ' '.join((self.file.getcell(row,3), self.file.getcell(row,4)))  # adds the 2 names with a space in the middle
+            result = ' '.join((self.file.getcell(row, 3), self.file.getcell(row, 4)))  # adds the 2 names with a space in the middle
         elif findtypeloc == -2:
             i = []
             for x in range(14):
-                i.append(self.file.getcell(row,x))
+                i.append(self.file.getcell(row, x))
             result = ', '.join(i)  # bassicly outputs the raw csv line
         elif findtypeloc > -1:  # pull the data from the row and column decided earlier
-            result = self.file.getcell(row,findtypeloc)
+            result = self.file.getcell(row, findtypeloc)
         else:
             result = '0.1'
         return result
@@ -193,7 +193,7 @@ class Csvcode:
                 pass
             else:
                 for location in locations:
-                    if newterm[1] == (self.file.getcell(location,4)):
+                    if newterm[1] == (self.file.getcell(location, 4)):
                         locationsnew.append(location)
                 locations = locationsnew
         else:
@@ -237,13 +237,13 @@ class Csvcode:
             raise 'That term could not be found'
         elif len(locations) == 1:  # if the sailor could be found
             index = int(str(locations[0]))
-            sailorid = self.file.getcell(index,0)
+            sailorid = self.file.getcell(index, 0)
             return sailorid
         else:  # if  multiple sailors are found
             if data == ():
                 names = []
                 for x in range(0, len(locations)):
-                    nameparts = (self.file.getcell(locations[x],3), self.file.getcell(locations[x],4))
+                    nameparts = (self.file.getcell(locations[x], 3), self.file.getcell(locations[x], 4))
                     names.append(' '.join(nameparts))
                 print(f'\nThe search term \'{term}\' is ambiguous'
                       '\nBelow is a list of names for that sailor')
@@ -253,7 +253,7 @@ class Csvcode:
                 finallocation = locations[(base.cleaninput('\nPlease enter the number of the correct sailor you are '
                                                            'searching for: ', 'i',  1, len(locations))) - 1]
                 index = int(finallocation)
-                sailorid = self.file.getcell(index,0)
+                sailorid = self.file.getcell(index, 0)
                 return sailorid
             else:
                 pointstracker = []
@@ -264,7 +264,7 @@ class Csvcode:
 
                 for x in range(sailors):
                     pointstracker.append(0.0)
-                    sailorids.append(self.file.getcell(locations[x],0))
+                    sailorids.append(self.file.getcell(locations[x], 0))
                     dates = self.getinfo(sailorids[x], 'd')
                     sailorinfos.append(self.getinfo(sailorids[x], 'a'))
 
@@ -277,38 +277,15 @@ class Csvcode:
                         if item in sailorinfos[x]:
                             pointstracker[x] += 1
                 index = locations[pointstracker.index(max(pointstracker))]
-                sailorid = self.file.getcell(index,0)
+                sailorid = self.file.getcell(index, 0)
                 return sailorid
 
-    def updatesinglevalue(self, term, row, column, bypass=False):
-        if 1 <= column <= 6 or bypass or column == 13:
-            self.file.updatevalue(term,row,column)
-            self.autosavefile()
-        else:
-            print('this change is not allowed please try again')
-
-    def mansavefile(self):  # useful but i dont think is used
-        self.autosavefile()
-        newfilename = ''.join((self.folder, self.universe, '-', str(self.sessiontime - 1), '.csv'))
-        os.rename(''.join((self.folder, self.universe, '-', str(self.sessiontime), '.csv')), newfilename)
-
-        hostfileold = self.opencsv(self.hostfile)
-        with open(self.hostfile, 'w', newline='') as csvfile:
-            spamwriter = csv.writer(csvfile, delimiter=',',
-                                    quotechar=',', quoting=csv.QUOTE_MINIMAL)
-            spamwriter.writerow(hostfileold[0])
-            spamwriter.writerow([hostfileold[1][0], hostfileold[1][1], newfilename, hostfileold[1][3]])
-            for x in range(2, len(hostfileold)):
-                spamwriter.writerow(hostfileold[x])
-        self.sessiontime = time()
-        self.versionnumber += 1
-
-    def addsailor(self, sailid, first, sur, champ, sailno, region, nat) -> tuple[bool, str]:
+    def addsailor(self, sailid: str, first: str, sur: str, champ, sailno, region:str, nat: str) -> tuple[bool, str]:
         starting = ((self.elo.deviation - 100) * 5)
         day = 0
         if not base.multiindex(self.file.getcolumn(0), sailid):
-            self.file.addline([sailid, champ, sailno, first, sur, region, nat, starting, starting, starting, starting,
-                            0, 0, day])
+            self.file.addrow([sailid, champ, sailno, first, sur, region, nat, starting, starting, starting, starting,
+                              0, 0, day])
             return True, sailid
         else:
             print('That sailor id already exists')
@@ -327,13 +304,13 @@ class Csvcode:
                         sailid += count
                     else:
                         unique = True
-                    self.file.addline([sailid, champ, sailno, first, sur, region, nat, starting, starting, starting, starting,
-                                   0, 0, day])
+                    self.file.addrow([sailid, champ, sailno, first, sur, region, nat, starting, starting, starting, starting,
+                                      0, 0, day])
                 return True, sailid
             else:
                 return False, ''
 
-    def addrace(self, wind: int, sailorids: list, postitions: list,):
+    def addrace(self, wind: int, sailorids: list, postitions: list, days: int):
         for x in range(0, 2):
             currats = []
             currevents = []
@@ -356,20 +333,21 @@ class Csvcode:
             newrat = self.elo.cycle(currats, currevents, postitions)
             for z in range(0, len(newrat)):
                 self.file.updatevalue(newrat[z], sailorids[z], columnnum, bypass=True)
-            self.autosavefile()
+            self.file.autosavefile()
         direc = ''.join((path[0], '\\universes\\', self.universe, '\\events'))  # figures out the path of the new universe
         if not (os.path.exists(direc)):  # checks whether that universe exists
             os.mkdir(direc)
         made = False
         count = 0
         while not made:
-            newdirec = ''.join((direc, '\\', str(base.dayssincetwothousand()), '-', str(count), '.csv'))
+            newdirec = ''.join((direc, '\\', str(base.dayssincetwothousand()-days), '-', str(count), '.csv'))
             if os.path.exists(newdirec):
                 count += 1
             else:
                 with open(newdirec, 'w', newline='') as csvfile:
                     spamwriter = csv.writer(csvfile, delimiter=',',
                                             quotechar=',', quoting=csv.QUOTE_MINIMAL)
+                    spamwriter.writerow(['wind', str(wind)])
                     spamwriter.writerow(['sailor-id', 'position'])
                     for x in range(len(sailorids)):
                         spamwriter.writerow([sailorids[x], postitions[x]])
@@ -396,7 +374,7 @@ class Csvcode:
                 self.file.updatevalue(eventday, sailor, 13, bypass=True)
             self.file.updatevalue(temp, sailor, 10, bypass=True)
         for x in range(1, len(self.file.getcolumn(0))):
-            othersailor = self.file.getcell(x,0)
+            othersailor = self.file.getcell(x, 0)
             if othersailor not in sailorids:
                 temp = float(self.getinfo(othersailor, 'o'))
                 temp -= individualcost
@@ -411,5 +389,5 @@ class Csvcode:
             if float(self.getinfo(othersailor, 'l')) < 0.1:
                 self.file.updatevalue(0.1, othersailor, 7, bypass=True)
         self.file.autosavefile()
-        self.file.sortoncol(10, reverse=True, targetcol=11, excluderows=0, greaterthan=[12,5])
+        self.file.sortoncol(10, reverse=True, targetcol=11, excluderows=0, greaterthan=[12, 5])
         self.file.autosavefile()

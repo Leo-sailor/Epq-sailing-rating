@@ -11,9 +11,9 @@ class Csvnew:
         self.sessionstart = int(time())
         if universe is not None:
             folder = path[0]
-            self.hostfile = ''.join((folder, 'host-', universe, '.csv'))
+            self.hostfile = ''.join((folder, '\\universes\\', universe, '\\host-', universe, '.csv'))
             self.hostfileold = Csvnew(self.hostfile)
-            self.prevversionnum = self.hostfileold.getcell(1, 0)
+            self.prevversionnum = int(self.hostfileold.getcell(1, 0))
             self.universe = universe
         if protectedcols is None:
             protectedcols = []
@@ -59,7 +59,11 @@ class Csvnew:
         else:
             raise TypeError
 
-    def getcell(self, row, column):
+    def updatevaluesingle(self, term, row: int, column:bool, bypass: bool=False):
+        self.updatevalue(term, row, column, 0, bypass)
+        self.autosavefile()
+
+    def getcell(self, row: int, column: int):
         return self.rowfirst[row][column]
 
     def protectrows(self, rows: int | list[int]):
@@ -106,7 +110,7 @@ class Csvnew:
             for x in range(0, len(valid)):
                 self.updatevalue((x + 1), valid[x][0], 11, bypass=True)
         valid.sort(reverse=reverse, key=lambda y: y[column])
-        for x in range(len(new), -1, -1):
+        for x in range((len(new) - 1), -1, -1):
             newnew.append(new[x])
         newnew.append(valid)
         if ret:
@@ -127,6 +131,8 @@ class Csvnew:
             print(toprint)
 
     def getcolumn(self, column, excudedrows: int | list[int] = None):
+        if excudedrows is None:
+            excudedrows = []
         excudedrows.sort(reverse=True)
         toprint = self.columnfirst[column][:]
         for index in excudedrows:
@@ -139,14 +145,21 @@ class Csvnew:
     def numcolumns(self):
         return len(self.columnfirst)
 
-    def addline(self, array: list):
+    def addrow(self, array: list):
         for x in range(len(array)):
             self.columnfirst[x].append(str(array[x]))
+        self.rowfirst.append(array)
+        self.autosavefile()
+
+    def addcol(self, array: list):
+        for x in range(len(array)):
+            self.rowfirst[x].append(str(array[x]))
+        self.columnfirst.append(array)
         self.autosavefile()
 
     def autosavefile(self):
         filename = ''.join((self.universe, '-', str(self.sessionstart), '.csv'))
-        folder = path[0]
+        folder = ''.join((path[0], '\\universes\\', self.universe, '\\'))
         cfile = ''.join((folder, filename))
         with open(cfile, 'w', newline='') as csvfile:  # saves the filr
             spamwriter = csv.writer(csvfile, delimiter=',',
@@ -154,7 +167,7 @@ class Csvnew:
             # print(len(self.currcolumn))
             for x in range(0, len(self.columnfirst[0])):  # number of rows # assembls the row
                 spamwriter.writerow(self.rowfirst[x])  # writes the row  # clears the row for the next one
-        if self.hostfileold.getcell(0,1) == (self.prevversionnum + 1):  # checks how to record the temporry save
+        if self.hostfileold.getcell(0, 1) == (self.prevversionnum + 1):  # checks how to record the temporry save
             with open(self.hostfile, 'w', newline='') as csvfile:  # works as if its a second or more auto save
                 spamwriter = csv.writer(csvfile, delimiter=',',
                                         quotechar=',', quoting=csv.QUOTE_MINIMAL)
@@ -173,15 +186,23 @@ class Csvnew:
 
     def mansavefile(self):  # useful but i dont think is used
         self.autosavefile()
-        newfilename = ''.join((path[0], self.universe, '-', str(self.sessionstart - 1), '.csv'))
-        os.rename(''.join((path[0], self.universe, '-', str(self.sessionstart), '.csv')), newfilename)
+        newfilename = ''.join((path[0], '\\universes\\', self.universe, '\\', self.universe, '-', str(self.sessionstart - 1), '.csv'))
+        os.rename(''.join((path[0], '\\universes\\', self.universe, '\\', self.universe, '-', str(self.sessionstart), '.csv')), newfilename)
 
         with open(self.hostfile, 'w', newline='') as csvfile:
             spamwriter = csv.writer(csvfile, delimiter=',',
                                     quotechar=',', quoting=csv.QUOTE_MINIMAL)
             spamwriter.writerow(self.hostfileold.getrow(0))
-            spamwriter.writerow([self.hostfileold.getcell(0,1), self.hostfileold.getcell(1, 1), newfilename, self.hostfileold.getcell(3, 1)])
+            spamwriter.writerow([self.hostfileold.getcell(0, 1), self.hostfileold.getcell(1, 1), newfilename, self.hostfileold.getcell(3, 1)])
             for x in range(2, len(self.hostfileold.rowfirst)):
                 spamwriter.writerow(self.hostfileold.getrow(x))
         self.sessionstart = int(time())
         self.prevversionnum += 1
+
+    def writefile(self):
+        with open(self.filelocation, 'w', newline='') as csvfile:  # saves the filr
+            spamwriter = csv.writer(csvfile, delimiter=',',
+                                    quotechar=',', quoting=csv.QUOTE_MINIMAL)
+            # print(len(self.currcolumn))
+            for x in range(0, len(self.columnfirst[0])):  # number of rows # assembls the row
+                spamwriter.writerow(self.rowfirst[x])
