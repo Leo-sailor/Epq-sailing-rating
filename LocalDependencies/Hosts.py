@@ -61,19 +61,19 @@ class HostScript:
         med = 0
         heavy = 0
         while inp != 1:
-            racenum = base.cleaninput('Please enter the number of races in the event (1-20):', 'i', rangelow=1,
+            racenum = base.cleaninput('\nPlease enter the number of races in the event (1-20):', 'i', rangelow=1,
                                       rangehigh=20)
-            light = base.cleaninput('Please enter the number of light wind (0-8kts) races in the event (0-{}):'.format(racenum), 'i', rangelow=0,
+            light = base.cleaninput('\nPlease enter the number of light wind (0-8kts) races in the event (0-{}):'.format(racenum), 'i', rangelow=0,
                                     rangehigh=racenum)
             racenum -= light
             med = base.cleaninput('Please enter the number of medium wind (9-16kts) races in the event (0-{}):'.format(racenum), 'i',
                                   rangelow=0, rangehigh=racenum)
             racenum -= med
             heavy = racenum
-            inp = base.cleaninput(f'That means there were\n{light} light wind races\n{med}  medium wind races\n{heavy} strong wind races\n'
+            inp = base.cleaninput(f'\nThat means there were\n{light} light wind races\n{med} medium wind races\n{heavy} strong wind races\n'
                                   f'press (1) to confirm or press (2) to try again:', 'i',
                                   rangelow=1, rangehigh=2)
-        days = base.cleaninput(f'How many days ago was the final race of the event(0-30):', 'i', rangehigh=30,
+        days = base.cleaninput(f'\nHow many days ago was the final race of the event(0-500):', 'i', rangehigh=500,
                                rangelow=0)
         info = self.__getranking('the event')
         for x in range(light):
@@ -108,26 +108,21 @@ class HostScript:
         days = base.cleaninput(f'\nHow many days ago was the final race of the event(0-500):', 'i', rangehigh=500,
                                rangelow=0)
         allsailors = []
-        oldsailorids = []
-        currsailorids = []
-        wind = 0
-        currfile = None
         for x in range(racenum):
             racetext = ' '.join(['Race', str(x + 1)])
             print(f'\n{racetext.upper()} ENTRY WIZZARD')
-            while currsailorids == oldsailorids:
-                fileloc = base.cleaninput(f'Please enter the full file location of the file for {racetext}:','s',charlevel=0)
-                currfile = Csvnew(fileloc)
-                wind = int(currfile.getcell(0, 1))
-                currsailorids = currfile.getcolumn(0, [0, 1])
-                if currsailorids == oldsailorids:
-                    print('That race result was the same as the last one, please enter a new file')
+            fileloc = base.cleaninput(f'Please enter the full file location of the file for {racetext}:','s',charlevel=0)
+            currfile = Csvnew(fileloc)
+            wind = int(currfile.getcell(0, 1))
+            currsailorids = currfile.getcolumn(0, [0, 1])
             positions = currfile.getcolumn(1, [0, 1])
+            for x in range(len(positions)):
+                positions[x] = int(positions[x])
+
             for item in currsailorids:
                 if item not in allsailors:
                     allsailors.append(item)
-            universecsv.addrace(wind, currsailorids, positions, days)
-            oldsailorids = currsailorids
+            universecsv.addrace(wind, currsailorids, positions, days, imported = True)
 
     def __getranking(self, eventname: str):
         self.__getinputmethod()
@@ -214,11 +209,11 @@ class HostScript:
                 print('\nAdd event failed, please try with admin rights')
                 return ''
 
-        print("EVENT ENTRY WIZZARD")
+        print("\nEVENT ENTRY WIZZARD")
         inp = base.cleaninput('\n(1) for entering overall event results (less accurate - quicker)\n'
                               '(2) for entering individual race results (higher accuracy - slower)\n'
                               '(3) for importing previous race (needs previously entered csv):',
-                              'i', rangehigh=2, rangelow=1)
+                              'i', rangehigh=3, rangelow=1)
         if inp == 1:
             self.addeventlazy()
         elif inp == 2:

@@ -310,7 +310,7 @@ class Csvcode:
             else:
                 return False, ''
 
-    def addrace(self, wind: int, sailorids: list, postitions: list, days: int):
+    def addrace(self, wind: int, sailorids: list, postitions: list, days: int, imported: bool = False):
         for x in range(0, 2):
             currats = []
             currevents = []
@@ -339,19 +339,20 @@ class Csvcode:
             os.mkdir(direc)
         made = False
         count = 0
-        while not made:
-            newdirec = ''.join((direc, '\\', str(base.dayssincetwothousand()-days), '-', str(count), '.csv'))
-            if os.path.exists(newdirec):
-                count += 1
-            else:
-                with open(newdirec, 'w', newline='') as csvfile:
-                    spamwriter = csv.writer(csvfile, delimiter=',',
-                                            quotechar=',', quoting=csv.QUOTE_MINIMAL)
-                    spamwriter.writerow(['wind', str(wind)])
-                    spamwriter.writerow(['sailor-id', 'position'])
-                    for x in range(len(sailorids)):
-                        spamwriter.writerow([sailorids[x], postitions[x]])
-                made = True
+        if not imported:
+            while not made:
+                newdirec = ''.join((direc, '\\', str(base.dayssincetwothousand()-days), '-', str(count), '.csv'))
+                if os.path.exists(newdirec):
+                    count += 1
+                else:
+                    with open(newdirec, 'w', newline='') as csvfile:
+                        spamwriter = csv.writer(csvfile, delimiter=',',
+                                                quotechar=',', quoting=csv.QUOTE_MINIMAL)
+                        spamwriter.writerow(['wind', str(wind)])
+                        spamwriter.writerow(['sailor-id', 'position'])
+                        for x in range(len(sailorids)):
+                            spamwriter.writerow([sailorids[x], postitions[x]])
+                    made = True
 
     def endevent(self, sailorids: list, daysago: int):
         eventday = base.dayssincetwothousand() - daysago

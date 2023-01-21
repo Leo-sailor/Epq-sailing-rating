@@ -327,7 +327,7 @@ class General:
                   '\n2 - ')
         elif amount == 1:
             # Detailed instructions
-            print('Detailed instructions and more details')
+            print('\nDetailed instructions and more details')
             print('(1) to add a new event')
             print('(2) to add a new sailor')
             print('(3) to get a sailors information')
