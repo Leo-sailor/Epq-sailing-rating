@@ -280,7 +280,7 @@ class Csvcode:
                 sailorid = self.file.getcell(index, 0)
                 return sailorid
 
-    def addsailor(self, sailid: str, first: str, sur: str, champ, sailno, region:str, nat: str) -> tuple[bool, str]:
+    def addsailor(self, sailid: str, first: str, sur: str, champ, sailno, region: str, nat: str) -> tuple[bool, str]:
         starting = ((self.elo.deviation - 100) * 5)
         day = 0
         if not base.multiindex(self.file.getcolumn(0), sailid):

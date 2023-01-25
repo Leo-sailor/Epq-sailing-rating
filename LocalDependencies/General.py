@@ -331,6 +331,8 @@ class General:
             print('(1) to add a new event')
             print('(2) to add a new sailor')
             print('(3) to get a sailors information')
+            print('(4) to quit')
+            print('(5) to get sailor info over time')
         elif amount == 2:
             # developer instructions with methods locations objects and modes and other parameters and explainations
             print('\nclass: General method: help parameters: mode explaination: if the mode is 0 basic instructions '

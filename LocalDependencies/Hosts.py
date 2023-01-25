@@ -3,7 +3,7 @@ from LocalDependencies.General import General
 from LocalDependencies.Csv_custom import Csvnew
 base = General()
 universecsv = Csvcode()
-
+import datetime
 
 class HostScript:
     def __init__(self):
@@ -11,20 +11,47 @@ class HostScript:
         self.inputmethodname = ''
 
     def torun(self):
-        base.help(1)
-        choice = base.cleaninput('\nWhat would you like to do?','i',rangelow=1,rangehigh=2)
-        match choice:
-            case 1:
-                self.addevent()
-            case 2:
-                self.makenewsailor()
-
+        while True:
+            base.help(1)
+            choice = base.cleaninput('\nWhat would you like to do?','i',rangelow=1,rangehigh=4)
+            match choice:
+                case 1:
+                    self.addevent()
+                case 2:
+                    self.makenewsailor()
+                case 3:
+                    self.getsailorinfo()
+                case 4:
+                    break
 
         # print('nationality: {}\nFist name: {}\nSurname: {}\nsail number {}'.format(nat, first, sur, sail))
         # print('\nsailor id is: {}'.format(sailorid[0]))
 
         # print('csv line is: {}'.format(base.csvlinegenerate(sailorid[0], nat, sail, first, sur, 'LSE', 317)))
         # print('it should be: gb-8153-leoya,317,48153,Leo,Yates,LSE,gbr,1500,1500,1500,1500,5,0')
+    def getsailorinfo(self):
+        print('\nSAILOR INFO WIZZARD\n')
+        print('please enter type of information you would like to recive')
+        print('(c) for champ number\n(s) for sail number\n(l) for light wind rating\n(n) for name\n(i) for sailor id\n'
+              '(m) for medium wind rating\n(h) for high wind rating\n(o) for overall rating\n(r) for rank\n'
+              '(e) for total events\n(d) for date of last event\n(z) for zone / region\n'
+              '(t) for territory / country\n(a) for all\n(s) for sailor info (not including rating rank or events)')
+        outtype = base.cleaninput("\nWhat would u like to recive?", 's')
+        outtype.lower().strip()
+        a = {'c': 'Championship Number', 's': 'Sail Number', 'l': 'Light wind rating', 'm': 'Medium wind rating',
+             'h': 'Heavy wind rating', 'n': 'Name', 'i': 'sailorid', 'o': 'Overall rating', 'r': 'Rank',
+             'e': 'Total events', 'd': 'Date of last event', 'z': 'Zone/Region', 't': 'Territory/country', 'a': 'All',
+             'S': 'Sailor info'}
+        outtypename = a[outtype]
+        inpmethod = self.__getinputmethod()
+        inp = base.cleaninput(f'Please enter the sailor\'s {self.inputmethodname}:', 's')
+        sailorid = universecsv.getsailorid(inpmethod,inp)
+        out = universecsv.getinfo(sailorid, outtype)
+        if outtype == 'd':
+            twothousand = datetime.date(2000, 1, 1)
+
+            out = twothousand + datetime.timedelta(days=float(out))
+        print(f'\n{inp}\'s {outtypename} is {out}')
 
     @staticmethod
     def makenewsailor(name=None, sailno=None, champ=None):
