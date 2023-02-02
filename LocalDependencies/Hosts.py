@@ -23,6 +23,8 @@ class HostScript:
                     self.getsailorinfo()
                 case 4:
                     break
+                case 5:
+                    pass
 
         # print('nationality: {}\nFist name: {}\nSurname: {}\nsail number {}'.format(nat, first, sur, sail))
         # print('\nsailor id is: {}'.format(sailorid[0]))
