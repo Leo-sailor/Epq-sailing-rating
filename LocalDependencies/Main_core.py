@@ -45,7 +45,7 @@ class Csvcode:
 
         try:  # used to cath any file opening erros, probable to much inside of the 'try' tho
             self.folder = ''.join((path[0], '\\universes\\', universename, '\\'))
-            self.hostfile = ''.join((self.folder, 'host-', universename, '.csv'))  # TODO make admin rights work
+            self.hostfile = ''.join((self.folder, 'host-', universename, '.csv'))
 
             universehost = Csvnew(self.hostfile)  # opens the csv with the [rows][columns]
 
@@ -63,7 +63,7 @@ class Csvcode:
         except FileNotFoundError:
             raise 'There was a error loading the file, the program will now exit '
         # filters through the current file and ignores empty lines
-        # self.cleanup - this will go through universe host and look for identical md5 hash and if there is, delete the older one TODO make this
+        self.cleanup()
         return universename
 
     def __makeuniverse(self):
@@ -120,6 +120,27 @@ class Csvcode:
                                      'pr', correcthash=self.passhash,
                                      salt=self.passsalt)
         return self.admin  # checks whether the user should have admin eights
+
+    def cleanup(self):
+        host = Csvnew(self.hostfile)
+        length = host.numrows()
+        hashes = []
+        toremove = []
+        toremoverows = []
+        for x in range(1, length):
+            hashed = host.getcell(x, 3)
+            if hashed in hashes:
+                file = host.getcell(x, 2)
+                toremove.append(file)
+                toremoverows.append(x)
+            else:
+                hashes.append(hash)
+        for x in range(len(toremove)-1, -1, -1):
+            file = toremove[x]
+            fileloc = ''.join((self.folder, file))
+            os.remove(fileloc)
+            host.removerow(toremoverows[x], save=False)
+            host.save()
 
     def getinfo(self, sailorid: str, resulttype: str):
         try:

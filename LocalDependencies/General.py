@@ -83,7 +83,7 @@ class General:
                 return name
             elif charlevel == 3 or charlevel == '3':
                 alphebet = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R',
-                            'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '-']
+                            'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '-', ' ']
                 name = ''
                 same = False
                 while not same:
@@ -147,10 +147,10 @@ class General:
             while not done:
                 inp = input(prompt)
                 if self.passwordhash(inp, salt)[0] == correcthash:
-                    print('Password is correct')
+                    print('\nPassword is correct')
                     return True
                 elif inp == '':
-                    print('Password entry is skipped')
+                    print('\nPassword entry is skipped')
                     return False
                 else:
                     print('\nThat password was incorrect, please try again')

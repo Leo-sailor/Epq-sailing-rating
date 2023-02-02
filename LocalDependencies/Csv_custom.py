@@ -33,7 +33,7 @@ class Csvnew:
                     rows[x] = rows[x].split(',')  # takes the raw string and splits itnto an array
                     x += 1
         except FileNotFoundError:
-            with open(filelocation, 'x', newline='') as csvfile:
+            with open(filelocation, 'x', newline=''):
                 rows = [[]]
 
         column = [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []]
@@ -59,7 +59,7 @@ class Csvnew:
         else:
             raise TypeError
 
-    def updatevaluesingle(self, term, row: int, column:bool, bypass: bool=False):
+    def updatevaluesingle(self, term, row: int, column: bool, bypass: bool = False):
         self.updatevalue(term, row, column, 0, bypass)
         self.autosavefile()
 
@@ -145,6 +145,9 @@ class Csvnew:
     def numcolumns(self):
         return len(self.columnfirst)
 
+    def numrows(self):
+        return len(self.rowfirst)
+
     def addrow(self, array: list):
         for x in range(len(array)):
             self.columnfirst[x].append(str(array[x]))
@@ -156,6 +159,20 @@ class Csvnew:
             self.rowfirst[x].append(str(array[x]))
         self.columnfirst.append(array)
         self.autosavefile()
+
+    def removerow(self, rownum: int, save: bool = True):
+        self.rowfirst.pop(rownum)
+        for col in self.rowfirst:
+            col.pop(rownum)
+        if save:
+            self.save()
+
+    def save(self):
+        with open(self.filelocation, 'w', newline='') as csvfile:
+            spamwriter = csv.writer(csvfile, delimiter=',',
+                                    quotechar=',', quoting=csv.QUOTE_MINIMAL)
+            for x in range(0, len(self.rowfirst[0])):
+                spamwriter.writerow(self.rowfirst[x])
 
     def autosavefile(self):
         filename = ''.join((self.universe, '-', str(self.sessionstart), '.csv'))
@@ -172,7 +189,9 @@ class Csvnew:
                 spamwriter = csv.writer(csvfile, delimiter=',',
                                         quotechar=',', quoting=csv.QUOTE_MINIMAL)
                 spamwriter.writerow(self.hostfileold.getrow(0))
-                spamwriter.writerow((self.hostfileold.getrow(1, 3).append(base.hashfile(cfile))))
+                row = self.hostfileold.getrow(1, miss=3)
+                row.append(base.hashfile(cfile))
+                spamwriter.writerow(row)
                 for x in range(2, len(self.hostfileold.rowfirst)):
                     spamwriter.writerow(self.hostfileold.getrow(x))
         else:
