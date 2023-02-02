@@ -3,6 +3,7 @@ import requests
 from countryinfo import CountryInfo
 from hashlib import md5
 from bcrypt import gensalt, hashpw
+from datetime import date
 
 
 # class which contains basic funtions for the program not directly related to the elo calculations
@@ -21,6 +22,12 @@ class General:
                          'POL', 'POR', 'PUR', 'QAT', 'ROM', 'RUS', 'SAM', 'SMR', 'SEN', 'SRB', 'SEY', 'SGP', 'SVK',
                          'SLO', 'RSA', 'ESP', 'SRI', 'SKN', 'LCA', 'SUD', 'SWE', 'SUI', 'TAH', 'TAN', 'THA', 'TLS',
                          'TTO', 'TUN', 'TUR', 'TKS', 'UGA', 'UKR', 'UAE', 'USA', 'URU', 'ISV', 'VAN', 'VEN', 'ZIM'}
+
+    def dayssincetwothousand(self) -> int:
+        thousand = date(2000, 1, 1)
+        now = date.today()
+        day = now - thousand
+        return day.days
 
     def cleaninput(self, prompt: str, datatype: str, rangelow: float = 0, rangehigh: float = 500, charlevel: int = 0,
                    correcthash='', salt=''.encode(),):
@@ -76,7 +83,7 @@ class General:
                 return name
             elif charlevel == 3 or charlevel == '3':
                 alphebet = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R',
-                            'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '-']
+                            'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '-', ' ']
                 name = ''
                 same = False
                 while not same:
@@ -140,10 +147,10 @@ class General:
             while not done:
                 inp = input(prompt)
                 if self.passwordhash(inp, salt)[0] == correcthash:
-                    print('Password is correct')
+                    print('\nPassword is correct')
                     return True
                 elif inp == '':
-                    print('Password entry is skipped')
+                    print('\nPassword entry is skipped')
                     return False
                 else:
                     print('\nThat password was incorrect, please try again')
@@ -151,7 +158,7 @@ class General:
         else:
             return ''
 
-    def generatesailorid(self, nat: str, sailno: str, first: str, surname: str) -> tuple:
+    def generatesailorid(self, nat: str, sailno: str | int, first: str, surname: str) -> tuple[str, str]:
         """
         This function generates a sailorid from its components
         :param nat: 3 letter sting or none
@@ -177,6 +184,15 @@ class General:
         iden += first[:3]
         iden += surname[:2]
         return iden.lower(), nat
+
+    def ordinal(self, num):
+        suffixes = {1: 'st', 2: 'nd', 3: 'rd'}
+        if 10 <= num % 100 <= 20:
+            suffix = 'th'
+        else:
+            # the second parameter is a default.
+            suffix = suffixes.get(num % 10, 'th')
+        return str(num) + suffix
 
     def getnat(self) -> str:
         """
@@ -214,7 +230,7 @@ class General:
         :param champnum: 3 number stinf or ''
         :return:
         """
-        rank = self.generaterank(1500, [1700, 1600, 1500, 1400])
+        rank = 0
 
         first = self.__firstcap(first)
         surname = self.__firstcap(surname)
@@ -241,38 +257,33 @@ class General:
         """
         word = word.lower()
         word = word.strip()
-        word = word[0].upper() + word[1:]
-        return word
+        try:
+            newword = word[0].upper() + word[1:]
+            return newword
+        except IndexError:
+            return word
 
-    def generaterank(self, rating: float, ratings: list):
-        """
-        This function finds a sailors rank inside a list of ratings sorted or unsorted
-        :param rating: the rating which needs to be ranked
-        :param ratings: a list of ratings of sailors for the ranks to be determined from
-        :return: int of the rank (lowest is 1)
-        """
-        ratings = self.__ranksailor(ratings)
-        rank = ratings.index(rating) + 1
-        return rank
+    def SortOnElement(self, sub_li, element):
+        sub_li.sort(reverse=True, key=lambda x: x[element])
+        return sub_li
 
-    def __ranksailor(self, ratings: list):
+    def multiindex(self, inlist: list, term: int | str) -> list:
         """
-        This function sorts a list of sailors in from highest to lowest ready to be indexed in the generate rank function
-        :param ratings: a list to be reverse sorted
-        :return: a list of reverse sorted floats
-        """
-        ratings.sort(reverse=True)
-        return ratings
-
-    def multiindex(self, inlist: list, term) -> list:
-        """
-        This function takes a list and finds all occourences of the term inside of that list
+        This function takes a list and finds all occourences of the term inside of that list,
+        will not return the first one
         :param inlist: the list to be searched through
         :param term: the term to be searched for
         :return: all indexes of the term inside of that list
         """
+        term = str(term)
+        for x in range(len(inlist)):
+            if type(inlist[x]) != str:
+                inlist[x] = str(inlist[x])
+
+            inlist[x] = inlist[x].lower().strip()
+
         indexs = []
-        start = -1
+        start = 0
         end = False
         while not end:
             try:
@@ -316,7 +327,12 @@ class General:
                   '\n2 - ')
         elif amount == 1:
             # Detailed instructions
-            print('Detailed instructions and more details')
+            print('\nDetailed instructions and more details')
+            print('(1) to add a new event')
+            print('(2) to add a new sailor')
+            print('(3) to get a sailors information')
+            print('(4) to quit')
+            print('(5) to get sailor info over time')
         elif amount == 2:
             # developer instructions with methods locations objects and modes and other parameters and explainations
             print('\nclass: General method: help parameters: mode explaination: if the mode is 0 basic instructions '

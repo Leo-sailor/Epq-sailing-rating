@@ -1,9 +1,12 @@
+from numpy import sqrt
+
+
 class EloCalculations:
     def __init__(self, deviation, multiplier):
         self.deviation = float(deviation)  # sets the rating difference that will deliver a 90% win chance
-        self.changemultiplier = multiplier # sets the k factor multiplier
+        self.changemultiplier = float(multiplier)  # sets the k factor multiplier
 
-    def calc(self, rat1, rat2, result, k):
+    def calc(self, rat1: float, rat2: float, result: float, k: float) -> float:
         """
         Calculates the Elo change for sailor 1 (sailor 2's is inverted) after an event based
         off of the ratings going in and their results
@@ -13,25 +16,29 @@ class EloCalculations:
         :param k: the k factor used for caluclation
         :return: sailor 1 rating chnage
         """
-        change = k*(result - self.pred(rat1, rat2))  # **(3))
+        prediction = self.pred(rat1, rat2)
+        # print(type(result))
+        # print(type(prediction))
+        # print(type(k))
+        change = k * (result - prediction)  # **(3))
         return change
 
-    def pred(self, rata, ratb):
+    def pred(self, rata: float, ratb: float) -> float:
         """
         Calculate the predicted result of a mini event
         :param rata: rating of sailor 1
         :param ratb: rating of sailor 2
         :return:
         """
-        prediction = 1/(1 + 10 ** ((ratb - rata) / self.deviation))
+        prediction = 1 / (1 + 10 ** ((ratb - rata) / self.deviation))
         return prediction
 
-    def cycle(self, currat, sailorid, position):
+    def cycle(self, currat: list[float], events: list[int], position: list[int]):
         """
         note: nth position's must be = to nth currat = nth sailor id (more like a 2d table)
         This function take a list of ratings and their positions and returns thier updated ratings after an event
         :param currat:
-        :param sailorid:
+        :param events:
         :param position:
         :return:
         """
@@ -46,35 +53,35 @@ class EloCalculations:
                 bloc = position.index(y + 1)
                 arat = currat[aloc]
                 brat = currat[bloc]
-                kfac = self.k(sailorid, sailors, 150)
+                kfac = self.__k(events[x], events[y], 30, sailors)
                 change = self.calc(arat, brat, 1, kfac)
-                ratchange[aloc] = ratchange[aloc] + change
-                ratchange[bloc] = ratchange[bloc] - change
-        for x in range(0, len(ratchange)):
-            ratchange[x] = round(ratchange[x], 1)
-        return ratchange
+                ratchange[aloc] += change
+                ratchange[bloc] -= change
+        newratings = self.__updaterating(ratchange, currat)
+        return newratings
 
-    def k(self, sailorid, people, k):
+    def __k(self, eventsailor1: int, eventsailor2: int, kbase: int, totalsailor: int):
         """
         A function which returns the correct k factor for the sailors involved in the comparison
-        :param sailorid: list of the 2 sailors IDs of the sailors in the mnin event
-        :param people:
-        :param k:
+        :param eventsailor1
+        :param eventsailor2
+        :param totalsailor
+        :param kbase:
         :return:
         """
-        k = k * self.changemultiplier
+        k = (((15 / (eventsailor1 + 1)) + (15 / (eventsailor2 + 1))) * (1/(sqrt(totalsailor)))) + kbase
+        k *= self.changemultiplier
         # will make this intresting later when i 'realise' its crap
         return k
 
-    def updaterating(self, change, currat):
+    def __updaterating(self, change: list[float], currat: list[float]):
         """
-        This function will take a 32 bit float and add that to the current rating and round it correctly
-        :param change: 32 bit float to be added to the current rating
+        This function will take a 32-bit float and add that to the current rating and round it correctly
+        :param change: 32-bit float to be added to the current rating
         :param currat: the current rating
         :return:
         """
         for y in range(0, len(change)):
-            currat[y] = currat[y] + change[y]
-            if currat[y] <= 0:
-                currat[y] = 0.1
+            currat[y] += change[y]
+            currat[y] = round(currat[y], 1)
         return currat
