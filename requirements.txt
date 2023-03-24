@@ -5,4 +5,4 @@ bcrypt==4.0.1
 pandas~=1.5.2
 lxml~=4.9.2
 
-numpy~=1.24.1
+numpy~=1.24.2
