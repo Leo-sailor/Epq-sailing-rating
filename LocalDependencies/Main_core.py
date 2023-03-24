@@ -10,7 +10,7 @@ base = General()
 
 
 class Csvcode:
-    def __init__(self):
+    def __init__(self, universe=None, password=None):
         self.admin = False
         self.cfile = ''
         print('\n UNIVERSE SELECTION TOOL:')
@@ -18,8 +18,8 @@ class Csvcode:
         host = Csvnew(''.join((path[0], '\\universes\\', 'host.csv',)))  # imports the universes file and stores it in [column][row]
 
         host.printcolumn(0, True, 0)  # prints all the names of the universes
-
-        universe = input('\nPlease enter the name of the universe you would like to acess or (n) for a new universe:').lower()
+        if universe is None:
+            universe = input('\nPlease enter the name of the universe you would like to acess or (n) for a new universe:').lower()
         while not(universe in host.getcolumn(0) or universe.upper() == 'N'):
             print('\nThat universe name was not valid, please try again')  # keeps trying unitl a valid input is entered
             universe = input('\nPlease enter the name of the universe you would like to acess or (n) for a new universe:').lower()
@@ -37,7 +37,7 @@ class Csvcode:
         self.elo = EloCalculations(host.getcell(universeloc, 2), host.getcell(universeloc, 4))  # initzallises the elo object with the universes numbers
         self.deviation = host.getcell(universeloc, 1)  # saves the deviation
 
-        self.adminrights()  # sees whether the user should have admin rights
+        self.adminrights(password)  # sees whether the user should have admin rights
 
     def __linkuniverse(self, universename):
         if universename.upper() == 'N':
@@ -113,7 +113,16 @@ class Csvcode:
         print('{} universe has been created'.format(name))
         return universe
 
-    def adminrights(self):
+    def adminrights(self, password=None):
+        if password is not None:
+            if base.passwordhash(password, self.passsalt)[0] == self.passhash:
+                self.admin = True
+                return True
+            elif password == '':
+                self.admin = False
+                return False
+            else:
+                print('\nThat password was incorrect, please try again')
         print('\n ADMIN RIGHTS')
         self.admin = base.cleaninput(('Press (enter) to skip entering a password'
                                      '\nor enter the admin password for the universe {}:'.format(self.universe)),
@@ -196,6 +205,13 @@ class Csvcode:
         return findtypeloc
 
     def getsailorid(self, fieldnum: str | int, term: str | int, *data) -> str:
+        """
+
+        :param fieldnum: the table in the column you want to acces, -1 for names
+        :param term:
+        :param data:
+        :return:
+        """
 
         term = str(term)  # makes sure the term to be searched for is a string
         while term[0] == '0':
@@ -204,15 +220,18 @@ class Csvcode:
             # print(fieldnum)
             fieldnum = self.getfieldnumber(fieldnum)
             # print(fieldnum)
-        if fieldnum == -1:
+        if fieldnum == -1: # the exception for if its a name
             locationsnew = []
-            newterm = term.split(' ', 1)
-            locations = base.multiindex(self.file.getcolumn(3), newterm[0])
-            print(newterm)
-            print(locations)
-            if len(locations) == 0:
-                pass
-            else:
+            newterm = term.lower().split(' ', 1)
+            locations = []
+            for x in range(len(self.file.getcolumn(3))):
+                current = (self.file.getcolumn(3)[x])
+                score = base.similar(newterm[0], current)
+                # print(self.file.getcolumn(3)[x])
+                # print(score)
+                if score > 0.7 or current[:2] == newterm[0][:2]:
+                    locations.append(x)
+            if len(locations) != 1:
                 for location in locations:
                     if newterm[1] == (self.file.getcell(location, 4)):
                         locationsnew.append(location)
@@ -229,14 +248,15 @@ class Csvcode:
                                       '\nor press (p) to get a list of all sailor id\'s:', 's', charlevel=2)
                 if inp == '':
                     from LocalDependencies.Hosts import HostScript  # yes this is really bad becuse this is a dependency for the thing i imported so potential for circular reference
-                    if fieldnum == -1:
-                        a = HostScript.makenewsailor(name=term)
-                    elif fieldnum == 1:
-                        a = HostScript.makenewsailor(champ=term)
-                    elif fieldnum == 2:
-                        a = HostScript.makenewsailor(sailno=term)
-                    else:
-                        a = HostScript.makenewsailor()
+                    match fieldnum:
+                        case -1:
+                            a = HostScript.makenewsailor(name=term)
+                        case  1:
+                            a = HostScript.makenewsailor(champ=term)
+                        case 2:
+                            a = HostScript.makenewsailor(sailno=term)
+                        case _:
+                            a = HostScript.makenewsailor()
                     del HostScript
                     # print(a)  # debug line
                     if not a[0]:  # checks whether the sailor was sucessfully made
@@ -269,7 +289,7 @@ class Csvcode:
                 print(f'\nThe search term \'{term}\' is ambiguous'
                       '\nBelow is a list of names for that sailor')
                 for x in range(0, len(locations)):
-                    string = (str(x+1), ' - ', names[x])
+                    string = (str(x+1), ' - ', names[x], ' - ', self.file.getcell(locations[x], 1), ' - ', self.file.getcell(locations[x], 2))
                     print((''.join(string)))
                 finallocation = locations[(base.cleaninput('\nPlease enter the number of the correct sailor you are '
                                                            'searching for: ', 'i',  1, len(locations))) - 1]
@@ -286,18 +306,21 @@ class Csvcode:
                 for x in range(sailors):
                     pointstracker.append(0.0)
                     sailorids.append(self.file.getcell(locations[x], 0))
-                    dates = self.getinfo(sailorids[x], 'd')
-                    sailorinfos.append(self.getinfo(sailorids[x], 'a'))
-
-                diff = (max(dates) - min(dates)) / 100
+                    dates.append(int(self.getinfo(sailorids[x], 'd')))
+                    sailorinfos.append([self.getinfo(sailorids[x], 'a')])
+                print(sailorids)
+                diff = (max(dates) - min(dates)) / 365
                 pointstracker[dates.index(max(dates))] += diff
                 pointstracker[dates.index(min(dates))] -= diff
 
                 for item in data:
                     for x in range(sailors):
-                        if item in sailorinfos[x]:
+                        sailorinfos[x] = sailorinfos[x][0].split(', ')
+                        if str(item) in sailorinfos[x][:7]:
+                            print('if passed')
                             pointstracker[x] += 1
-                index = locations[pointstracker.index(max(pointstracker))]
+                print(pointstracker)
+                index = locations[pointstracker.index(max(pointstracker))]  # gets the location of the sailor witht he most points
                 sailorid = self.file.getcell(index, 0)
                 return sailorid
 

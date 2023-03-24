@@ -1,10 +1,16 @@
 # imports
+import time
+
 import requests
 from countryinfo import CountryInfo
 from hashlib import md5
 from bcrypt import gensalt, hashpw
-from datetime import date
-
+from datetime import datetime, date, timedelta
+import pandas as pd
+from difflib import SequenceMatcher
+from tkinter import filedialog
+from os import remove
+from tabula import read_pdf
 
 # class which contains basic funtions for the program not directly related to the elo calculations
 class General:
@@ -22,7 +28,47 @@ class General:
                          'POL', 'POR', 'PUR', 'QAT', 'ROM', 'RUS', 'SAM', 'SMR', 'SEN', 'SRB', 'SEY', 'SGP', 'SVK',
                          'SLO', 'RSA', 'ESP', 'SRI', 'SKN', 'LCA', 'SUD', 'SWE', 'SUI', 'TAH', 'TAN', 'THA', 'TLS',
                          'TTO', 'TUN', 'TUR', 'TKS', 'UGA', 'UKR', 'UAE', 'USA', 'URU', 'ISV', 'VAN', 'VEN', 'ZIM'}
+        self.numbers = ['0','1','2','3','4','5','6','7','8','9']
 
+    @staticmethod
+    def getfilename(mode='r'):
+        file = filedialog.askopenfile(mode)
+        file.close()
+        return file.name
+
+    def getdate(self,returnmethod='epoch'):
+        """
+
+        :param returnmethod: epoch is seconds since epoch, text returns a text format, date returns a dateobject, datetime returns a datetime object
+        :return:
+        """
+        year = self.cleaninput("Please enter the year", 'i', 2000,2100)
+        month = self.cleaninput("Please enter the month", 'i', 1, 12)
+        if month in [4,6,9,11]:
+            day = self.cleaninput("Please enter the day", 'i', 1, 30)
+        elif month in [1,3,5,7,8,10,12]:
+            day = self.cleaninput("Please enter the day", 'i', 1, 31)
+        else:
+            day = self.cleaninput("Please enter the day", 'i', 1, 28)
+        current = date(year,month,day)
+        match returnmethod:
+            case 'epoch':
+                epoch = date(1970,1,1)
+                return (current-epoch).total_seconds()
+            case 'text':
+                return current.strftime()
+            case 'date':
+                return current
+            case 'datetime':
+                return datetime(year,month,day,0,0,0,0)
+    @staticmethod
+    def twothousandtodatetime(days):
+        thousand = date(2000,1,1)
+        delta = timedelta(days)
+        return (thousand + delta)
+
+
+    @staticmethod
     def dayssincetwothousand(self) -> int:
         thousand = date(2000, 1, 1)
         now = date.today()
@@ -232,8 +278,8 @@ class General:
         """
         rank = 0
 
-        first = self.__firstcap(first)
-        surname = self.__firstcap(surname)
+        first.lower()
+        surname.lower()
         region = region[:3].upper().strip()
         champnum = '000' + str(champnum)
         champnum = champnum[-3:]
@@ -241,7 +287,7 @@ class General:
             nat.upper()
             nat.strip()
 
-        parts = [sailorid, champnum, sailno, first, surname, region, nat, 1500, 1500, 1500, 1500, rank, 0]
+        parts = [sailorid, champnum, sailno, first, surname, region, nat, 1500, 1500, 1500, 1500, rank, self.dayssincetwothousand()]
 
         line = ','.join(parts)
 
@@ -305,15 +351,140 @@ class General:
         hashed = hashpw(password.encode(), salt).hex()
         return hashed, salt.hex()
 
-    def hashfile(self, file):
+    @staticmethod
+    def hashfile(file):
         """
         This function takes a file adress and opens it as a text file and produces a md5 hash of it
         :param file: the file address of the file to be hashed
         :return: the string of the md5 hash
         """
-        str2hash = open(file).read()
+        with open(file) as actualfile:
+            str2hash = actualfile.read()
         result = md5(str2hash.encode()).hexdigest()
         return str(result)
+
+
+    def gettablefromhtmlfile(self,file, tablenum = 0):
+        df_list = pd.read_html(file)
+        lists = df_list[tablenum].values.tolist()
+        header = [list(df_list[tablenum].columns.values)]
+        lists.insert(0,header)
+        return lists
+
+    def gettablefromweb(self,url,tablenum=0):
+        page = requests.get(url)
+        g = open('webpage.temp', 'w').write(page.text)
+        del g
+        out = self.gettablefromhtmlfile('webpage.temp',tablenum)
+        remove('webpage.temp')
+        return out
+
+    def findandreplace(self, inp, find: str, replace: str, preserve_type=False):
+        """
+        a recussive find and replace algoritim which searchs through lists and thiers sub lits up to the recursion limit
+        in search of strings, when a string is found, a normal find and replace algoritim on is applied to the string.
+        intended side effect: all int
+        THIS IS A TIME CRITICAL FUNCTION, TIME TO RUN > READABILTY OR MAINAINABILITY OR LOC (LINES OF CODE)
+        :param inp:
+        :param find:
+        :param replace:
+        :return:
+        """
+        match inp:
+            case str():
+                return inp.replace(find,replace)
+            case list():
+                out = []
+                for item in inp:
+                    out.append(self.findandreplace(item, find, replace))
+                return out
+            case float() | int():
+                if preserve_type:
+                    return inp
+                return str(inp)
+            case _:
+                if preserve_type:
+                    return inp
+                try:
+                    return str(inp)
+                except ValueError:
+                    raise TypeError('Expected type list or str or struct which str() can be applied not ' + str(type(inp)))
+
+    def tablefrompdf(self, file: str, tablenum: int = -1,purge_nan_col:bool = True) -> list[list]:
+        df_list = read_pdf(file, pages="all") # reads pdf with tabula, is a utter shit module tho caus eof java requirements
+        # use this stack overfolw page to get it working on your computer: https://stackoverflow.com/questions/54817211/java-command-is-not-found-from-this-python-process-please-ensure-java-is-inst
+        print('2. Read')
+        df = pd.concat(df_list) # each page comes as a spererate table, this puts them all into one
+        lists = df.values.tolist() # gets the raw data as a python array
+        header = self.findandreplace([(df.columns.tolist())],'\r',' ') # cleans the header
+        lists.insert(0,header)
+        big_table = self.findandreplace(lists, "\r", " ") # cleans the table
+        print('3. cleaned')
+        if tablenum == -1 : # if we want all the tables
+            return big_table
+        table_start_point = [1] # the array which stores the locations of each new set of data
+        first_col = [row[0] for row in big_table]
+        old = 0
+        for x in range(1,len(first_col)): # assumes new set of data begins, when place field (always column 1) goes downwards, (differnt to normal)
+            try:
+                new = int(first_col[x])
+            except ValueError:
+                new = ['0']
+                for char in first_col[x]:
+                    if char in self.numbers:
+                        new.append(char)
+                new = int(''.join(new))
+            if old > new:
+                table_start_point.append(x)
+            old = new
+
+
+        end = len(big_table)
+        tables = []
+        for x in range(len(table_start_point)-1,-1,-1): # reverse order to make sure nothing gets messed with
+            new_table = big_table[table_start_point[x]:end] # splits data
+            new_table.insert(0,header[0]) # adds headers to each set
+            # new_table = [new_table]
+            tables.insert(0,new_table) # adds new table to list of tables
+            end = table_start_point[x] - 1
+        print('4. Split')
+        if not(purge_nan_col):
+            return tables[tablenum]
+
+        table = tables[tablenum]
+        cols_to_remove = list(range(len(table[0])))
+        for x in range(1,len(table)):
+            data = []
+            for y in cols_to_remove:
+                if table[x][y] != 'nan':
+                    data.append(y)
+            for item in data:
+                index = cols_to_remove.index(item)
+                cols_to_remove.pop(index)
+        cols_to_remove.sort(reverse=True)
+        for row in table:
+            for col in cols_to_remove:
+                row.pop(col)
+        print('5. clean nan')
+        return table
+
+
+    def url_to_pdf_to_table(self,url,tablenum: int =-1,purge_nan_col:bool = True) -> list[list]:
+        page = requests.get(url) # gets the page as a response object
+        print('1. Internet')
+        start_time = time.perf_counter_ns()
+        g = open('webpage.temp', 'wb').write(page.content) # writes the contents of the response object to a field
+        del g # deletes an unused variable, it didnt work for me without this
+        out = self.tablefrompdf('webpage.temp', tablenum, purge_nan_col) # gets the outpu as if a local file
+        remove('webpage.temp') # removes the temp file
+        end_time = time.perf_counter_ns()
+        print((end_time-start_time)/1000000)
+        return out
+
+
+    @staticmethod
+    def similar(a, b):
+        return SequenceMatcher(None, a, b).ratio()
 
     def help(self, amount):
         """

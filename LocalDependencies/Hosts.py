@@ -4,6 +4,7 @@ from LocalDependencies.Csv_custom import Csvnew
 base = General()
 universecsv = Csvcode()
 import datetime
+import cProfile
 
 class HostScript:
     def __init__(self):
@@ -11,6 +12,12 @@ class HostScript:
         self.inputmethodname = ''
 
     def torun(self):
+        g = base.url_to_pdf_to_table("https://gbrtopper.ourclubadmin.com/docs/1185/53_After_Race_5_Provisional.pdf",0,purge_nan_col=True)
+        for line in g:
+            print(line)
+
+
+
         while True:
             base.help(1)
             choice = base.cleaninput('\nWhat would you like to do?','i',rangelow=1,rangehigh=4)
@@ -23,12 +30,18 @@ class HostScript:
                     self.getsailorinfo()
                 case 4:
                     break
+                case 5:
+                    self.sailorratingovertime()
 
         # print('nationality: {}\nFist name: {}\nSurname: {}\nsail number {}'.format(nat, first, sur, sail))
         # print('\nsailor id is: {}'.format(sailorid[0]))
 
         # print('csv line is: {}'.format(base.csvlinegenerate(sailorid[0], nat, sail, first, sur, 'LSE', 317)))
         # print('it should be: gb-8153-leoya,317,48153,Leo,Yates,LSE,gbr,1500,1500,1500,1500,5,0')
+    def sailorratingovertime(self):
+        inpmethod = self.__getinputmethod()
+        inp = base.cleaninput(f'(enter (_a) for all) \nPlease enter the sailor\'s {self.inputmethodname}:', 's')
+        sailorid = universecsv.getsailorid(inpmethod, inp)
     def getsailorinfo(self):
         print('\nSAILOR INFO WIZZARD\n')
         print('please enter type of information you would like to recive')
@@ -57,10 +70,13 @@ class HostScript:
     def makenewsailor(name=None, sailno=None, champ=None):
         print('\n NEW SAILOR WIZZARD')
         if name is None:
-            name = base.cleaninput('Please enter the sailor\'s name:', 's', charlevel=3)
+            name = base.cleaninput('Please enter the sailor\'s Full name:', 's', charlevel=3)
         name = name.split(' ', 1)
         first = name[0]
-        sur = name[1]
+        try:
+            sur = name[1]
+        except:
+            sur = base.cleaninput('Please enter the sailor\'s  surname:', 's', charlevel=3)
         if champ is None:
             champ = str(base.cleaninput('Please enter the sailor\'s Championship number '
                                         '\n(Please enter (000) if the sailor does not have a Champ number):',
