@@ -5,8 +5,7 @@ from time import time
 import os
 base = General()
 
-
-class Csvnew:
+class Csvnew():
     def __init__(self, filelocation, protectedrows: list[int] = None, protectedcols: list[int] = None, universe=None):
         self.sessionstart = int(time())
         if universe is not None:
@@ -132,7 +131,7 @@ class Csvnew:
 
     def getcolumn(self, column, excudedrows: int | list[int] = None):
         if excudedrows is None:
-            excudedrows = []
+            return self.columnfirst[column][:]
         excudedrows.sort(reverse=True)
         toprint = self.columnfirst[column][:]
         for index in excudedrows:
