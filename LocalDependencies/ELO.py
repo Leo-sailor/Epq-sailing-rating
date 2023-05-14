@@ -17,9 +17,7 @@ class EloCalculations:
         :return: sailor 1 rating chnage
         """
         prediction = self.pred(rat1, rat2)
-        # print(type(result))
-        # print(type(prediction))
-        # print(type(k))
+
         change = k * (result - prediction)  # **(3))
         return change
 
