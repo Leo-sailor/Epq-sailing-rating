@@ -367,12 +367,36 @@ class Csvcode:
             else:
                 return False, ''
 
-    def processtable(self, table: list[list[str]], field: str) -> dat.Event:
+    def processtable(self, table: list[list[str]], field: str, event_title = "the event") -> dat.Event:
         race_columns = []
         fields = {'c': 'champ', 's': 'sail', 'n': 'name'}
-        for x in range(len(table[0])):
-            if (table[0][x][0]).upper() == 'R':
-                race_columns.append(x)
+        search_term = fields[field]
+        info_column = -255
+        numbers = '0123456789'
+        for loc,val in enumerate(table[0]):
+            if (val[0]).upper() == 'R' and val[1] in numbers:
+                race_columns.append(loc)
+            if search_term in val.lower():
+                info_column = loc
+        if info_column == -255:
+            raise IndexError('That term could not be found')
+        extra_data_cols = list(range(1, min(race_columns)))
+
+        sailorids = []
+        for row in table[1:]:
+            sailorids.append(self.getsailorid(field, row[info_column], *[row[item].lower() for item in extra_data_cols]))
+
+        races = []
+        chars_to_strip = "abcdefghijklmnopqrstuvwxyz()"
+        date = Base.dayssincetwothousand(Base.getdate("date", f"of the last day of {event_title}"))
+        for race in race_columns:
+            wind = Base.cleaninput(f'What was the wind of {table[0][race]}?', 'i', 1, 3)
+            result = [int(table[x][race].lower().strip(chars_to_strip)) for x in range(1, len(table))]
+            races.append(dat.Race(dat.Results(sailorids, result), wind, date))
+        return dat.Event(races, date)
+
+
+
 
     def export_race(self, race):
         sailorids = race.results.sailorids

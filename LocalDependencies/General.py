@@ -10,6 +10,8 @@ from tkinter import filedialog
 from os import remove
 from tabula import read_pdf
 
+TEMP = 'webpage.temp'
+
 # class which contains basic funtions for the program not directly related to the elo calculations
 basenat = ''
 validnat = {'ALG', 'ASA', 'AND', 'ANT', 'ARG', 'ARM', 'ARU', 'AUS', 'AUT', 'AZE', 'BAH', 'ARN', 'BAR',
@@ -31,20 +33,20 @@ def getfilename(mode='r'):
     file_getter.close()
     return file_getter.name
 
-def getdate(returnmethod='epoch'):
+def getdate(returnmethod='epoch', prompt = ""):
     """
 
     :param returnmethod: epoch is seconds since epoch, text returns a text format, date returns a dateobject, datetime returns a datetime object
     :return:
     """
-    year = cleaninput("Please enter the year", 'i', 2000,2100)
-    month = cleaninput("Please enter the month", 'i', 1, 12)
+    year = cleaninput(f"Please enter the year {prompt}", 'i', 2000,2100)
+    month = cleaninput(f"Please enter the month {prompt}", 'i', 1, 12)
     if month in [4,6,9,11]:
-        day = cleaninput("Please enter the day", 'i', 1, 30)
+        day = cleaninput(f"Please enter the day {prompt}", 'i', 1, 30)
     elif month in [1,3,5,7,8,10,12]:
-        day = cleaninput("Please enter the day", 'i', 1, 31)
+        day = cleaninput(f"Please enter the day {prompt}", 'i', 1, 31)
     else:
-        day = cleaninput("Please enter the day", 'i', 1, 28)
+        day = cleaninput(f"Please enter the day {prompt}", 'i', 1, 28)
     current = date(year,month,day)
     match returnmethod:
         case 'epoch':
@@ -63,13 +65,15 @@ def twothousandtodatetime(days):
     return thousand + delta
 
 
-
-def dayssincetwothousand() -> int:
+def dayssincetwothousand(date: date | datetime = None) -> int:
     thousand = date(2000, 1, 1)
-    now = date.today()
+    if date is None:
+        now = date.today()
     day = now - thousand
     return day.days
-
+def check_consecutive(l):
+    n = len(l) - 1
+    return (sum(np.diff(sorted(l)) == 1) >= n)
 def cleaninput(prompt: str, datatype: str, rangelow: float = 0, rangehigh: float = 500, charlevel: int = 0,
                correcthash='', salt=''.encode()) -> str|float|int|bool|tuple[str,str]:
     """This function takes a prompt and a type and keeps taking an input from the user until it furfills the
@@ -291,7 +295,7 @@ def firstcap(word: str) -> str:
     except IndexError:
         return word
 
-def SortOnElement(sub_li: list, element: int) -> list:
+def sort_on_element(sub_li: list, element: int) -> list:
     sub_li.sort(reverse=True, key=lambda x: x[element])
     return sub_li
 
@@ -355,10 +359,10 @@ def gettablefromhtmlfile(file: str, tablenum: int = 0) -> list[list]:
 
 def gettablefromweb(url: str,tablenum: int =0) -> list[list[str]]:
     page = requests.get(url)
-    g = open('webpage.temp', 'w').write(page.text)
+    g = open(TEMP, 'w').write(page.text)
     del g
-    out = gettablefromhtmlfile('webpage.temp',tablenum)
-    remove('webpage.temp')
+    out = gettablefromhtmlfile(TEMP, tablenum)
+    remove(TEMP)
     return out
 
 def findandreplace(inp, find: str, replace: str, preserve_type=False):
@@ -451,10 +455,10 @@ def tablefrompdf(file: str, tablenum: int = -1,purge_nan_col:bool = True) -> lis
 
 def url_to_pdf_to_table(url: str,tablenum: int =-1,purge_nan_col:bool = True) -> list[list]:
     page = requests.get(url) # gets the page as a response object
-    g = open('webpage.temp', 'wb').write(page.content) # writes the contents of the response object to a field
+    g = open(TEMP, 'wb').write(page.content) # writes the contents of the response object to a field
     del g # deletes an unused variable, it didnt work for me without this
-    out = tablefrompdf('webpage.temp', tablenum, purge_nan_col) # gets the outpu as if a local file
-    remove('webpage.temp') # removes the temp file
+    out = tablefrompdf(TEMP, tablenum, purge_nan_col) # gets the outpu as if a local file
+    remove(TEMP) # removes the temp file
     return out
 
 
