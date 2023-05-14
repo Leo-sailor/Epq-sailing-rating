@@ -1,11 +1,11 @@
 import csv
-from LocalDependencies.General import General
+import LocalDependencies.General as Base
 from sys import path
 from time import time
 import os
-base = General()
 
-class Csvnew():
+
+class Csvnew:
     def __init__(self, filelocation, protectedrows: list[int] = None, protectedcols: list[int] = None, universe=None):
         self.sessionstart = int(time())
         if universe is not None:
@@ -189,7 +189,7 @@ class Csvnew():
                                         quotechar=',', quoting=csv.QUOTE_MINIMAL)
                 spamwriter.writerow(self.hostfileold.getrow(0))
                 row = self.hostfileold.getrow(1, miss=3)
-                row.append(base.hashfile(cfile))
+                row.append(Base.hashfile(cfile))
                 spamwriter.writerow(row)
                 for x in range(2, len(self.hostfileold.rowfirst)):
                     spamwriter.writerow(self.hostfileold.getrow(x))
@@ -198,7 +198,7 @@ class Csvnew():
                 spamwriter = csv.writer(csvfile, delimiter=',',
                                         quotechar=',', quoting=csv.QUOTE_MINIMAL)
                 spamwriter.writerow(self.hostfileold.getrow(0))
-                spamwriter.writerow([self.prevversionnum + 1, self.sessionstart, filename, base.hashfile(cfile)])
+                spamwriter.writerow([self.prevversionnum + 1, self.sessionstart, filename, Base.hashfile(cfile)])
                 for x in range(1, len(self.hostfileold.rowfirst)):
                     spamwriter.writerow(self.hostfileold.getrow(x))
 
@@ -217,10 +217,4 @@ class Csvnew():
         self.sessionstart = int(time())
         self.prevversionnum += 1
 
-    def writefile(self):
-        with open(self.filelocation, 'w', newline='') as csvfile:  # saves the filr
-            spamwriter = csv.writer(csvfile, delimiter=',',
-                                    quotechar=',', quoting=csv.QUOTE_MINIMAL)
-            # print(len(self.currcolumn))
-            for x in range(0, len(self.columnfirst[0])):  # number of rows # assembls the row
-                spamwriter.writerow(self.rowfirst[x])
+
