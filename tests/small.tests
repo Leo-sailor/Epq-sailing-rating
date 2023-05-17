@@ -1,0 +1,12 @@
+twothousandtodatetime:(8391):datetime.date(2022,12,22)
+twothousandtodatetime:(8390):datetime.date(2022,12,21)
+twothousandtodatetime:(0):datetime.date(2000,1,1)
+dayssincetwothousand:(datetime.date(2023,5,6),):8526
+check_consecutive:([1,2,3,4,4,5]):False
+check_consecutive:([]):True
+check_consecutive:([5,4,3,2,1]):True
+check_consecutive:([1,1]):False
+check_consecutive:([0,-1,-2,-1,0]):False
+check_consecutive:([2,1,0,-1,-2]):True
+generate_sailor_id:('gbr',48153,'leo','yates'):('gb-8153-leoya','GBR')
+generate_sailor_id:(None,48153,'leo','yates'):('gb-8153-leoya','GBR'):"gbr"
