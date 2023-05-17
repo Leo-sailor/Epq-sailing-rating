@@ -19,7 +19,7 @@ class HostScript:
 
         while True:
             Base.text_blocks(1)
-            choice = Base.cleaninput('\nWhat would you like to do?', 'i', rangelow=1, rangehigh=4)
+            choice = Base.clean_input('\nWhat would you like to do?', 'i', rangelow=1, rangehigh=4)
             match choice:
                 case 1:
                     self.addevent()
@@ -35,7 +35,7 @@ class HostScript:
 
     def sailorratingovertime(self):
         inpmethod = self.__getinputmethod()
-        inp = Base.cleaninput(f'(enter (_a) for all) \nPlease enter the sailor\'s {self.inputmethodname}:', 's')
+        inp = Base.clean_input(f'(enter (_a) for all) \nPlease enter the sailor\'s {self.inputmethodname}:', 's')
         sailorid = universecsv.getsailorid(inpmethod, inp)
         # TODO make this work and finnish it
     def getsailorinfo(self):
@@ -48,12 +48,12 @@ class HostScript:
         for key,val in info_codes.items(): # prints all the info_codes
             print(f'({key}) for {val}')
 
-        outtype = Base.cleaninput("\nWhat would u like to recive?", 's')
+        outtype = Base.clean_input("\nWhat would u like to recive?", 's')
         outtype.lower().strip()
         outtypename = info_codes[outtype]
 
         inpmethod = self.__getinputmethod()
-        inp = Base.cleaninput(f'Please enter the sailor\'s {self.inputmethodname}:', 's')
+        inp = Base.clean_input(f'Please enter the sailor\'s {self.inputmethodname}:', 's')
 
         sailorid = universecsv.getsailorid(inpmethod,inp)
         out = universecsv.getinfo(sailorid, outtype)
@@ -68,27 +68,27 @@ class HostScript:
     def makenewsailor(name=None, sailno=None, champ=None):
         print('\n NEW SAILOR WIZZARD')
         if name is None:
-            name = Base.cleaninput('Please enter the sailor\'s Full name:', 's', charlevel=3)
+            name = Base.clean_input('Please enter the sailor\'s Full name:', 's', charlevel=3)
         name = name.split(' ', 1)
         first = name[0]
         try:
             sur = name[1]
         except IndexError:
-            sur = Base.cleaninput('Please enter the sailor\'s  surname:', 's', charlevel=3)
+            sur = Base.clean_input('Please enter the sailor\'s  surname:', 's', charlevel=3)
         if champ is None:
-            champ = str(Base.cleaninput('Please enter the sailor\'s Championship number '
+            champ = str(Base.clean_input('Please enter the sailor\'s Championship number '
                                         '\n(Please enter (000) if the sailor does not have a Champ number):',
                                         'i', rangehigh=999))
         if sailno is None:
-            sailno = str(Base.cleaninput('Please enter the sailor\'s Sail number '
+            sailno = str(Base.clean_input('Please enter the sailor\'s Sail number '
                                          '\n(Please ignore any letters):',
                                          'i', rangehigh=99999))
-        nat = Base.cleaninput('\n(enter) for automatic\nPlease enter the sailor\'s 3 letter country code:', 's', charlevel=3).upper()[:3]
-        out = Base.generatesailorid(nat, sailno, first, sur)
+        nat = Base.clean_input('\n(enter) for automatic\nPlease enter the sailor\'s 3 letter country code:', 's', charlevel=3).upper()[:3]
+        out = Base.generate_sailor_id(nat, sailno, first, sur)
         sailorid = out[0]
         nat = out[1]
         if nat == 'GBR':
-            region = Base.cleaninput('\n SC - Scotland\n SE - London and South-east\n SW - South-west\n SO - South'
+            region = Base.clean_input('\n SC - Scotland\n SE - London and South-east\n SW - South-west\n SO - South'
                                      '\n MD - Midlands\n NO - North\n NI - Northen Ireland\n WL - Wales\n EA - East'
                                      '\n NA - Unknown\nPlease enter {} {}\'s\'s 2 letter RYA region code:'.format(first, sur),
                                      's', charlevel=3).upper()[:2]
@@ -102,22 +102,22 @@ class HostScript:
         med = 0
         heavy = 0
         while inp != 1:
-            racenum = Base.cleaninput('\nPlease enter the number of races in the event (1-20):', 'i', rangelow=1,
-                                      rangehigh=20)
-            light_race_num = Base.cleaninput(
+            racenum = Base.clean_input('\nPlease enter the number of races in the event (1-20):', 'i', rangelow=1,
+                                       rangehigh=20)
+            light_race_num = Base.clean_input(
                 '\nPlease enter the number of light wind (0-8kts) races in the event (0-{}):'.format(racenum), 'i',
                 rangehigh=racenum)
             racenum -= light_race_num
-            med = Base.cleaninput(
+            med = Base.clean_input(
                 'Please enter the number of medium wind (9-16kts) races in the event (0-{}):'.format(racenum), 'i',
                 rangehigh=racenum)
             racenum -= med
             heavy = racenum
-            inp = Base.cleaninput(f'\nThat means there were\n{light_race_num} light wind races\n{med} medium wind races\n{heavy} strong wind races\n'
+            inp = Base.clean_input(f'\nThat means there were\n{light_race_num} light wind races\n{med} medium wind races\n{heavy} strong wind races\n'
                                   f'press (1) to confirm or press (2) to try again:', 'i',
-                                  1, rangehigh=2)
+                                   1, rangehigh=2)
 
-        days = Base.cleaninput('\nHow many days ago was the final race of the event(0-500):', 'i')
+        days = Base.clean_input('\nHow many days ago was the final race of the event(0-500):', 'i')
 
         results_obj = self.__getranking('the event')
 
@@ -130,13 +130,13 @@ class HostScript:
         universecsv.endevent(results_obj.sailorids, days)
 
     def addeventproper(self):
-        racenum = Base.cleaninput('\nPlease enter the number of races in the event (1-20):', 'i', rangelow=1, rangehigh=20)
-        days = Base.cleaninput('\nHow many days ago was the final race of the event(0-500):', 'i')
+        racenum = Base.clean_input('\nPlease enter the number of races in the event (1-20):', 'i', rangelow=1, rangehigh=20)
+        days = Base.clean_input('\nHow many days ago was the final race of the event(0-500):', 'i')
         allsailors = set()
         for x in range(racenum):
             racetext = ' '.join(['Race', str(x+1)])
             print(f'\n{racetext.upper()} ENTRY WIZZARD')
-            wind = Base.cleaninput(f'\nPlease enter the wind strength for {racetext}\n'
+            wind = Base.clean_input(f'\nPlease enter the wind strength for {racetext}\n'
                                    f'(1) for light wind - 0-8kts\n'
                                    f'(2) for medium wind - 9-16kts\n'
                                    f'(3) for strong wind - 17+ kts:', 'i', rangehigh=3, rangelow=1)
@@ -148,14 +148,14 @@ class HostScript:
         universecsv.endevent(allsailors, days)
 
     def addeventcsv(self):
-        racenum = Base.cleaninput('\nPlease enter the number of races in the event (1-20):', 'i', rangelow=1,
-                                  rangehigh=20)
-        days = Base.cleaninput('\nHow many days ago was the final race of the event(0-500):', 'i')
+        racenum = Base.clean_input('\nPlease enter the number of races in the event (1-20):', 'i', rangelow=1,
+                                   rangehigh=20)
+        days = Base.clean_input('\nHow many days ago was the final race of the event(0-500):', 'i')
         allsailors = set()
         for x in range(racenum):
             racetext = ' '.join(['Race', str(x + 1)])
             print(f'\n{racetext.upper()} ENTRY WIZZARD')
-            fileloc = Base.cleaninput(f'Please enter the full file location of the file for {racetext}:', 's')
+            fileloc = Base.clean_input(f'Please enter the full file location of the file for {racetext}:', 's')
             currfile = Csvnew(fileloc)
             wind = int(currfile.getcell(0, 1))
 
@@ -187,7 +187,7 @@ class HostScript:
                 toprint = '\n'.join(speedprint)
                 print(toprint)
             position += 1
-            inp = Base.cleaninput(
+            inp = Base.clean_input(
                 "\nPlease enter the {} of {} place in {}:".format(self.inputmethodname, Base.ordinal(position),
                                                                   eventname), 's').lower()
             if inp == 'd':
@@ -223,9 +223,9 @@ class HostScript:
                 self.inputmethodname = 'Sailor-id'
             else:
                 self.inputmethodname = 'Sail Number'
-            inp = Base.cleaninput((''.join(('\nYour current selected input method is: ', self.inputmethodname,
+            inp = Base.clean_input((''.join(('\nYour current selected input method is: ', self.inputmethodname,
                                             '\nWould you like to change it?\n(0) for no\n(1) for yes:'))), 'i',
-                                  rangehigh=1)
+                                   rangehigh=1)
             if inp == 1:
                 ip = ''
             else:
@@ -233,7 +233,7 @@ class HostScript:
         else:
             ip = ''
         while ip not in inpmethods:
-            ip = Base.cleaninput('\nHow would you like to enter sailors information?\n'
+            ip = Base.clean_input('\nHow would you like to enter sailors information?\n'
                                  '(c) for Championship Number\n'
                                  '(i) for Sailor-id\n'
                                  '(n) for Name\n'
@@ -257,7 +257,7 @@ class HostScript:
                 return ''
 
         print("\nEVENT ENTRY WIZZARD")
-        inp = Base.cleaninput('\n(1) for entering overall event results (less accurate - quicker)\n'
+        inp = Base.clean_input('\n(1) for entering overall event results (less accurate - quicker)\n'
                               '(2) for entering individual race results (higher accuracy - slower)\n'
                               '(3) for importing previous race (needs previously entered csv):',
                               'i', rangehigh=3, rangelow=1)

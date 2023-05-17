@@ -1,6 +1,33 @@
 import pandas
 import tabula
 import cProfile
+import LocalDependencies.General as b
+
+import unittest
+from unittest.mock import patch
+
+# Unit under test.
+def get_input():
+    my_input = input("Enter some string: ")
+    if my_input == "bad":
+        raise Exception("You were a bad boy...")
+    return my_input
+
+class MyTestCase(unittest.TestCase):
+    # Force input to return "hello" whenever it's called in the following test
+    @patch("builtins.input", return_value="hello")
+    def test_input_good(self, mock_input):
+        self.assertEqual(get_input(), "hello")
+
+    # Force input to return "bad" whenever it's called in the following test
+    @patch("builtins.input", return_value="bad")
+    def test_input_throws_exception(self, mock_input):
+        with self.assertRaises(Exception) as e:
+            get_input()
+            self.assertEqual(e.message, "You were a bad boy...")
+
+if __name__ == "__main__":
+    unittest.main()
 def findandreplace(inp,find,replace):
     if type(inp) == str:
         findlength = len(find)

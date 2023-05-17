@@ -9,15 +9,19 @@ import LocalDependencies.dataclasses as dat
 from binascii import unhexlify
 
 UNIVERSES_ = '\\universes\\'
+sys_path = path[0]
+if "teststttt" in sys_path:
+    sys_path = sys_path.replace('tests', '')
 
 
 class Csvcode:
+    global sys_path
     def __init__(self, universe=None, password=None):
         self.admin = False
         self.cfile = ''
         print('\n UNIVERSE SELECTION TOOL:')
         print('Avalible universes are:')
-        host = Csvnew(''.join((path[0], UNIVERSES_, 'host.csv',)))  # stores it in [column][row]
+        host = Csvnew(''.join((sys_path, UNIVERSES_, 'host.csv',)))  # stores it in [column][row]
 
         host.printcolumn(0, True, 0)  # prints all the names of the universes
         if universe is None:
@@ -33,7 +37,7 @@ class Csvcode:
 
         if universe != self.universe:
             host = Csvnew(''.join(
-                (path[0], UNIVERSES_, 'host.csv',)))  # if a new universe has been created, reopen the hist csv file
+                (sys_path, UNIVERSES_, 'host.csv',)))  # if a new universe has been created, reopen the hist csv file
         # print(column) #--debuging line
 
         universeloc = host.getrownum(self.universe, 0)  # gets the location of the universe inside of the host file
@@ -49,7 +53,7 @@ class Csvcode:
             universename = self.__makeuniverse()  # checks whether to make a universe and makes it if needed
 
         try:  # used to cath any file opening erros, probable to much inside of the 'try' tho
-            self.folder = ''.join((path[0], '\\universes\\', universename, '\\'))
+            self.folder = ''.join((sys_path, '\\universes\\', universename, '\\'))
             self.hostfile = ''.join((self.folder, 'host-', universename, '.csv'))
 
             universehost = Csvnew(self.hostfile)  # opens the csv with the [rows][columns]
@@ -70,10 +74,10 @@ class Csvcode:
         return universename
 
     def __makeuniverse(self):
-        name = Base.cleaninput('\nPlease enter your new ranking universe name:', 's',
-                               charlevel=1)  # gets the universe name
+        name = Base.clean_input('\nPlease enter your new ranking universe name:', 's',
+                                charlevel=1)  # gets the universe name
 
-        direc = ''.join((path[0], UNIVERSES_, name,))  # figures out the path of the new universe
+        direc = ''.join((sys_path, UNIVERSES_, name,))  # figures out the path of the new universe
         if os.path.exists(direc):  # checks whether that universe exists
             raise FileExistsError('This universe already exists, please try again')
         else:
@@ -98,20 +102,20 @@ class Csvcode:
             spamwriter.writerow(
                 ['1', curtime, firstfilename, Base.hashfile(firstfile)])  # adds the row and has hashed the file
 
-        temp = Base.cleaninput('\nPlease enter a password for this universe:',
+        temp = Base.clean_input('\nPlease enter a password for this universe:',
                                'pn')  # makes a passowrd and returns the hash and salt
         self.passhash = temp[0]  # saves the salt and hash
         self.passsalt = temp[1]
 
-        starting = Base.cleaninput('\nWhat would you like the average rating of this '
+        starting = Base.clean_input('\nWhat would you like the average rating of this '
                                    'universe to be?(450-3100)(default: 1500):',
                                    'i', rangehigh=3100, rangelow=450)
-        k = Base.cleaninput('\nWhat would you like the speed of rating change '
+        k = Base.clean_input('\nWhat would you like the speed of rating change '
                             'to be?(0.3 - 4)(Recomended: 1):',
                             'f', rangelow=0.3, rangehigh=4)  # random comment
         # generic input collecting
 
-        with open(''.join((path[0], '\\universes\\host.csv')), 'a',
+        with open(''.join((sys_path, '\\universes\\host.csv')), 'a',
                   newline='') as csvfile:  # writes all the inputs to the master host file
             spamwriter = csv.writer(csvfile, delimiter=',',
                                     quotechar=',', quoting=csv.QUOTE_MINIMAL)
@@ -131,10 +135,10 @@ class Csvcode:
             else:
                 print('\nThat password was incorrect, please try again')
         print('\n ADMIN RIGHTS')
-        self.admin = Base.cleaninput(('Press (enter) to skip entering a password'
+        self.admin = Base.clean_input(('Press (enter) to skip entering a password'
                                       '\nor enter the admin password for the universe {}:'.format(self.universe)),
                                      'pr', correcthash=self.passhash,
-                                     salt=self.passsalt)
+                                      salt=self.passsalt)
         return self.admin  # checks whether the user should have admin eights
 
     def cleanup(self):
@@ -213,25 +217,6 @@ class Csvcode:
                 findtypeloc = 0
         return findtypeloc
 
-    def get_data_locations(self, term, fieldnum) -> list[int]:
-        term = str(term)  # makes sure the term to be searched for is a string
-        term.strip('0')
-        if type(fieldnum) == str:
-            fieldnum = self.getfieldnumber(fieldnum)
-
-        if fieldnum == -1:  # the exception for if its a name
-            newterm = term.lower().split(' ', 1)
-            locations = []
-            for loc, val in enumerate(self.file.getcolumn(3)):
-                score = Base.similar(newterm[0], val)
-                if score > 0.7 or val[:2] == newterm[0][:2]:
-                    locations.append(loc)
-            if len(locations) != 1:
-                locations = [loc for loc in locations if newterm[1] == (self.file.getcell(loc, 4))]
-        else:
-            locations = Base.multiindex(self.file.getcolumn(fieldnum), term)
-        return locations
-
     def getsailorid(self, fieldnum: str | int, term: str | int, *data) -> str:
         """
 
@@ -241,14 +226,34 @@ class Csvcode:
         :return:
         """
 
+        def get_data_locations(term,fieldnum) -> list[int]:
+
+            term = str(term)  # makes sure the term to be searched for is a string
+            term.strip('0')
+            if type(fieldnum) == str:
+                fieldnum = self.getfieldnumber(fieldnum)
+
+            if fieldnum == -1:  # the exception for if its a name
+                newterm = term.lower().split(' ', 1)
+                locations = []
+                for loc, val in enumerate(self.file.getcolumn(3)):
+                    score = Base.similar(newterm[0], val)
+                    if score > 0.7 or val[:2] == newterm[0][:2]:
+                        locations.append(loc)
+                if len(locations) != 1:
+                    locations = [loc for loc in locations if newterm[1] == (self.file.getcell(loc, 4))]
+            else:
+                locations = Base.multiindex(self.file.getcolumn(fieldnum), term)
+            return locations
+
         def user_select_sailor() -> str:
             print(f'\nA sailor could not be found with {term} in field number {fieldnum}')
             working = True
             while working:
-                inp = Base.cleaninput('\nPlease type in a sailor id \nor press (enter) to make a new sailor'
+                inp = Base.clean_input('\nPlease type in a sailor id \nor press (n) to make a new sailor'
                                       '\nor press (t) to try again '
-                                      '\nor press (p) to get a list of all sailor id\'s:', 's', charlevel=2)
-                if inp == '':
+                                      '\nor press (p) to get a list of all sailor id\'s:', 's', charlevel=2).lower()
+                if inp == 'n':
                     from LocalDependencies.Hosts import HostScript
                     match fieldnum:
                         case -1:
@@ -265,9 +270,9 @@ class Csvcode:
                         working = True  # makes the user try again
                     else:
                         return a[1]  # returns the sailor id just made
-                elif inp.lower() in self.file.getcolumn(0):  # checks if what the user eneter is a sailor id that exists
+                elif inp in self.file.getcolumn(0):  # checks if what the user eneter is a sailor id that exists
                     return inp
-                elif inp.lower().strip() == 'p':  # lists all sailor id's
+                elif inp.strip() == 'p':  # lists all sailor id's
                     print('')
                     for line in self.file.getcolumn(0):
                         print(line)
@@ -279,19 +284,21 @@ class Csvcode:
 
             raise IndexError('That term could not be found')
 
-        def user_tie_break() -> str:
+        def user_tie_break(locs = None) -> str:
+            if locs is None:
+                locs = locations
             names = []
-            for x in range(0, len(locations)):
-                nameparts = (self.file.getcell(locations[x], 3), self.file.getcell(locations[x], 4))
+            for x in range(0, len(locs)):
+                nameparts = (self.file.getcell(locs[x], 3), self.file.getcell(locs[x], 4))
                 names.append(' '.join(nameparts))
             print(f'\nThe search term \'{term}\' is ambiguous'
                   '\nBelow is a list of names for that sailor')
-            for x in range(0, len(locations)):
-                string = (str(x + 1), ' - ', names[x], ' - ', self.file.getcell(locations[x], 1), ' - ',
-                          self.file.getcell(locations[x], 2))
+            for x in range(0, len(locs)):
+                string = (str(x + 1), ' - ', names[x], ' - ', self.file.getcell(locs[x], 1), ' - ',
+                          self.file.getcell(locs[x], 2))
                 print((''.join(string)))
-            finallocation = locations[(Base.cleaninput('\nPlease enter the number of the correct sailor you are '
-                                                       'searching for: ', 'i', 1, len(locations))) - 1]
+            finallocation = locs[(Base.clean_input('\nPlease enter the number of the correct sailor you are '
+                                                  'searching for: ', 'i', 1, len(locs))) - 1]
             index = int(finallocation)
             sailorid = self.file.getcell(index, 0)
             return sailorid
@@ -319,11 +326,14 @@ class Csvcode:
                         pointstracker[x] += 1
             index = locations[
                 pointstracker.index(max(pointstracker))]  # gets the location of the sailor witht he most points
+            if len(set(pointstracker)) != len(pointstracker):
+                locs = [locations[index] for index in Base.multiindex(pointstracker,max(pointstracker))]
+                return user_tie_break(locs)# makes sure there are no duplicates
             sailorid = self.file.getcell(index, 0)
             return sailorid
 
         # main code for function
-        locations = self.get_data_locations(term, fieldnum)
+        locations = get_data_locations(term,fieldnum)
         if len(locations) == 0:  # deals with no sailor being found with that data
             return user_select_sailor()
         elif len(locations) == 1:  # if the sailor could be found
@@ -348,7 +358,7 @@ class Csvcode:
             print(f'The original sailors information is: {self.getinfo(sailid, "a")}')
             print('\n(1). Append "-1" to the new sailor id and proceed to add'
                   '\n(2). Abort adding new sailor id')
-            inp = Base.cleaninput('Which of those options do you want to use:', 'i', rangelow=1, rangehigh=2)
+            inp = Base.clean_input('Which of those options do you want to use:', 'i', rangelow=1, rangehigh=2)
             if inp == 1:
                 sailid += '-1'
                 count = 1
@@ -390,7 +400,7 @@ class Csvcode:
         chars_to_strip = "abcdefghijklmnopqrstuvwxyz()"
         date = Base.dayssincetwothousand(Base.getdate("date", f"of the last day of {event_title}"))
         for race in race_columns:
-            wind = Base.cleaninput(f'What was the wind of {table[0][race]}?', 'i', 1, 3)
+            wind = Base.clean_input(f'What was the wind of {table[0][race]}?', 'i', 1, 3)
             result = [int(table[x][race].lower().strip(chars_to_strip)) for x in range(1, len(table))]
             races.append(dat.Race(dat.Results(sailorids, result), wind, date))
         return dat.Event(races, date)
@@ -404,7 +414,7 @@ class Csvcode:
         wind = race.wind
         days = race.date
         direc = ''.join(
-            (path[0], UNIVERSES_, self.universe, '\\events'))  # figures out the path of the new universe
+            (sys_path, UNIVERSES_, self.universe, '\\events'))  # figures out the path of the new universe
         if not (os.path.exists(direc)):  # checks whether that universe exists
             os.mkdir(direc)
         made = False

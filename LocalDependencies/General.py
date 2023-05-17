@@ -9,6 +9,7 @@ from difflib import SequenceMatcher
 from tkinter import filedialog
 from os import remove
 from tabula import read_pdf
+from numpy import diff as np_diff
 
 TEMP = 'webpage.temp'
 
@@ -28,25 +29,25 @@ validnat = {'ALG', 'ASA', 'AND', 'ANT', 'ARG', 'ARM', 'ARU', 'AUS', 'AUT', 'AZE'
 numbers = ['0','1','2','3','4','5','6','7','8','9']
 
 
-def getfilename(mode='r'):
+def getfilename(mode='r')->str:
     file_getter = filedialog.askopenfile(mode)
     file_getter.close()
     return file_getter.name
 
-def getdate(returnmethod='epoch', prompt = ""):
+def getdate(returnmethod='epoch', prompt = "")->int|str|datetime:
     """
 
     :param returnmethod: epoch is seconds since epoch, text returns a text format, date returns a dateobject, datetime returns a datetime object
     :return:
     """
-    year = cleaninput(f"Please enter the year {prompt}", 'i', 2000,2100)
-    month = cleaninput(f"Please enter the month {prompt}", 'i', 1, 12)
+    year = clean_input(f"Please enter the year {prompt}", 'i', 2000, 2100)
+    month = clean_input(f"Please enter the month {prompt}", 'i', 1, 12)
     if month in [4,6,9,11]:
-        day = cleaninput(f"Please enter the day {prompt}", 'i', 1, 30)
+        day = clean_input(f"Please enter the day {prompt}", 'i', 1, 30)
     elif month in [1,3,5,7,8,10,12]:
-        day = cleaninput(f"Please enter the day {prompt}", 'i', 1, 31)
+        day = clean_input(f"Please enter the day {prompt}", 'i', 1, 31)
     else:
-        day = cleaninput(f"Please enter the day {prompt}", 'i', 1, 28)
+        day = clean_input(f"Please enter the day {prompt}", 'i', 1, 28)
     current = date(year,month,day)
     match returnmethod:
         case 'epoch':
@@ -59,23 +60,25 @@ def getdate(returnmethod='epoch', prompt = ""):
         case 'datetime':
             return datetime(year,month,day)
 
-def twothousandtodatetime(days):
+def twothousandtodatetime(days:int) -> datetime:
     thousand = date(2000,1,1)
     delta = timedelta(days)
     return thousand + delta
 
 
-def dayssincetwothousand(date: date | datetime = None) -> int:
+def dayssincetwothousand(in_date: date | datetime = None) -> int:
     thousand = date(2000, 1, 1)
-    if date is None:
+    if in_date is None:
         now = date.today()
+    else:
+        now = in_date
     day = now - thousand
     return day.days
-def check_consecutive(l):
+def check_consecutive(l:list) -> bool:
     n = len(l) - 1
-    return (sum(np.diff(sorted(l)) == 1) >= n)
-def cleaninput(prompt: str, datatype: str, rangelow: float = 0, rangehigh: float = 500, charlevel: int = 0,
-               correcthash='', salt=''.encode()) -> str|float|int|bool|tuple[str,str]:
+    return (sum(np_diff(sorted(l)) == 1) >= n)
+def clean_input(prompt: str, datatype: str, rangelow: float = 0, rangehigh: float = 500, charlevel: int = 0,
+                correcthash='', salt=''.encode()) -> str|float|int|bool|tuple[str,str]:
     """This function takes a prompt and a type and keeps taking an input from the user until it furfills the
     requirmetns attached
     char lever 0: all characters allowed
@@ -189,7 +192,8 @@ def user_filterd_string(chars_allowed, prompt) -> str:
         else:
             same = True
     return name
-def generatesailorid(nat: str, sailno: str | int, first: str, surname: str) -> tuple[str, str]:
+def generate_sailor_id(nat: str | None, sailno: str | int, first: str, surname: str) -> tuple[str, str]:
+    global basenat
     """
     This function generates a sailorid from its components
     :param nat: 3 letter sting or none
@@ -199,11 +203,13 @@ def generatesailorid(nat: str, sailno: str | int, first: str, surname: str) -> t
     :return: string
     """
     iden = ''
-
+    if nat is None:
+        nat = getnat()
     nat = nat.upper()
-
     if nat not in validnat:
         nat = getnat()
+    if basenat == '':
+        basenat = nat
     first += '000'
     surname += '000'
     sailno = str(sailno)
@@ -231,7 +237,7 @@ def getnat() -> str:
     :return: 3 letter country code
     """
     global basenat
-    if basenat == '':
+    if basenat == '' or basenat == 'GBR':
         ip = requests.get('https://geolocation-db.com/json').json()
         natname = ip['country_name']
         choice = input('\nAre the majority of competitors from the {}?\ny for yes and n for no'.format(natname))
@@ -312,15 +318,15 @@ def multiindex(inlist: list, term: int | str) -> list[int]:
         if type(inlist[x]) != str:
             inlist[x] = str(inlist[x])
 
-        inlist[x] = inlist[x].lower().strip()
+        # inlist[x] = inlist[x].lower().strip()
 
     indexs = []
     start = 0
     end = False
     while not end:
         try:
-            indexs.append(inlist.index(term, start + 1))
-            start = indexs[-1]
+            indexs.append(inlist.index(term, start))
+            start = indexs[-1] + 1
         except ValueError:
             end = True
     return indexs
