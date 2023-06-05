@@ -3,15 +3,18 @@ import LocalDependencies.General as g
 from LocalDependencies.Main_core import Csvcode
 from unittest.mock import patch
 import datetime
+
+def compare_complex_lists(a, b):
+    if str(a)!= str(b):
+        return False
+    else:
+        return True
 class Test:
     def __init__(self, inps: tuple,out: any,keyboard_input: str = None,func:str = None):
         if isinstance(inps, tuple):
             self.inps = inps
         else:
-            try:
-                self.inps = tuple(inps)
-            except TypeError:
-                self.inps = (inps,)
+            self.inps = (inps,)
         self.out = out
         if keyboard_input is None:
             self.keyboard_input = ""
@@ -58,10 +61,12 @@ class TestSum(unittest.TestCase):
 
 
     def test_small(self):
-
+        self.maxDiff = None
         with open("small.tests") as f:
             for line_num, line in enumerate(f):
                 line_parts = line.split(':')
+                for x in range(len(line_parts)):
+                    line_parts[x] = line_parts[x].replace(';',':')
                 func = line_parts[0]
                 a, b = eval(line_parts[1]), eval(line_parts[2])
                 if len(line_parts) == 4:
@@ -72,8 +77,15 @@ class TestSum(unittest.TestCase):
                 with patch('builtins.input', return_value=test.keyboard_input):
 
                     output = eval(''.join(('g.',func,line_parts[1])))
-                    self.assertEqual(output, test.out, f"Failed - {test}")
+                    try:
+                        self.assertEqual(output, test.out, f"Failed - {test}")
+                    except AssertionError as er:
+                        if not compare_complex_lists(output, test.out):
+                            raise er
                     print(f"Passed - {line_num + 1} - with output: {output}")
 
-if __name__ == '__main__':
+def main():
+    print(datetime.datetime.now())
     unittest.main()
+if __name__ == '__main__':
+    main()

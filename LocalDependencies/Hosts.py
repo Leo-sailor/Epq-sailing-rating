@@ -1,28 +1,28 @@
 from LocalDependencies.Main_core import Csvcode
 import LocalDependencies.General as Base
 from LocalDependencies.Csv_custom import Csvnew
-import LocalDependencies.dataclasses as dat
-universecsv = Csvcode()
+import LocalDependencies.leo_dataclasses as dat
 import datetime
+from pickle import load as _load
+global universecsv
 
 
 class HostScript:
+
     def __init__(self):
         self.inpmethod = ''
         self.inputmethodname = ''
 
     def torun(self):
-        g = Base.url_to_pdf_to_table("https://gbrtopper.ourclubadmin.com/docs/1185/53_After_Race_5_Provisional.pdf", 0)
-        print(g)
-
-
+        universecsv = Csvcode()
 
         while True:
             Base.text_blocks(1)
-            choice = Base.clean_input('\nWhat would you like to do?', 'i', rangelow=1, rangehigh=4)
+            choice = Base.clean_input('\nWhat would you like to do?', 'i', rangelow=1, rangehigh=7)
             match choice:
                 case 1:
-                    self.addevent()
+                    event = self.import_event()
+                    universecsv.add_event(event)
                 case 2:
                     self.makenewsailor()
                 case 3:
@@ -31,7 +31,11 @@ class HostScript:
                     break
                 case 5:
                     self.sailorratingovertime()
-
+                case 6:
+                    print(universecsv)
+                case 7:
+                    self.torun()
+                    break
 
     def sailorratingovertime(self):
         inpmethod = self.__getinputmethod()
@@ -118,21 +122,21 @@ class HostScript:
                                    1, rangehigh=2)
 
         days = Base.clean_input('\nHow many days ago was the final race of the event(0-500):', 'i')
-
+        event = dat.Event([], days)
         results_obj = self.__getranking('the event')
 
         for _ in range(light_race_num):
-            universecsv.addrace(dat.Race(results_obj, 1, days))
+            event.append(dat.Race(results_obj, 1, days))
         for _ in range(med):
-            universecsv.addrace(dat.Race(results_obj, 2, days))
+            event.append(dat.Race(results_obj, 2, days))
         for _ in range(heavy):
-            universecsv.addrace(dat.Race(results_obj, 3, days))
-        universecsv.endevent(results_obj.sailorids, days)
+            event.append(dat.Race(results_obj, 3, days))
+        return event
 
     def addeventproper(self):
         racenum = Base.clean_input('\nPlease enter the number of races in the event (1-20):', 'i', rangelow=1, rangehigh=20)
         days = Base.clean_input('\nHow many days ago was the final race of the event(0-500):', 'i')
-        allsailors = set()
+        event = dat.Event([], days)
         for x in range(racenum):
             racetext = ' '.join(['Race', str(x+1)])
             print(f'\n{racetext.upper()} ENTRY WIZZARD')
@@ -141,17 +145,14 @@ class HostScript:
                                    f'(2) for medium wind - 9-16kts\n'
                                    f'(3) for strong wind - 17+ kts:', 'i', rangehigh=3, rangelow=1)
             info = self.__getranking(racetext)
-            universecsv.addrace(dat.Race(info, wind, days))
-            for item in info.sailorids:
-                if item not in allsailors:
-                    allsailors.add(item)
-        universecsv.endevent(allsailors, days)
+            event.append(dat.Race(info, wind, days))
+        return event
 
     def addeventcsv(self):
         racenum = Base.clean_input('\nPlease enter the number of races in the event (1-20):', 'i', rangelow=1,
                                    rangehigh=20)
         days = Base.clean_input('\nHow many days ago was the final race of the event(0-500):', 'i')
-        allsailors = set()
+        event = dat.Event([],days)
         for x in range(racenum):
             racetext = ' '.join(['Race', str(x + 1)])
             print(f'\n{racetext.upper()} ENTRY WIZZARD')
@@ -160,15 +161,10 @@ class HostScript:
             wind = int(currfile.getcell(0, 1))
 
             currsailorids = currfile.getcolumn(0, excudedrows= [0, 1])
-            positions = currfile.getcolumn(1, excudedrows= [0, 1])
-            for y in range(len(positions)):
-                positions[y] = int(positions[y])
+            positions = [int(x) for x in currfile.getcolumn(1, excudedrows= [0, 1])]
             results_obj = dat.Results(currsailorids,positions)
-
-            for item in currsailorids:
-                allsailors.add(item)
-            universecsv.addrace(dat.Race(results_obj, wind, days), imported = True)
-        universecsv.endevent(allsailors, days)
+            event.append(dat.Race(results_obj, wind, days))
+        return event
 
     def __getranking(self, eventname: str) -> dat.Results:
         self.__getinputmethod()
@@ -249,22 +245,83 @@ class HostScript:
             self.inputmethodname = 'Sail Number'
         return ip
 
-    def addevent(self):
+    def import_pickled_event(self):
+        fileloc = '_________'
+        while fileloc[-6:] != '.event':
+            if fileloc != '_________':
+                print('that file is not of the correct type, please try again')
+            fileloc = Base.getfilename()
+        with open(fileloc, 'rb') as f:
+            event = _load(f)
+        return event
+
+    def import_event(self):
         if not universecsv.admin:
             print('\nTo add an event you need admin rights')
             if not universecsv.adminrights():
                 print('\nAdd event failed, please try with admin rights')
-                return ''
+                return None
 
         print("\nEVENT ENTRY WIZZARD")
         inp = Base.clean_input('\n(1) for entering overall event results (less accurate - quicker)\n'
-                              '(2) for entering individual race results (higher accuracy - slower)\n'
-                              '(3) for importing previous race (needs previously entered csv):',
-                              'i', rangehigh=3, rangelow=1)
-        if inp == 1:
-            self.addeventlazy()
-        elif inp == 2:
-            self.addeventproper()
-        elif inp == 3:
-            self.addeventcsv()
+                               '(2) for entering individual race results (higher accuracy - slower)\n'
+                               '(3) for importing previous race csv (needs previously entered csv)\n:'
+                               '(4) for importing an online results file (needs internet - html/htm/pdf)\n'
+                               '(5) for importing an local file (html/htm/pdf)\n'
+                               '(6) for importing a .event file'
+                               '(0) to cancel',
+                               'i', rangehigh=5, rangelow=0)
+        match inp:
+            case 1:
+                event = self.addeventlazy()
+            case 2:
+                event = self.addeventproper()
+            case 3:
+                event = self.addeventcsv()
+            case 0:
+                return None
+            case 4:
+                pass
+                # event = # self.addeventonline() #
+            case 5:
+                event = self.addeventlocal()
+            case 6:
+                event = self.import_pickled_event()
+        return event
+
+    def addeventlocal(self) -> dat.Event:
+        fileloc = '______'
+        file_types = ['.htm', 'html', '.pdf']
+        while file_loc[-4:] not in file_types:
+            if fileloc != '':
+                print('that file is not of the correct type')
+            file_loc = Base.getfilename()
+        expected = False
+        while not expected:
+            try:
+                table_num = int(input('please enter the table number you want to retrieve'))
+            except ValueError:
+                table_num = 255
+            try:
+                match file_loc[-4:]:
+                    case '.htm'|'html':
+                        table = Base.gettablefromhtmlfile(file_loc,table_num)
+                    case '.pdf':
+                        table = Base.tablefrompdf(file_loc,table_num)
+            except IndexError:
+                table =  'The table number you input was invalid'
+            for line in table:
+                print(line)
+            expected = Base.clean_input('Was the table what you exepected')
+        data_extract_type = Base.clean_input('what field would you like to read on the file (s,c,n)?','str',length=1)
+        event_title = Base.clean_input('What is the event called')
+        return universecsv.processtable(table,data_extract_type,event_title)
+
+
+
+def main():
+    HostScript.torun()
+
+if __name__ == '__main__':
+    main()
 
