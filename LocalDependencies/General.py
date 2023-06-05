@@ -1,6 +1,5 @@
 # imports
 import requests
-from countryinfo import CountryInfo
 from hashlib import md5
 from bcrypt import gensalt, hashpw
 from datetime import datetime, date, timedelta
@@ -8,7 +7,7 @@ import pandas as pd
 from difflib import SequenceMatcher
 from tkinter import filedialog
 from os import remove
-from tabula import read_pdf
+from tabula import read_pdf as __read_pdf
 from numpy import diff as np_diff
 
 TEMP = 'webpage.temp'
@@ -29,8 +28,8 @@ validnat = {'ALG', 'ASA', 'AND', 'ANT', 'ARG', 'ARM', 'ARU', 'AUS', 'AUT', 'AZE'
 numbers = ['0','1','2','3','4','5','6','7','8','9']
 
 
-def getfilename(mode='r')->str:
-    file_getter = filedialog.askopenfile(mode)
+def getfilename(mode = 'r',**args)->str:
+    file_getter = filedialog.askopenfile(mode,**args)
     file_getter.close()
     return file_getter.name
 
@@ -78,7 +77,7 @@ def check_consecutive(l:list) -> bool:
     n = len(l) - 1
     return (sum(np_diff(sorted(l)) == 1) >= n)
 def clean_input(prompt: str, datatype: str, rangelow: float = 0, rangehigh: float = 500, charlevel: int = 0,
-                correcthash='', salt=''.encode()) -> str|float|int|bool|tuple[str,str]:
+                correcthash='', salt=''.encode(), length = None )-> str|float|int|bool|tuple[str,str]:
     """This function takes a prompt and a type and keeps taking an input from the user until it furfills the
     requirmetns attached
     char lever 0: all characters allowed
@@ -87,38 +86,56 @@ def clean_input(prompt: str, datatype: str, rangelow: float = 0, rangehigh: floa
     char level 3: character good for names
     for range high and range low, its less than or equal"""
     if datatype == 's':
-        if charlevel == 0 or charlevel == '0': # all characters
-            return input(prompt)
+        if charlevel == 0 or charlevel == '0':
+            if length is None:
+                return input(prompt)
+            inp = ''
+            while len(inp) != length:
+                if inp != '':
+                    print(f'your string must have a length of {length} characters')
+                inp = input(prompt)
+            return inp
         elif charlevel == 1 or charlevel == '1': # file safe chars
             file_safe_chars = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k',
                      'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
                      'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5',
                      '6', '7', '8', '9', '.', '_', '\'', '(', ')', ':']
-            return user_filterd_string(file_safe_chars,prompt)
+            if length is None:
+                return user_filterd_string(file_safe_chars,prompt)
+            inp = ''
+            while len(inp) != length:
+                if inp != '':
+                    print(f'your string must have a length of {length} characters')
+                inp = user_filterd_string(file_safe_chars,prompt)
+            return inp
         elif charlevel == 2 or charlevel == '2': # sailor id chars
             file_safe_chars = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k',
                      'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
                      'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5',
                      '6', '7', '8', '9', '-']
-            return user_filterd_string(file_safe_chars,prompt)
+            file_safe_chars = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k',
+                               'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
+                               'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5',
+                               '6', '7', '8', '9', '.', '_', '\'', '(', ')', ':']
+            if length is None:
+                return user_filterd_string(file_safe_chars, prompt)
+            inp = ''
+            while len(inp) != length:
+                if inp != '':
+                    print(f'your string must have a length of {length} characters')
+                inp = user_filterd_string(file_safe_chars, prompt)
+            return inp
         elif charlevel == 3 or charlevel == '3':
-            alphebet = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R',
+            file_safe_chars = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R',
                         'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '-', ' ']
-            name = ''
-            same = False
-            while not same:
-                origname = input(prompt)
-                name = (x for x in origname if x.upper() in alphebet)
-                name = ''.join(name)
-                name = firstcap(name)
-                if origname.upper() != name.upper():
-                    num = input(f'\nYour string is {name}\nPlease press (enter) to continue or (1) to retype')
-
-                    if num == '':
-                        same = True
-                else:
-                    same = True
-            return name
+            if length is None:
+                return user_filterd_string(file_safe_chars, prompt)
+            inp = ''
+            while len(inp) != length:
+                if inp != '':
+                    print(f'your string must have a length of {length} characters')
+                inp = user_filterd_string(file_safe_chars, prompt)
+            return inp
 
     elif datatype == 'f':
         try:
@@ -174,6 +191,14 @@ def clean_input(prompt: str, datatype: str, rangelow: float = 0, rangehigh: floa
                 return False
             else:
                 print('\nThat password was incorrect, please try again')
+
+    elif datatype == 'bool':
+        inp = clean_input(f'{prompt} - please enter 1 for yes and 0 for no','i',0,1)
+        if inp == 1:
+            return True
+        else:
+            return False
+
 
     else:
         return ''
@@ -236,9 +261,14 @@ def getnat() -> str:
     This function gets the current computer's adress and uses that to generate a suggested 3 letter country code
     :return: 3 letter country code
     """
+    from countryinfo import CountryInfo
     global basenat
     if basenat == '' or basenat == 'GBR':
+        if __name__ == 'tests.py':
+            print('starting network request')
         ip = requests.get('https://geolocation-db.com/json').json()
+        if __name__ == 'tests.py':
+            print('ending network request')
         natname = ip['country_name']
         choice = input('\nAre the majority of competitors from the {}?\ny for yes and n for no'.format(natname))
         if choice.upper() == 'Y':
@@ -256,7 +286,7 @@ def getnat() -> str:
     else:
         return basenat
 
-def csvlinegenerate(sailorid: str, nat: str, sailno: str, first: str, surname: str, region: str, champnum: str) -> str:
+def csv_line_generate(sailorid: str, nat: str, sailno: str, first: str, surname: str, region: str, champnum: str) -> str:
     """
     This function generates a csv line from its components ready to be appended to a csv
     :param sailorid: sailorid
@@ -301,7 +331,7 @@ def firstcap(word: str) -> str:
     except IndexError:
         return word
 
-def sort_on_element(sub_li: list, element: int) -> list:
+def sort_on_element(sub_li: list[list], element: int) -> list[list]:
     sub_li.sort(reverse=True, key=lambda x: x[element])
     return sub_li
 
@@ -356,9 +386,11 @@ def hashfile(file: str) -> str:
     return str(result)
 
 
-def gettablefromhtmlfile(file: str, tablenum: int = 0) -> list[list]:
+def gettablefromhtmlfile(file: str, tablenum: int =  None) -> list[list]|list[pd.DataFrame]:
     df_list = pd.read_html(file)
-    lists = list(df_list[tablenum].values.tolist())
+    if tablenum is None:
+        return df_list
+    lists = df_list[tablenum].values.tolist()
     header = [list(df_list[tablenum].columns.values)]
     lists.insert(0,header)
     return lists
@@ -404,7 +436,7 @@ def findandreplace(inp, find: str, replace: str, preserve_type=False):
                 raise TypeError('Expected type list or str or struct which str() can be applied not ' + str(type(inp)))
 
 def tablefrompdf(file: str, tablenum: int = -1,purge_nan_col:bool = True) -> list[list]:
-    df_list = read_pdf(file, pages="all") # reads pdf with tabula, is a utter shit module tho caus eof java requirements
+    df_list = __read_pdf(file, pages="all") # reads pdf with tabula, is a utter shit module tho caus eof java requirements
     # use this stack overfolw page to get it working on your computer: https://stackoverflow.com/questions/54817211/java-command-is-not-found-from-this-python-process-please-ensure-java-is-inst
     df = pd.concat(df_list) # each page comes as a spererate table, this puts them all into one
     lists = df.values.tolist()
@@ -490,6 +522,8 @@ def text_blocks(amount):
         print('(3) to get a sailors information')
         print('(4) to quit')
         print('(5) to get sailor info over time')
+        print('(6) to print the universe')
+        print('(7) to exit the universe')
     elif amount == 2:
         # developer instructions with methods locations objects and modes and other parameters and explainations
         print('\nclass: General method: help parameters: mode explaination: if the mode is 0 basic instructions '
@@ -503,3 +537,11 @@ def text_blocks(amount):
               'explaination: will find the rank of the rating in the unsorted list ratings')
         print('class: General method: __firstcap parameters: word(string) explaination: first letter to a capital')
         print('class: General method: Csvlinegenerate Parameters')
+
+if __name__ == '__main__':
+    import unittest
+    import tests.tests as t
+
+    suite = unittest.TestLoader().loadTestsFromModule(t)
+    # run all tests with verbosity
+    unittest.TextTestRunner(verbosity=2).run(suite)

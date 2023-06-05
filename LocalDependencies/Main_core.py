@@ -5,13 +5,16 @@ import os
 from LocalDependencies.ELO import EloCalculations
 import LocalDependencies.General as Base
 from LocalDependencies.Csv_custom import Csvnew
-import LocalDependencies.dataclasses as dat
+import LocalDependencies.leo_dataclasses as dat
 from binascii import unhexlify
+from pickle import dump as _dump, load as _load
+from numpy import matrix as _mat, array as _array
 
 UNIVERSES_ = '\\universes\\'
 sys_path = path[0]
 if "teststttt" in sys_path:
     sys_path = sys_path.replace('tests', '')
+col_width = [15,10,9,11,9,8,5,12,11,13,15,6,8,15,10]
 
 
 class Csvcode:
@@ -123,6 +126,13 @@ class Csvcode:
 
         print('{} universe has been created'.format(name))
         return universe
+
+    def __str__(self, row_to_sort: int = 11):
+        increasing_sort_vals = [11,12,0]
+        if row_to_sort in
+        table = Base.sort_on_element(self.file.rowfirst, row_to_sort)
+        return '\n'.join([''.join([f'{"".join((item,"                        "))[:col_width[val]]}' for val,item in enumerate(row)]) for row in table])
+
 
     def adminrights(self, password=None):
         if password is not None:
@@ -380,7 +390,10 @@ class Csvcode:
     def processtable(self, table: list[list[str]], field: str, event_title = "the event") -> dat.Event:
         race_columns = []
         fields = {'c': 'champ', 's': 'sail', 'n': 'name'}
-        search_term = fields[field]
+        try:
+            search_term = fields[field]
+        except KeyError:
+            search_term = 'name'
         info_column = -255
         numbers = '0123456789'
         for loc,val in enumerate(table[0]):
@@ -403,16 +416,13 @@ class Csvcode:
             wind = Base.clean_input(f'What was the wind of {table[0][race]}?', 'i', 1, 3)
             result = [int(table[x][race].lower().strip(chars_to_strip)) for x in range(1, len(table))]
             races.append(dat.Race(dat.Results(sailorids, result), wind, date))
-        return dat.Event(races, date)
+        return dat.Event(races, date,event_title=event_title)
 
 
 
 
-    def export_race(self, race):
-        sailorids = race.results.sailorids
-        positions = race.results.positions
-        wind = race.wind
-        days = race.date
+    def __export_event(self, event: dat.Event):
+
         direc = ''.join(
             (sys_path, UNIVERSES_, self.universe, '\\events'))  # figures out the path of the new universe
         if not (os.path.exists(direc)):  # checks whether that universe exists
@@ -420,24 +430,28 @@ class Csvcode:
         made = False
         count = 0
         while not made:
-            newdirec = ''.join((direc, '\\', str(Base.dayssincetwothousand() - days), '-', str(count), '.csv'))
+            newdirec = ''.join((direc, '\\', str((Base.twothousandtodatetime(event.date))), '-', str(count), '.event'))
             if os.path.exists(newdirec):
                 count += 1
             else:
-                with open(newdirec, 'w', newline='') as csvfile:
-                    spamwriter = csv.writer(csvfile, delimiter=',',
-                                            quotechar=',', quoting=csv.QUOTE_MINIMAL)
-                    spamwriter.writerow(['wind', str(wind)])
-                    spamwriter.writerow(['sailor-id', 'position'])
-                    for x in range(len(sailorids)):
-                        spamwriter.writerow([sailorids[x], positions[x]])
+                with open(newdirec, 'xb', newline='') as eventfile:
+                    _dump(event,eventfile,-1)
+
                 made = True
 
-    def addrace(self, race: dat.Race, imported: bool = False):
+    def add_event(self,event: dat.Event|None):
+        if event is None:
+            return None
+        for race in event:
+            self.__addrace(race)
+        self.__endevent(event.all_sailors, event.date)
+        if not event.imported:
+            self.__export_event(event)
+
+    def __addrace(self, race: dat.Race):
         sailorids = race.results.sailorids
         positions = race.results.positions
         wind = race.wind
-        days = race.date
         for x in range(0, 2):
             currats = []
             currevents = []
@@ -466,10 +480,7 @@ class Csvcode:
                 self.file.updatevalue(newrat[z], sailorids[z], columnnum, bypass=True)
             self.file.autosavefile()
 
-        if not imported:  # creates a dump of the results into a csv file
-            self.export_race(race)
-
-    def endevent(self, used_sailorids: list | set, daysago: int):
+    def __endevent(self, used_sailorids: list | set, daysago: int):
         eventday = Base.dayssincetwothousand() - daysago
         eventreward = 10
         totalsailors = len(self.file.getcolumn(0)) - 1

@@ -70,9 +70,9 @@ class Race:
     def __add__(self, other):
         return Event([self, other], max(self.date, other.date))
 
-
 class Event:
-    def __init__(self, races: list[Race], date: int | datetime.datetime):
+    def __init__(self, races: list[Race], date: int | datetime.datetime, imported: bool = False, event_title: str = ''):
+        self.imported = imported
         self.races = races
         if date is int:
             self.date = date
@@ -80,9 +80,16 @@ class Event:
             self.date = (date - datetime.datetime(2000, 1, 1)).days
         if not(self.date is int and 3500 <= self.date <= Base.dayssincetwothousand()):
             raise ValueError("Date is not between 2010 and today")
+        self.all_sailors = set()
+        for race in self.races:
+            for sailor in race:
+                self.all_sailors.add(sailor)
+        self.event_title = event_title
 
     def append(self, race: Race):
         self.races.append(race)
+        for sailor in race:
+            self.all_sailors.add(sailor)
 
     def __str__(self):
         things_to_join = []
