@@ -19,7 +19,7 @@ col_width = [15,10,9,11,9,8,5,12,11,13,15,6,8,15,10]
 
 class Csvcode:
     global sys_path
-    def __init__(self, universe=None, password=None):
+    def __init__(self, universe: str=None, password:str=None):
         self.admin = False
         self.cfile = ''
         print('\n UNIVERSE SELECTION TOOL:')
@@ -51,7 +51,7 @@ class Csvcode:
 
         self.adminrights(password)  # sees whether the user should have admin rights
 
-    def __linkuniverse(self, universename):
+    def __linkuniverse(self, universename: str) -> str:
         if universename.upper() == 'N':
             universename = self.__makeuniverse()  # checks whether to make a universe and makes it if needed
 
@@ -76,7 +76,7 @@ class Csvcode:
         self.cleanup()
         return universename
 
-    def __makeuniverse(self):
+    def __makeuniverse(self) -> str:
         name = Base.clean_input('\nPlease enter your new ranking universe name:', 's',
                                 charlevel=1)  # gets the universe name
 
@@ -127,14 +127,16 @@ class Csvcode:
         print('{} universe has been created'.format(name))
         return universe
 
-    def __str__(self, row_to_sort: int = 11):
+    def __str__(self, row_to_sort: int = 11) -> str:
         increasing_sort_vals = [11,12,0]
-        if row_to_sort in
-        table = Base.sort_on_element(self.file.rowfirst, row_to_sort)
+        if row_to_sort in increasing_sort_vals:
+            table = Base.sort_on_element(self.file.rowfirst, row_to_sort,False)
+        else:
+            table = Base.sort_on_element(self.file.rowfirst, row_to_sort,True)
         return '\n'.join([''.join([f'{"".join((item,"                        "))[:col_width[val]]}' for val,item in enumerate(row)]) for row in table])
 
 
-    def adminrights(self, password=None):
+    def adminrights(self, password:str=None):
         if password is not None:
             if Base.passwordhash(password, self.passsalt)[0] == self.passhash:
                 self.admin = True
