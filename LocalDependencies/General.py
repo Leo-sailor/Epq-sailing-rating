@@ -331,8 +331,8 @@ def firstcap(word: str) -> str:
     except IndexError:
         return word
 
-def sort_on_element(sub_li: list[list], element: int) -> list[list]:
-    sub_li.sort(reverse=True, key=lambda x: x[element])
+def sort_on_element(sub_li: list[list], element: int, reverse: bool = True) -> list[list]:
+    sub_li.sort(reverse=reverse, key=lambda x: x[element])
     return sub_li
 
 def multiindex(inlist: list, term: int | str) -> list[int]:
