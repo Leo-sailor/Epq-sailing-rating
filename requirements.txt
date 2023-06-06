@@ -2,6 +2,6 @@ countryinfo==0.1.2
 future==0.18.3
 requests==2.31.0
 bcrypt==4.0.1
-pandas==2.0.1
+pandas==2.0.2
 numpy==1.24.3
 tabula-py==2.7.0
