@@ -128,12 +128,13 @@ class Csvcode:
         return universe
 
     def __str__(self, row_to_sort: int = 11) -> str:
+        header = str(self.file.getrow(0)) + '\n'
         increasing_sort_vals = [11,12,0]
         if row_to_sort in increasing_sort_vals:
-            table = Base.sort_on_element(self.file.rowfirst, row_to_sort,False)
+            table = Base.sort_on_element(self.file.rowfirst, row_to_sort,False,zero_is_big=True)
         else:
-            table = Base.sort_on_element(self.file.rowfirst, row_to_sort,True)
-        return '\n'.join([''.join([f'{"".join((item,"                        "))[:col_width[val]]}' for val,item in enumerate(row)]) for row in table])
+            table = Base.sort_on_element(self.file.rowfirst, row_to_sort,True, zero_is_big=True)
+        return header + '\n'.join([''.join([f'{"".join((item,"                        "))[:col_width[val]]}' for val,item in enumerate(row)]) for row in table])
 
 
     def adminrights(self, password:str=None):
@@ -201,9 +202,9 @@ class Csvcode:
         match resulttype:
             case 'n' | 'name':
                 findtypeloc = -1  # makes sure the next bit will be bypassed
-            case 'sail number' | 's':
+            case 'sail number' | 's' | 'sail':
                 findtypeloc = 2  # the column location of the data
-            case 'champ number' | 'championship number' | 'c':
+            case 'champ number' | 'championship number' | 'c' | 'champ':
                 findtypeloc = 1
             case 'region' | 'z':
                 findtypeloc = 5
@@ -229,73 +230,68 @@ class Csvcode:
                 findtypeloc = 0
         return findtypeloc
 
-    def getsailorid(self, fieldnum: str | int, term: str | int, *data) -> str:
-        """
+    def get_data_locations(self,term, fieldnum) -> list[int]:
 
-        :param fieldnum: the table in the column you want to acces, -1 for names
-        :param term:
-        :param data:
-        :return:
-        """
+        term = str(term)  # makes sure the term to be searched for is a string
+        if term[-2:] == '.0':
+            term = term[:-2]
+        term.strip('0')
+        if type(fieldnum) == str:
+            fieldnum = self.getfieldnumber(fieldnum)
 
-        def get_data_locations(term,fieldnum) -> list[int]:
+        if fieldnum == -1:  # the exception for if its a name
+            newterm = term.lower().split(' ', 1)
+            locations = []
+            for loc, val in enumerate(self.file.getcolumn(3)):
+                score = Base.similar(newterm[0], val)
+                if score > 0.7 or val[:2] == newterm[0][:2]:
+                    locations.append(loc)
+            if len(locations) != 1:
+                locations = [loc for loc in locations if newterm[1] == (self.file.getcell(loc, 4))]
+        else:
+            locations = Base.multiindex(self.file.getcolumn(fieldnum), term)
+        return locations
 
-            term = str(term)  # makes sure the term to be searched for is a string
-            term.strip('0')
-            if type(fieldnum) == str:
-                fieldnum = self.getfieldnumber(fieldnum)
-
-            if fieldnum == -1:  # the exception for if its a name
-                newterm = term.lower().split(' ', 1)
-                locations = []
-                for loc, val in enumerate(self.file.getcolumn(3)):
-                    score = Base.similar(newterm[0], val)
-                    if score > 0.7 or val[:2] == newterm[0][:2]:
-                        locations.append(loc)
-                if len(locations) != 1:
-                    locations = [loc for loc in locations if newterm[1] == (self.file.getcell(loc, 4))]
-            else:
-                locations = Base.multiindex(self.file.getcolumn(fieldnum), term)
-            return locations
-
-        def user_select_sailor() -> str:
-            print(f'\nA sailor could not be found with {term} in field number {fieldnum}')
-            working = True
-            while working:
-                inp = Base.clean_input('\nPlease type in a sailor id \nor press (n) to make a new sailor'
-                                      '\nor press (t) to try again '
-                                      '\nor press (p) to get a list of all sailor id\'s:', 's', charlevel=2).lower()
-                if inp == 'n':
-                    from LocalDependencies.Hosts import HostScript
-                    match fieldnum:
-                        case -1:
-                            a = HostScript.makenewsailor(name=term)
-                        case 1:
-                            a = HostScript.makenewsailor(champ=term)
-                        case 2:
-                            a = HostScript.makenewsailor(sailno=term)
-                        case _:
-                            a = HostScript.makenewsailor()
-                    del HostScript
-                    # print(a)  # debug line
-                    if not a[0]:  # checks whether the sailor was sucessfully made
-                        working = True  # makes the user try again
-                    else:
-                        return a[1]  # returns the sailor id just made
-                elif inp in self.file.getcolumn(0):  # checks if what the user eneter is a sailor id that exists
-                    return inp
-                elif inp.strip() == 'p':  # lists all sailor id's
-                    print('')
-                    for line in self.file.getcolumn(0):
-                        print(line)
-                elif inp.lower().strip() == 't':
-                    inp = input('\nPlease enter the search term again:')
-                    return self.getsailorid(fieldnum, inp, data)
+    def user_select_sailor(self,term,fieldnum,return_on_new:bool = False,*data) -> str:
+        print(f'\nA sailor could not be found with {term} in field number {fieldnum}')
+        working = True
+        while working:
+            inp = Base.clean_input('\nPlease type in a sailor id \nor press (n) to make a new sailor'
+                                   '\nor press (t) to try again '
+                                   '\nor press (p) to get a list of all sailor id\'s:', 's', charlevel=2).lower()
+            if inp == 'n':
+                if return_on_new:
+                    return 0
+                from LocalDependencies.Hosts import HostScript
+                match fieldnum:
+                    case -1:
+                        a = HostScript.makenewsailor(name=term)
+                    case 1:
+                        a = HostScript.makenewsailor(champ=term)
+                    case 2:
+                        a = HostScript.makenewsailor(sailno=term)
+                    case _:
+                        a = HostScript.makenewsailor()
+                del HostScript
+                # print(a)  # debug line
+                if not a[0]:  # checks whether the sailor was sucessfully made
+                    working = True  # makes the user try again
                 else:
-                    print('\n That sailor id could not be found')
+                    return a[1]  # returns the sailor id just made
+            elif inp in self.file.getcolumn(0):  # checks if what the user eneter is a sailor id that exists
+                return inp
+            elif inp.strip() == 'p':  # lists all sailor id's
+                print('')
+                for line in self.file.getcolumn(0):
+                    print(line)
+            elif inp.lower().strip() == 't':
+                inp = input('\nPlease enter the search term again:')
+                return self.getsailorid(fieldnum, inp,return_on_new, *data)
+            else:
+                print('\n That sailor id could not be found')
 
-            raise IndexError('That term could not be found')
-
+        raise IndexError('That term could not be found')
+    def getsailorid(self, fieldnum: str | int, term: str | int, *data) -> str:
         def user_tie_break(locs = None) -> str:
             if locs is None:
                 locs = locations
@@ -343,11 +339,10 @@ class Csvcode:
                 return user_tie_break(locs)# makes sure there are no duplicates
             sailorid = self.file.getcell(index, 0)
             return sailorid
-
         # main code for function
-        locations = get_data_locations(term,fieldnum)
+        locations = self.get_data_locations(term,fieldnum)
         if len(locations) == 0:  # deals with no sailor being found with that data
-            return user_select_sailor()
+            return self.user_select_sailor(term, fieldnum,*data)
         elif len(locations) == 1:  # if the sailor could be found
             index = int(str(locations[0]))
             sailorid = self.file.getcell(index, 0)
@@ -362,7 +357,7 @@ class Csvcode:
         starting = ((self.elo.deviation - 100) * 5)
         day = 0
         if not Base.multiindex(self.file.getcolumn(0), sailid):
-            self.file.addrow([sailid, champ, sailno, first, sur, region, nat, starting, starting, starting, starting,
+            self.file.addrow([sailid, int(float(champ)), int(float(sailno)), first, sur, region, nat, starting, starting, starting, starting,
                               0, 0, day])
             return True, sailid
         else:
@@ -390,6 +385,17 @@ class Csvcode:
                 return False, ''
 
     def processtable(self, table: list[list[str]], field: str, event_title = "the event") -> dat.Event:
+        info = {'name': None, 'sail ': None, 'champ': None}
+        same_nat = Base.clean_input('Is everyone in the event from the same country','bool')
+        nat = None
+        fullspeed = False
+        #TODO: make fullspeed option for entering quickly
+        if same_nat:
+            nat = Base.getnat()
+        for val,item in enumerate(table[0]):
+            for key in info:
+                if key.upper() in item.upper():
+                    info[key] = val
         race_columns = []
         fields = {'c': 'champ', 's': 'sail', 'n': 'name'}
         try:
@@ -398,7 +404,7 @@ class Csvcode:
             search_term = 'name'
         info_column = -255
         numbers = '0123456789'
-        for loc,val in enumerate(table[0]):
+        for loc,val in enumerate(table[0]): # goes through the headers looking for races and the search colum
             if (val[0]).upper() == 'R' and val[1] in numbers:
                 race_columns.append(loc)
             if search_term in val.lower():
@@ -408,17 +414,41 @@ class Csvcode:
         extra_data_cols = list(range(1, min(race_columns)))
 
         sailorids = []
-        for row in table[1:]:
-            sailorids.append(self.getsailorid(field, row[info_column], *[row[item].lower() for item in extra_data_cols]))
+        for count,row in enumerate(table[1:]):
+            print(f'{count}/{len(table)-1} sailors enterd')
+            sailorids.append(self.import_sailor(field, row[info_column],row,info,nat, *[row[item].lower() for item in extra_data_cols]))
 
         races = []
         chars_to_strip = "abcdefghijklmnopqrstuvwxyz()"
-        date = Base.dayssincetwothousand(Base.getdate("date", f"of the last day of {event_title}"))
+        date = Base.dayssincetwothousand(Base.getdate("date", f"of the last day of {event_title}: "))
         for race in race_columns:
-            wind = Base.clean_input(f'What was the wind of {table[0][race]}?', 'i', 1, 3)
-            result = [int(table[x][race].lower().strip(chars_to_strip)) for x in range(1, len(table))]
+            wind = Base.clean_input(f'What was the wind of {table[0][race]}: ', 'i', 1, 3)
+            result = [int(float(table[x][race].lower().strip(chars_to_strip))) for x in range(1, len(table))]
             races.append(dat.Race(dat.Results(sailorids, result), wind, date))
-        return dat.Event(races, date,event_title=event_title)
+        return dat.Event(races, date,event_title=event_title,nation = nat)
+
+    def import_sailor(self, field, data, row, info,nat, *extra_info) -> str:
+        sailor_info = [None if x is None else row[x] for x in info.values()]
+
+        if nat is not None:
+            sailor_info.append(nat)
+        if len(self.get_data_locations(data,field)) == 0:
+            res = self.user_select_sailor(data,field,True)
+            if isinstance(res,int):
+                while True:
+                    from LocalDependencies.Hosts import HostScript
+                    a = HostScript.makenewsailor(*sailor_info)
+                    del HostScript
+                    if a[0]:  # checks whether the sailor was sucessfully made
+                        return a[1]  # returns the sailor id just made
+            else:
+                return res
+        else:
+            return self.getsailorid(field,data,*extra_info)
+
+
+
+
 
 
 
@@ -436,7 +466,7 @@ class Csvcode:
             if os.path.exists(newdirec):
                 count += 1
             else:
-                with open(newdirec, 'xb', newline='') as eventfile:
+                with open(newdirec, 'xb',) as eventfile:
                     _dump(event,eventfile,-1)
 
                 made = True
@@ -483,7 +513,7 @@ class Csvcode:
             self.file.autosavefile()
 
     def __endevent(self, used_sailorids: list | set, daysago: int):
-        eventday = Base.dayssincetwothousand() - daysago
+        eventday = daysago
         eventreward = 10
         totalsailors = len(self.file.getcolumn(0)) - 1
         totalcost = eventreward * len(used_sailorids)
@@ -500,7 +530,7 @@ class Csvcode:
                 self.file.updatevalue(eventday, sailor, 13, bypass=True)
             self.file.updatevalue(temp, sailor, 10, bypass=True)
 
-        for othersailor in self.file.getcolumn(0, 1):
+        for othersailor in self.file.getcolumn(0, [0]):
             if othersailor not in used_sailorids:
                 temp = float(self.getinfo(othersailor, 'o'))
                 temp -= individualcost

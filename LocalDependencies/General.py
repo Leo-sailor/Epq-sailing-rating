@@ -85,7 +85,7 @@ def clean_input(prompt: str, datatype: str, rangelow: float = 0, rangehigh: floa
     char level 2: character good for sailor id
     char level 3: character good for names
     for range high and range low, its less than or equal"""
-    if datatype == 's':
+    if datatype == 's' or datatype == 'str':
         if charlevel == 0 or charlevel == '0':
             if length is None:
                 return input(prompt)
@@ -96,9 +96,9 @@ def clean_input(prompt: str, datatype: str, rangelow: float = 0, rangehigh: floa
                 inp = input(prompt)
             return inp
         elif charlevel == 1 or charlevel == '1': # file safe chars
-            file_safe_chars = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k',
-                     'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
-                     'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5',
+            file_safe_chars = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K',
+                     'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V',
+                     'W', 'X', 'Y', 'Z', '0', '1', '2', '3', '4', '5',
                      '6', '7', '8', '9', '.', '_', '\'', '(', ')', ':']
             if length is None:
                 return user_filterd_string(file_safe_chars,prompt)
@@ -109,14 +109,7 @@ def clean_input(prompt: str, datatype: str, rangelow: float = 0, rangehigh: floa
                 inp = user_filterd_string(file_safe_chars,prompt)
             return inp
         elif charlevel == 2 or charlevel == '2': # sailor id chars
-            file_safe_chars = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k',
-                     'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
-                     'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5',
-                     '6', '7', '8', '9', '-']
-            file_safe_chars = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k',
-                               'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
-                               'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5',
-                               '6', '7', '8', '9', '.', '_', '\'', '(', ')', ':']
+            file_safe_chars = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K','L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V','W', 'X', 'Y', 'Z', '0', '1', '2', '3', '4', '5','6', '7', '8', '9', '-']
             if length is None:
                 return user_filterd_string(file_safe_chars, prompt)
             inp = ''
@@ -127,7 +120,7 @@ def clean_input(prompt: str, datatype: str, rangelow: float = 0, rangehigh: floa
             return inp
         elif charlevel == 3 or charlevel == '3':
             file_safe_chars = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R',
-                        'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '-', ' ']
+                               'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '-', ' ']
             if length is None:
                 return user_filterd_string(file_safe_chars, prompt)
             inp = ''
@@ -137,7 +130,7 @@ def clean_input(prompt: str, datatype: str, rangelow: float = 0, rangehigh: floa
                 inp = user_filterd_string(file_safe_chars, prompt)
             return inp
 
-    elif datatype == 'f':
+    elif datatype == 'f' or datatype == 'float':
         try:
             inp = float(input(prompt))
         except ValueError:
@@ -152,7 +145,7 @@ def clean_input(prompt: str, datatype: str, rangelow: float = 0, rangehigh: floa
                 inp = 5000000000
         return inp
 
-    elif datatype == 'i':
+    elif datatype == 'i' or datatype == 'int':
         try:
             inp = int(input(prompt))
         except ValueError:
@@ -192,7 +185,7 @@ def clean_input(prompt: str, datatype: str, rangelow: float = 0, rangehigh: floa
             else:
                 print('\nThat password was incorrect, please try again')
 
-    elif datatype == 'bool':
+    elif datatype == 'bool' or datatype == 'b' or datatype == 'boolean':
         inp = clean_input(f'{prompt} - please enter 1 for yes and 0 for no','i',0,1)
         if inp == 1:
             return True
@@ -202,21 +195,22 @@ def clean_input(prompt: str, datatype: str, rangelow: float = 0, rangehigh: floa
 
     else:
         return ''
-def user_filterd_string(chars_allowed, prompt) -> str:
-    name = ''
-    same = False
-    while not same:
-        origname = input(prompt).lower()
-        name = (char for char in origname if char in chars_allowed)
-        name = ''.join(name)
-        if origname.upper() != name.upper():
-            num = input(f'\nYour string is {name}\nPlease press (enter) to continue or (1) to retype')
+def user_filterd_string(chars_allowed: list | tuple, prompt: str) -> str:
 
-            if num == '':
-                same = True
-        else:
-            same = True
-    return name
+    new = []
+    old = input(prompt)
+    for char in old:
+        if char.upper() in chars_allowed:
+
+            new.append(char)
+    new_str = ''.join(new)
+    if old == new_str:
+        return old
+    choice = input(f'\nYour string is "{new_str}" Please press (enter) to continue or (1) to retype')
+    if choice == '':
+        return new_str
+    else:
+        return user_filterd_string(chars_allowed,prompt)
 def generate_sailor_id(nat: str | None, sailno: str | int, first: str, surname: str) -> tuple[str, str]:
     global basenat
     """
@@ -239,6 +233,8 @@ def generate_sailor_id(nat: str | None, sailno: str | int, first: str, surname: 
     surname += '000'
     sailno = str(sailno)
     newsailno = '0000' + sailno
+    if newsailno[-2:] == '.0':
+        newsailno = sailno[:-2]
     iden += nat[:2]
     iden += '-'
     iden += newsailno[-4:]
@@ -263,7 +259,7 @@ def getnat() -> str:
     """
     from countryinfo import CountryInfo
     global basenat
-    if basenat == '' or basenat == 'GBR':
+    if basenat == '' :
         if __name__ == 'tests.py':
             print('starting network request')
         ip = requests.get('https://geolocation-db.com/json').json()
@@ -331,8 +327,8 @@ def firstcap(word: str) -> str:
     except IndexError:
         return word
 
-def sort_on_element(sub_li: list[list], element: int, reverse: bool = True) -> list[list]:
-    sub_li.sort(reverse=reverse, key=lambda x: x[element])
+def sort_on_element(sub_li: list[list], element: int, reverse: bool = True,zero_is_big=True) -> list[list]:
+    sub_li.sort(reverse=reverse, key=lambda x: x[element] if (x[element] == 0 and zero_is_big) else 9999999)
     return sub_li
 
 def multiindex(inlist: list, term: int | str) -> list[int]:
@@ -436,6 +432,7 @@ def findandreplace(inp, find: str, replace: str, preserve_type=False):
                 raise TypeError('Expected type list or str or struct which str() can be applied not ' + str(type(inp)))
 
 def tablefrompdf(file: str, tablenum: int = -1,purge_nan_col:bool = True) -> list[list]:
+    #TODO fix not reading last line
     df_list = __read_pdf(file, pages="all") # reads pdf with tabula, is a utter shit module tho caus eof java requirements
     # use this stack overfolw page to get it working on your computer: https://stackoverflow.com/questions/54817211/java-command-is-not-found-from-this-python-process-please-ensure-java-is-inst
     df = pd.concat(df_list) # each page comes as a spererate table, this puts them all into one
@@ -467,7 +464,7 @@ def tablefrompdf(file: str, tablenum: int = -1,purge_nan_col:bool = True) -> lis
 
     for x in range(len(table_start_point)-1,-1,-1): # reverse order to make sure nothing gets messed with
         new_table = big_table[table_start_point[x]:end] # splits data
-        new_table.insert(0,header[0]) # adds headers to each set
+        new_table.insert(0,header) # adds headers to each set
 
         tables.insert(0,new_table) # adds new table to list of tables
         end = table_start_point[x] - 1
@@ -475,7 +472,7 @@ def tablefrompdf(file: str, tablenum: int = -1,purge_nan_col:bool = True) -> lis
         return tables[tablenum]
 
     table = tables[tablenum]
-    cols_to_remove = list(range(len(table[0])))
+    cols_to_remove = list(range(len(table[1])))
     for x in range(1,len(table)):
         data = []
         for y in cols_to_remove:
@@ -485,9 +482,17 @@ def tablefrompdf(file: str, tablenum: int = -1,purge_nan_col:bool = True) -> lis
             index = cols_to_remove.index(item)
             cols_to_remove.pop(index)
     cols_to_remove.sort(reverse=True)
-    for row in table:
-        for col in cols_to_remove:
-            row.pop(col)
+    try:
+        for loc in range(len(table)):
+            for col in cols_to_remove:
+                try:
+                    table[loc].pop(col)
+                except AttributeError:
+                    table.pop(loc)
+    except IndexError:
+        breakpoint()
+
+
     return table
 
 

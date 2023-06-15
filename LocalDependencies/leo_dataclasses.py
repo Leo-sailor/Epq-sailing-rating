@@ -16,12 +16,8 @@ class Results:
             raise ValueError("Sailorids must be strings")
         if not(all(isinstance(x, int) for x in self.positions)):
             raise ValueError("Positions must be integers")
-        if len(set(positions)) != len(self.positions):
-            raise ValueError("Positions must be unique")
         if len(set(sailorids)) != len(self.sailorids):
             raise ValueError("Sailorids must be unique")
-        if not(Base.check_consecutive(positions)):
-            raise ValueError("Positions must be consecutive")
 
     def __str__(self):
         things_to_join = []
@@ -43,13 +39,13 @@ class Race:
     def __init__(self, results: Results, wind: int, date: int | datetime.datetime):
         self.results = results
         self.wind = wind
-        if date is int:
+        if isinstance(date, int):
             self.date = date
         else:
             self.date = (date - datetime.datetime(2000, 1, 1)).days
-        if not(wind is int and 3 >= wind >= 1):
+        if not(isinstance(wind, int) and 3 >= wind >= 1):
             raise ValueError("Wind must be between 1 and 3")
-        if not(self.date is int and 3500 <= self.date <= Base.dayssincetwothousand()):
+        if not(isinstance(self.date, int) and 3500 <= self.date <= Base.dayssincetwothousand()):
             raise ValueError("Date is not between 2010 and today")
 
     def __str__(self) -> str:
@@ -71,20 +67,21 @@ class Race:
         return Event([self, other], max(self.date, other.date))
 
 class Event:
-    def __init__(self, races: list[Race], date: int | datetime.datetime, imported: bool = False, event_title: str = ''):
+    def __init__(self, races: list[Race], date: int | datetime.datetime, imported: bool = False, event_title: str = '',nation = None):
         self.imported = imported
         self.races = races
-        if date is int:
+        if isinstance(date, int):
             self.date = date
         else:
             self.date = (date - datetime.datetime(2000, 1, 1)).days
-        if not(self.date is int and 3500 <= self.date <= Base.dayssincetwothousand()):
+        if not(isinstance(self.date, int) and 3500 <= self.date <= Base.dayssincetwothousand()):
             raise ValueError("Date is not between 2010 and today")
         self.all_sailors = set()
         for race in self.races:
             for sailor in race:
                 self.all_sailors.add(sailor)
         self.event_title = event_title
+        self.nat = nation
 
     def append(self, race: Race):
         self.races.append(race)

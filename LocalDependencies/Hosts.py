@@ -1,10 +1,13 @@
+import requests
+
 from LocalDependencies.Main_core import Csvcode
 import LocalDependencies.General as Base
 from LocalDependencies.Csv_custom import Csvnew
 import LocalDependencies.leo_dataclasses as dat
 import datetime
 from pickle import load as _load
-global universecsv
+from os import remove as _remove
+from time import sleep as _sleep
 
 
 class HostScript:
@@ -13,11 +16,16 @@ class HostScript:
         self.inpmethod = ''
         self.inputmethodname = ''
 
-    def torun(self):
-        universecsv = Csvcode()
+    def torun(self,*args):
+        global universecsv
+        if len(args) >2:
+            universecsv = Csvcode(args[1],args[2])
+        else:
+            universecsv = Csvcode()
 
         while True:
             Base.text_blocks(1)
+            # TODO: add something for importing just sailors from a full file
             choice = Base.clean_input('\nWhat would you like to do?', 'i', rangelow=1, rangehigh=7)
             match choice:
                 case 1:
@@ -32,7 +40,9 @@ class HostScript:
                 case 5:
                     self.sailorratingovertime()
                 case 6:
+                    print()
                     print(universecsv)
+                    _sleep(0.5)
                 case 7:
                     self.torun()
                     break
@@ -69,25 +79,32 @@ class HostScript:
         print(f'\n{inp}\'s {outtypename} is {out}')
 
     @staticmethod
-    def makenewsailor(name=None, sailno=None, champ=None):
+    def makenewsailor(name=None, sailno=None, champ=None,nat = None):
+
         print('\n NEW SAILOR WIZZARD')
         if name is None:
-            name = Base.clean_input('Please enter the sailor\'s Full name:', 's', charlevel=3)
+            name = Base.clean_input('Please enter the sailor\'s Full name: ', 's', charlevel=3)
         name = name.split(' ', 1)
         first = name[0]
         try:
             sur = name[1]
         except IndexError:
-            sur = Base.clean_input('Please enter the sailor\'s  surname:', 's', charlevel=3)
+            sur = Base.clean_input('Please enter the sailor\'s  surname: ', 's', charlevel=3)
         if champ is None:
             champ = str(Base.clean_input('Please enter the sailor\'s Championship number '
-                                        '\n(Please enter (000) if the sailor does not have a Champ number):',
+                                        '\n(Please enter (000) if the sailor does not have a Champ number): ',
                                         'i', rangehigh=999))
+        else:
+            champ = str(champ)
         if sailno is None:
             sailno = str(Base.clean_input('Please enter the sailor\'s Sail number '
                                          '\n(Please ignore any letters):',
                                          'i', rangehigh=99999))
-        nat = Base.clean_input('\n(enter) for automatic\nPlease enter the sailor\'s 3 letter country code:', 's', charlevel=3).upper()[:3]
+        else:
+            sailno = str(sailno)
+        if nat is None:
+            nat = Base.clean_input('\n(enter) for automatic\nPlease enter the sailor\'s 3 letter country code:', 's', charlevel=3).upper()[:3]
+        nat = str(nat)
         out = Base.generate_sailor_id(nat, sailno, first, sur)
         sailorid = out[0]
         nat = out[1]
@@ -96,6 +113,8 @@ class HostScript:
                                      '\n MD - Midlands\n NO - North\n NI - Northen Ireland\n WL - Wales\n EA - East'
                                      '\n NA - Unknown\nPlease enter {} {}\'s\'s 2 letter RYA region code:'.format(first, sur),
                                      's', charlevel=3).upper()[:2]
+            if region not in ['SC', 'SE', 'SW', 'SO','MD','NO','NI','WL','EA']:
+                region = 'NA'
         else:
             region = 'NA'
         return universecsv.addsailor(sailorid, first, sur, champ, sailno, region, nat)
@@ -265,11 +284,11 @@ class HostScript:
         print("\nEVENT ENTRY WIZZARD")
         inp = Base.clean_input('\n(1) for entering overall event results (less accurate - quicker)\n'
                                '(2) for entering individual race results (higher accuracy - slower)\n'
-                               '(3) for importing previous race csv (needs previously entered csv)\n:'
+                               '(3) for importing previous race csv (needs previously entered csv)\n'
                                '(4) for importing an online results file (needs internet - html/htm/pdf)\n'
                                '(5) for importing an local file (html/htm/pdf)\n'
-                               '(6) for importing a .event file'
-                               '(0) to cancel',
+                               '(6) for importing a .event file\n'
+                               '(0) to cancel\n',
                                'i', rangehigh=5, rangelow=0)
         match inp:
             case 1:
@@ -278,44 +297,68 @@ class HostScript:
                 event = self.addeventproper()
             case 3:
                 event = self.addeventcsv()
-            case 0:
-                return None
             case 4:
-                pass
-                # event = # self.addeventonline() #
+                event = self.add_online_event() #
             case 5:
                 event = self.addeventlocal()
             case 6:
                 event = self.import_pickled_event()
+            case _:
+                return None
         return event
 
-    def addeventlocal(self) -> dat.Event:
+    def addeventlocal(self,file:str = None) -> dat.Event:
         fileloc = '______'
         file_types = ['.htm', 'html', '.pdf']
-        while file_loc[-4:] not in file_types:
-            if fileloc != '':
+        while fileloc[-4:] not in file_types:
+            if fileloc != '______':
                 print('that file is not of the correct type')
-            file_loc = Base.getfilename()
+            fileloc = Base.getfilename()
+        return self.get_table_num(fileloc)
+
+    def add_online_event(self) -> dat.Event:
+
+        fileloc = '______'
+        file_types = ['.htm', 'html', '.pdf']
+
+        while fileloc[-4:] not in file_types:
+            if fileloc != '______':
+                print('that file is not of the correct type')
+            fileloc = Base.clean_input("please enter the link to the webpage: ",'str')
+        temp_file = '.'.join(('webpage.temp', fileloc[-4:]))
+        print('Downloading_file')
+        page = requests.get(fileloc)  # gets the page as a response object
+        g = open(temp_file, 'wb').write(page.content)  # writes the contents of the response object to a field
+        del g  # deletes an unused variable, it didnt work for me without this
+        out = self.get_table_num(temp_file) # gets the outpu as if a local file
+        _remove(temp_file)  # removes the temp file
+        return out
+
+    def get_table_num(self,fileloc)-> dat.Event:
         expected = False
         while not expected:
             try:
-                table_num = int(input('please enter the table number you want to retrieve'))
+                table_num = int(input('please enter the table number you want to retrieve: '))
             except ValueError:
                 table_num = 255
             try:
-                match file_loc[-4:]:
-                    case '.htm'|'html':
-                        table = Base.gettablefromhtmlfile(file_loc,table_num)
+                match fileloc[-4:]:
+                    case '.htm' | 'html':
+                        table = Base.gettablefromhtmlfile(fileloc, table_num)
                     case '.pdf':
-                        table = Base.tablefrompdf(file_loc,table_num)
+
+                        table = Base.tablefrompdf(fileloc, table_num, True)
+                for line in table:
+                    print(line)
+
             except IndexError:
-                table =  'The table number you input was invalid'
-            for line in table:
-                print(line)
-            expected = Base.clean_input('Was the table what you exepected')
-        data_extract_type = Base.clean_input('what field would you like to read on the file (s,c,n)?','str',length=1)
-        event_title = Base.clean_input('What is the event called')
-        return universecsv.processtable(table,data_extract_type,event_title)
+                table = 'The table number you input was invalid'
+                print(table)
+            expected = Base.clean_input('Was the table what you exepected', 'bool')
+        data_extract_type = Base.clean_input('what field would you like to read on the file (s,c,n)?', 'str', length=1)
+        event_title = Base.clean_input('What is the event called: ', 'str')
+        return universecsv.processtable(table, data_extract_type, event_title)
+
 
 
 

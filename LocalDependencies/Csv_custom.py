@@ -89,7 +89,7 @@ class Csvnew:
         new = []
         newnew = []
         if excluderows is not None:
-            if type(excluderows) == int:
+            if isinstance(excluderows,int):
                 excluderows = [excluderows]
             for x in range((len(valid) - 1), -1, -1):
                 try:
@@ -150,6 +150,8 @@ class Csvnew:
     def addrow(self, array: list):
         for x in range(len(array)):
             self.columnfirst[x].append(str(array[x]))
+        for val,item in enumerate(array):
+            array[val] = Base.findandreplace(item, ' ', '-', True)
         self.rowfirst.append(array)
         self.autosavefile()
 

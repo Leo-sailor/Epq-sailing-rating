@@ -1,5 +1,5 @@
 from numpy import sqrt
-
+k = 15
 
 class EloCalculations:
     def __init__(self, deviation, multiplier):
@@ -45,20 +45,22 @@ class EloCalculations:
         ratchange = []
         for x in range(0, sailors):
             ratchange.append(0)
-        for x in range(0, sailors-1):
+        for x in range(sailors-1):
             for y in range(x+1, sailors):
-                aloc = position.index(x + 1)
-                bloc = position.index(y + 1)
-                arat = currat[aloc]
-                brat = currat[bloc]
-                kfac = self.__k(events[x], events[y], 30, sailors)
-                change = self.calc(arat, brat, 1, kfac)
-                ratchange[aloc] += change
-                ratchange[bloc] -= change
+                if position[x] > position[y]:
+                    result = 0
+                elif position[x] < position[y]:
+                    result = 1
+                else:
+                    result = 0.5
+                res = self.calc(currat[x], currat[y], result, self.__k(events[x], events[y], sailors))
+                ratchange[x] += res
+                ratchange[y] -= res
+
         newratings = self.__updaterating(ratchange, currat)
         return newratings
 
-    def __k(self, eventsailor1: int, eventsailor2: int, kbase: int, totalsailor: int):
+    def __k(self, eventsailor1: int, eventsailor2: int, totalsailor: int):
         """
         A function which returns the correct k factor for the sailors involved in the comparison
         :param eventsailor1
@@ -67,10 +69,10 @@ class EloCalculations:
         :param kbase:
         :return:
         """
-        k = (((15 / (eventsailor1 + 1)) + (15 / (eventsailor2 + 1))) * (1/(sqrt(totalsailor)))) + kbase
-        k *= self.changemultiplier
+        kfac = (((15 / (eventsailor1 + 1)) + (15 / (eventsailor2 + 1))) * (1/(sqrt(totalsailor)))) + k
+        kfac *= self.changemultiplier
         # will make this intresting later when i 'realise' its crap
-        return k
+        return kfac
 
     def __updaterating(self, change: list[float], currat: list[float]):
         """
