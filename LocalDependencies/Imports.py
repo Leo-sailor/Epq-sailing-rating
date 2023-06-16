@@ -48,23 +48,23 @@ def __import_html(file_loc):
 
 def __split_table(table: list[list[Any]]):
     table_start_points = [1]  # the array which stores the locations of each new set of data
-    first_col = [Base.force_int(row[0]) for row in big_table]
+    first_col = [Base.force_int(row[0]) for row in table]
     previous = 0
     for curr in first_col[1:]:
         if curr < previous:
             table_start_points.append(curr)
         previous = curr
 
-    end = len(big_table)
+    end = len(table)
     tables = []
     for start_point in reversed(table_start_points):  # reverse order to make sure nothing gets messed with
-        small_table = big_table[start_point:end]  # splits data
+        small_table = table[start_point:end]  # splits data
         small_table.insert(0, header)  # adds headers to each set
         tables.insert(0, new_table)  # adds new table to list of tables
         end = table_start_points[x]
 
-    for loc, table in tables:
-        tables[loc] = Base.clean_table(table)
+    for loc, tab in tables:
+        tables[loc] = Base.clean_table(tab)
     return tables
 
 
@@ -122,7 +122,7 @@ class Import_manager:
         self.chosen_table = table_num
         return self.chosen_table
 
-    def to_event(self, universe: Csvcode) -> dat.Event:
+    def to_event(self, universe: Universe_host) -> dat.Event:
         if self.chosen_table is None:
             self.user_select_table()
         table = self[self.chosen_table]
@@ -132,7 +132,7 @@ class Import_manager:
         event_title = Base.clean_input('What is the event called: ', 'str')
         return universe.processtable(table, self.chosen_data_type, event_title)
 
-    def import_sailors_to_universe(self, universe: Csvcode) -> list[str]:
+    def import_sailors_to_universe(self, universe: Universe_host) -> list[str]:
         info = {'name': None, 'sail ': None, 'champ': None, 'nat': None}
         same_nat = Base.clean_input('Is everyone in the event from the same country', 'bool')
         nat = None

@@ -1,6 +1,6 @@
 import datetime
 import LocalDependencies.General as Base
-from LocalDependencies.Main_core import Csvcode
+from LocalDependencies.Main_core import Universe_host
 
 
 class Results:
@@ -102,7 +102,7 @@ class Event:
         return iter(self.races)
 
 class old_results():
-    def __init__(self,universe:Csvcode):
+    def __init__(self, universe:Universe_host):
         self.universe = universe
         self.rowsfirst = universe.file.rowfirst
         self.colsfirst = universe.file.columnfirst

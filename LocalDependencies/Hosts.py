@@ -1,6 +1,6 @@
 import requests
 
-from LocalDependencies.Main_core import Csvcode
+from LocalDependencies.Main_core import Universe_host
 import LocalDependencies.General as Base
 from LocalDependencies.Csv_custom import Csvnew
 import LocalDependencies.leo_dataclasses as dat
@@ -20,9 +20,9 @@ class HostScript:
     def torun(self,*args):
         global universecsv
         if len(args) >2:
-            universecsv = Csvcode(args[1],args[2])
+            universecsv = Universe_host(args[1], args[2])
         else:
-            universecsv = Csvcode()
+            universecsv = Universe_host()
 
         while True:
             Base.text_blocks(1)

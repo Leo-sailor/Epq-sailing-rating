@@ -17,7 +17,7 @@ if "teststttt" in sys_path:
 col_width = [15,10,9,11,9,8,5,12,11,13,15,6,8,15,10]
 
 
-class Csvcode:
+class Universe_host:
     global sys_path
     def __init__(self, universe: str=None, password:str=None):
         self.admin = False
@@ -51,30 +51,30 @@ class Csvcode:
 
         self.adminrights(password)  # sees whether the user should have admin rights
 
-    def __linkuniverse(self, universename: str) -> str:
-        if universename.upper() == 'N':
-            universename = self.__makeuniverse()  # checks whether to make a universe and makes it if needed
+    def __linkuniverse(self, universe_name: str) -> str:
+        if universe_name.upper() == 'N':
+            universe_name = self.__makeuniverse()  # checks whether to make a universe and makes it if needed
 
         try:  # used to cath any file opening erros, probable to much inside of the 'try' tho
-            self.folder = ''.join((sys_path, '\\universes\\', universename, '\\'))
-            self.hostfile = ''.join((self.folder, 'host-', universename, '.csv'))
+            self.folder = ''.join((sys_path, '\\universes\\', universe_name, '\\'))
+            self.host_file = ''.join((self.folder, 'host-', universe_name, '.csv'))
 
-            universehost = Csvnew(self.hostfile)  # opens the csv with the [rows][columns]
+            universe_host = Csvnew(self.host_file)  # opens the csv with the [rows][columns]
 
-            self.basefile = ''.join((self.folder, universehost.getcell(1, 2)))  # sets the objects current file location
-            self.versionnumber = int(universehost.getcell(1, 0))  # sets the version number for the current open file
-            mostrecentdatafilehash = universehost.getcell(1, 3)  # gets the hash of the most current file
-            print('{} universe opened and running\n'.format(universename))
-            self.file = Csvnew(self.basefile, universe=universename)  # imports the current file
+            self.base_file = ''.join((self.folder, universe_host.getcell(1, 2)))  # sets the objects current file location
+            self.version_number = int(universe_host.getcell(1, 0))  # sets the version number for the current open file
+            most_recent_data_file_hash = universe_host.getcell(1, 3)  # gets the hash of the most current file
+            print('{} universe opened and running\n'.format(universe_name))
+            self.file = Csvnew(self.base_file, universe=universe_name)  # imports the current file
 
-            if Base.hashfile(self.basefile) != mostrecentdatafilehash and mostrecentdatafilehash != '0':
+            if Base.hashfile(self.base_file) != most_recent_data_file_hash and most_recent_data_file_hash != '0':
                 raise ValueError('The most recent data file is not as expected')
 
         except FileNotFoundError:
             raise FileNotFoundError('There was a error loading the file, the program will now exit ')
         # filters through the current file and ignores empty lines
         self.cleanup()
-        return universename
+        return universe_name
 
     def __makeuniverse(self) -> str:
         name = Base.clean_input('\nPlease enter your new ranking universe name: ', 's',
@@ -136,7 +136,6 @@ class Csvcode:
             table = Base.sort_on_element(self.file.rowfirst, row_to_sort,True, zero_is_big=True)
         return header + '\n'.join([''.join([f'{"".join((item,"                        "))[:col_width[val]]}' for val,item in enumerate(row)]) for row in table])
 
-
     def adminrights(self, password:str=None):
         if password is not None:
             if Base.passwordhash(password, self.passsalt)[0] == self.passhash:
@@ -155,7 +154,7 @@ class Csvcode:
         return self.admin  # checks whether the user should have admin eights
 
     def cleanup(self):
-        host = Csvnew(self.hostfile)
+        host = Csvnew(self.host_file)
         length = host.numrows()
         hashes = []
         toremove = []
@@ -198,6 +197,7 @@ class Csvcode:
         return result
 
     def getfieldnumber(self, resulttype: str) -> int:
+        #TODO: turn into a normal function, probabaly in base
         resulttype.lower()
         match resulttype:
             case 'n' | 'name':
@@ -291,6 +291,7 @@ class Csvcode:
                 print('\n That sailor id could not be found')
 
         raise IndexError('That term could not be found')
+
     def getsailorid(self, fieldnum: str | int, term: str | int, *data) -> str:
         def user_tie_break(locs = None) -> str:
             if locs is None:
@@ -449,15 +450,8 @@ class Csvcode:
         else:
             return self.getsailorid(field,data,*extra_info)
 
-
-
-
-
-
-
-
     def __export_event(self, event: dat.Event):
-
+    #TODO: chnage this to a normal function
         direc = ''.join(
             (sys_path, UNIVERSES_, self.universe, '\\events'))  # figures out the path of the new universe
         if not (os.path.exists(direc)):  # checks whether that universe exists
