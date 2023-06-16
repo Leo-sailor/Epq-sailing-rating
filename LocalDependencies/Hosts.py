@@ -8,6 +8,7 @@ import datetime
 from pickle import load as _load
 from os import remove as _remove
 from time import sleep as _sleep
+from LocalDependencies.Imports import Import_manager
 
 
 class HostScript:
@@ -26,7 +27,7 @@ class HostScript:
         while True:
             Base.text_blocks(1)
             # TODO: add something for importing just sailors from a full file
-            choice = Base.clean_input('\nWhat would you like to do?', 'i', rangelow=1, rangehigh=7)
+            choice = Base.clean_input('\nWhat would you like to do?', 'i', rangelow=1, rangehigh=8)
             match choice:
                 case 1:
                     event = self.import_event()
@@ -46,12 +47,21 @@ class HostScript:
                 case 7:
                     self.torun()
                     break
+                case 8:
+                    self.import_sailors()
+    def import_sailors(self):
+        imp_mgr = Import_manager()
+        sailors = imp_mgr.import_sailors()
+        print('The following {len(sailors)} sailors have been imported')
+        for line in sailors:
+            print(universecsv.getinfo(line,'all'))
 
     def sailorratingovertime(self):
         inpmethod = self.__getinputmethod()
         inp = Base.clean_input(f'(enter (_a) for all) \nPlease enter the sailor\'s {self.inputmethodname}:', 's')
         sailorid = universecsv.getsailorid(inpmethod, inp)
         # TODO make this work and finnish it
+
     def getsailorinfo(self):
         info_codes = {'c': 'Championship Number', 's': 'Sail Number', 'l': 'Light wind rating', 'm': 'Medium wind rating',
              'h': 'Heavy wind rating', 'n': 'Name', 'i': 'sailorid', 'o': 'Overall rating', 'r': 'Rank',
@@ -79,7 +89,7 @@ class HostScript:
         print(f'\n{inp}\'s {outtypename} is {out}')
 
     @staticmethod
-    def makenewsailor(name=None, sailno=None, champ=None,nat = None):
+    def makenewsailor(name=None, sailno=None, champ=None,nat = None,fullspeed=False):
 
         print('\n NEW SAILOR WIZZARD')
         if name is None:
@@ -108,7 +118,7 @@ class HostScript:
         out = Base.generate_sailor_id(nat, sailno, first, sur)
         sailorid = out[0]
         nat = out[1]
-        if nat == 'GBR':
+        if nat == 'GBR' and not(fullspeed):
             region = Base.clean_input('\n SC - Scotland\n SE - London and South-east\n SW - South-west\n SO - South'
                                      '\n MD - Midlands\n NO - North\n NI - Northen Ireland\n WL - Wales\n EA - East'
                                      '\n NA - Unknown\nPlease enter {} {}\'s\'s 2 letter RYA region code:'.format(first, sur),
@@ -308,58 +318,12 @@ class HostScript:
         return event
 
     def addeventlocal(self,file:str = None) -> dat.Event:
-        fileloc = '______'
-        file_types = ['.htm', 'html', '.pdf']
-        while fileloc[-4:] not in file_types:
-            if fileloc != '______':
-                print('that file is not of the correct type')
-            fileloc = Base.getfilename()
-        return self.get_table_num(fileloc)
+        inp_mgr = Import_manager('F')
+        return inp_mgr.to_event(universecsv)
 
     def add_online_event(self) -> dat.Event:
-
-        fileloc = '______'
-        file_types = ['.htm', 'html', '.pdf']
-
-        while fileloc[-4:] not in file_types:
-            if fileloc != '______':
-                print('that file is not of the correct type')
-            fileloc = Base.clean_input("please enter the link to the webpage: ",'str')
-        temp_file = '.'.join(('webpage.temp', fileloc[-4:]))
-        print('Downloading_file')
-        page = requests.get(fileloc)  # gets the page as a response object
-        g = open(temp_file, 'wb').write(page.content)  # writes the contents of the response object to a field
-        del g  # deletes an unused variable, it didnt work for me without this
-        out = self.get_table_num(temp_file) # gets the outpu as if a local file
-        _remove(temp_file)  # removes the temp file
-        return out
-
-    def get_table_num(self,fileloc)-> dat.Event:
-        expected = False
-        while not expected:
-            try:
-                table_num = int(input('please enter the table number you want to retrieve: '))
-            except ValueError:
-                table_num = 255
-            try:
-                match fileloc[-4:]:
-                    case '.htm' | 'html':
-                        table = Base.gettablefromhtmlfile(fileloc, table_num)
-                    case '.pdf':
-
-                        table = Base.tablefrompdf(fileloc, table_num, True)
-                for line in table:
-                    print(line)
-
-            except IndexError:
-                table = 'The table number you input was invalid'
-                print(table)
-            expected = Base.clean_input('Was the table what you exepected', 'bool')
-        data_extract_type = Base.clean_input('what field would you like to read on the file (s,c,n)?', 'str', length=1)
-        event_title = Base.clean_input('What is the event called: ', 'str')
-        return universecsv.processtable(table, data_extract_type, event_title)
-
-
+        inp_mgr = Import_manager('L')
+        return inp_mgr.to_event(universecsv)
 
 
 def main():

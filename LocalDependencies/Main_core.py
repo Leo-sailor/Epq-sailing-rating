@@ -427,17 +427,19 @@ class Csvcode:
             races.append(dat.Race(dat.Results(sailorids, result), wind, date))
         return dat.Event(races, date,event_title=event_title,nation = nat)
 
-    def import_sailor(self, field, data, row, info,nat, *extra_info) -> str:
+    def import_sailor(self, field, data, row, info,nat,fullspeed=False, *extra_info) -> str:
         sailor_info = [None if x is None else row[x] for x in info.values()]
 
         if nat is not None:
             sailor_info.append(nat)
         if len(self.get_data_locations(data,field)) == 0:
-            res = self.user_select_sailor(data,field,True)
-            if isinstance(res,int):
+            res = 0
+            if not fullspeed:
+                res = self.user_select_sailor(data,field,True,fullspeed)
+            if isinstance(res,int) or fullspeed:
                 while True:
                     from LocalDependencies.Hosts import HostScript
-                    a = HostScript.makenewsailor(*sailor_info)
+                    a = HostScript.makenewsailor(*sailor_info,fullspeed=fullspeed)
                     del HostScript
                     if a[0]:  # checks whether the sailor was sucessfully made
                         return a[1]  # returns the sailor id just made

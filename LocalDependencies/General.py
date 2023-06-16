@@ -3,14 +3,10 @@ import requests
 from hashlib import md5
 from bcrypt import gensalt, hashpw
 from datetime import datetime, date, timedelta
-import pandas as pd
 from difflib import SequenceMatcher
 from tkinter import filedialog
-from os import remove
-from tabula import read_pdf as __read_pdf
 from numpy import diff as np_diff
-
-TEMP = 'webpage.temp'
+from typing import Any
 
 # class which contains basic funtions for the program not directly related to the elo calculations
 basenat = ''
@@ -382,23 +378,6 @@ def hashfile(file: str) -> str:
     return str(result)
 
 
-def gettablefromhtmlfile(file: str, tablenum: int =  None) -> list[list]|list[pd.DataFrame]:
-    df_list = pd.read_html(file)
-    if tablenum is None:
-        return df_list
-    lists = df_list[tablenum].values.tolist()
-    header = [list(df_list[tablenum].columns.values)]
-    lists.insert(0,header)
-    return lists
-
-def gettablefromweb(url: str,tablenum: int =0) -> list[list[str]]:
-    page = requests.get(url)
-    g = open(TEMP, 'w').write(page.text)
-    del g
-    out = gettablefromhtmlfile(TEMP, tablenum)
-    remove(TEMP)
-    return out
-
 def findandreplace(inp, find: str, replace: str, preserve_type=False):
     """
     a recussive find and replace algoritim which searchs through lists and thiers sub lits up to the recursion limit
@@ -431,80 +410,33 @@ def findandreplace(inp, find: str, replace: str, preserve_type=False):
             except ValueError:
                 raise TypeError('Expected type list or str or struct which str() can be applied not ' + str(type(inp)))
 
-def tablefrompdf(file: str, tablenum: int = -1,purge_nan_col:bool = True) -> list[list]:
-    #TODO fix not reading last line
-    df_list = __read_pdf(file, pages="all") # reads pdf with tabula, is a utter shit module tho caus eof java requirements
-    # use this stack overfolw page to get it working on your computer: https://stackoverflow.com/questions/54817211/java-command-is-not-found-from-this-python-process-please-ensure-java-is-inst
-    df = pd.concat(df_list) # each page comes as a spererate table, this puts them all into one
-    lists = df.values.tolist()
-    header = findandreplace(df.columns.tolist(),'\r',' ',preserve_type=True) # cleans the header
-    lists.insert(0,header)
-    big_table = findandreplace(lists, "\r", " ") # cleans the table again
-    if tablenum == -1 : # if we want all the tables
-        return big_table
-    table_start_point = [1] # the array which stores the locations of each new set of data
-    first_col = [row[0] for row in big_table]
-    old = 0
-    for x in range(1,len(first_col)): # assumes new set of data begins, when place field (always column 1) goes downwards, (differnt to normal)
-        try:
-            new = int(first_col[x])
-        except ValueError:
-            new = ['0']
-            for char in first_col[x]:
-                if char in numbers:
-                    new.append(char)
-            new = int(''.join(new))
-        if old > new:
-            table_start_point.append(x)
-        old = new
 
-
-    end = len(big_table)
-    tables = []
-
-    for x in range(len(table_start_point)-1,-1,-1): # reverse order to make sure nothing gets messed with
-        new_table = big_table[table_start_point[x]:end] # splits data
-        new_table.insert(0,header) # adds headers to each set
-
-        tables.insert(0,new_table) # adds new table to list of tables
-        end = table_start_point[x] - 1
-    if not purge_nan_col:
-        return tables[tablenum]
-
-    table = tables[tablenum]
+def force_int(inp:str|float|int)->int:
+    inp = str(inp)
+    numbers_new = numbers[:]
+    numbers_new.append('.')
+    new_str = []
+    for char in inp:
+        if char in numbers_new:
+            new_str.append(char)
+    return int(float(''.join(new_str)))
+def clean_table(table: list[list[Any]]):
+    intial_vals = table[1]
     cols_to_remove = list(range(len(table[1])))
-    for x in range(1,len(table)):
-        data = []
-        for y in cols_to_remove:
-            if table[x][y] != 'nan':
-                data.append(y)
-        for item in data:
-            index = cols_to_remove.index(item)
-            cols_to_remove.pop(index)
+    for row_index in range(1, len(table)):
+        good_cols = []
+        for col in cols_to_remove:
+            if table[row_index][col] != intial_vals[col]:
+                good_cols.append(col)
+            [cols_to_remove.pop(cols_to_remove.index(item)) for item in good_cols]
     cols_to_remove.sort(reverse=True)
-    try:
-        for loc in range(len(table)):
-            for col in cols_to_remove:
-                try:
-                    table[loc].pop(col)
-                except AttributeError:
-                    table.pop(loc)
-    except IndexError:
-        breakpoint()
-
-
+    for loc,row in enumerate(table):
+        for col in cols_to_remove:
+            try:
+                table[loc].pop(col)
+            except AttributeError:
+                table.pop(loc)
     return table
-
-
-def url_to_pdf_to_table(url: str,tablenum: int =-1,purge_nan_col:bool = True) -> list[list]:
-    page = requests.get(url) # gets the page as a response object
-    g = open(TEMP, 'wb').write(page.content) # writes the contents of the response object to a field
-    del g # deletes an unused variable, it didnt work for me without this
-    out = tablefrompdf(TEMP, tablenum, purge_nan_col) # gets the outpu as if a local file
-    remove(TEMP) # removes the temp file
-    return out
-
-
 
 def similar(a, b):
     return SequenceMatcher(None, a, b).ratio()
