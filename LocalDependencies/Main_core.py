@@ -512,7 +512,7 @@ class Csvcode:
                     oldrats.append(float(old_results.getinfo(sailor, columnnum)))
 
 
-            newrat = self.elo.cycle(currats, currevents, positions,oldrats)  # executes the maths
+            newrat = self.elo.cycle(oldrats, currevents, positions,currats)  # executes the maths
 
             for z in range(0, len(newrat)):
                 self.file.updatevalue(newrat[z], sailorids[z], columnnum, bypass=True)
