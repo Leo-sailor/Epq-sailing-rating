@@ -31,7 +31,7 @@ class EloCalculations:
         prediction = 1 / (1 + 10 ** ((ratb - rata) / self.deviation))
         return prediction
 
-    def cycle(self, currat: list[float], events: list[int], position: list[int]):
+    def cycle(self, currat: list[float], events: list[int], position: list[int],oldrat: list[float]):
         """
         note: nth position's must be = to nth currat = nth sailor id (more like a 2d table)
         This function take a list of ratings and their positions and returns thier updated ratings after an event

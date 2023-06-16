@@ -500,12 +500,19 @@ class Csvcode:
                 for sailor in sailorids:  # gets the current information on all the current sailors
                     currats.append(float(old_results.getinfo(sailor, columnnum)))
                     currevents.append(int(old_results.getinfo(sailor, 'e')))
-            else:
-                for sailor in sailorids:  # gets the current information on all the current sailors
-                    currats.append(float(self.getinfo(sailor, columnnum)))
-                    currevents.append(int(self.getinfo(sailor, 'e')))
 
-            newrat = self.elo.cycle(currats, currevents, positions)  # executes the maths
+            for sailor in sailorids:  # gets the current information on all the current sailors
+                currats.append(float(self.getinfo(sailor, columnnum)))
+                currevents.append(int(self.getinfo(sailor, 'e')))
+            if old_results is None:
+                oldrats = currats
+            else:
+                oldrats = []
+                for sailor in sailorids:  # gets the current information on all the current sailors
+                    oldrats.append(float(old_results.getinfo(sailor, columnnum)))
+
+
+            newrat = self.elo.cycle(currats, currevents, positions,oldrats)  # executes the maths
 
             for z in range(0, len(newrat)):
                 self.file.updatevalue(newrat[z], sailorids[z], columnnum, bypass=True)
