@@ -4,7 +4,7 @@ import sys
 #TODO: force ': ' input styling
 #TODO: use clean input boolen entering more
 #TODO: come up with principle on newline usage
-#TODO: refactor with an 'imports' class to reduce reused code
+#Todo: fix last race focus
 # initzalizations
 host = HostScript()
 
