@@ -77,7 +77,7 @@ class Csvcode:
         return universename
 
     def __makeuniverse(self) -> str:
-        name = Base.clean_input('\nPlease enter your new ranking universe name:', 's',
+        name = Base.clean_input('\nPlease enter your new ranking universe name: ', 's',
                                 charlevel=1)  # gets the universe name
 
         direc = ''.join((sys_path, UNIVERSES_, name,))  # figures out the path of the new universe
@@ -105,16 +105,16 @@ class Csvcode:
             spamwriter.writerow(
                 ['1', curtime, firstfilename, Base.hashfile(firstfile)])  # adds the row and has hashed the file
 
-        temp = Base.clean_input('\nPlease enter a password for this universe:',
+        temp = Base.clean_input('\nPlease enter a password for this universe: ',
                                'pn')  # makes a passowrd and returns the hash and salt
         self.passhash = temp[0]  # saves the salt and hash
         self.passsalt = temp[1]
 
         starting = Base.clean_input('\nWhat would you like the average rating of this '
-                                   'universe to be?(450-3100)(default: 1500):',
+                                   'universe to be?(450-3100)(default: 1500): ',
                                    'i', rangehigh=3100, rangelow=450)
         k = Base.clean_input('\nWhat would you like the speed of rating change '
-                            'to be?(0.3 - 4)(Recomended: 1):',
+                            'to be?(0.3 - 4)(Recomended - 1): ',
                             'f', rangelow=0.3, rangehigh=4)  # random comment
         # generic input collecting
 
@@ -148,8 +148,8 @@ class Csvcode:
             else:
                 print('\nThat password was incorrect, please try again')
         print('\n ADMIN RIGHTS')
-        self.admin = Base.clean_input(('Press (enter) to skip entering a password'
-                                      '\nor enter the admin password for the universe {}:'.format(self.universe)),
+        self.admin = Base.clean_input((f'Press (enter) to skip entering a password'
+                                      f'\nor enter the admin password for the universe {self.universe}: '),
                                      'pr', correcthash=self.passhash,
                                       salt=self.passsalt)
         return self.admin  # checks whether the user should have admin eights
@@ -210,15 +210,15 @@ class Csvcode:
                 findtypeloc = 5
             case 'nat' | 'nation' | 'nationality' | 't':
                 findtypeloc = 6
-            case 'l' | 'light wind rating':
+            case 'l' | 'light wind rating' | 7:
                 findtypeloc = 7
-            case 'medium wind rating' | 'm':
+            case 'medium wind rating' | 'm' | 8:
                 findtypeloc = 8
-            case 'high wind rating' | 'h':
+            case 'high wind rating' | 'h'| 9:
                 findtypeloc = 9
             case 'ranking' | 'r':
                 findtypeloc = 11
-            case 'overall rating' | 'o':
+            case 'overall rating' | 'o'| 10:
                 findtypeloc = 10
             case 'events completed' | 'e':
                 findtypeloc = 12
@@ -252,13 +252,13 @@ class Csvcode:
             locations = Base.multiindex(self.file.getcolumn(fieldnum), term)
         return locations
 
-    def user_select_sailor(self,term,fieldnum,return_on_new:bool = False,*data) -> str:
+    def user_select_sailor(self,term,fieldnum,return_on_new:bool = False,*data) -> str|int:
         print(f'\nA sailor could not be found with {term} in field number {fieldnum}')
         working = True
         while working:
             inp = Base.clean_input('\nPlease type in a sailor id \nor press (n) to make a new sailor'
                                    '\nor press (t) to try again '
-                                   '\nor press (p) to get a list of all sailor id\'s:', 's', charlevel=2).lower()
+                                   '\nor press (p) to get a list of all sailor id\'s: ', 's', charlevel=2).lower()
             if inp == 'n':
                 if return_on_new:
                     return 0
@@ -365,7 +365,7 @@ class Csvcode:
             print(f'The original sailors information is: {self.getinfo(sailid, "a")}')
             print('\n(1). Append "-1" to the new sailor id and proceed to add'
                   '\n(2). Abort adding new sailor id')
-            inp = Base.clean_input('Which of those options do you want to use:', 'i', rangelow=1, rangehigh=2)
+            inp = Base.clean_input('Which of those options do you want to use: ', 'i', rangelow=1, rangehigh=2)
             if inp == 1:
                 sailid += '-1'
                 count = 1
@@ -388,14 +388,14 @@ class Csvcode:
         info = {'name': None, 'sail ': None, 'champ': None}
         same_nat = Base.clean_input('Is everyone in the event from the same country','bool')
         nat = None
-        fullspeed = False
-        #TODO: make fullspeed option for entering quickly
+
         if same_nat:
             nat = Base.getnat()
         for val,item in enumerate(table[0]):
             for key in info:
                 if key.upper() in item.upper():
                     info[key] = val
+        fullspeed = Base.clean_input('do you want sailors to be autocreated to speed up entry ', 'bool')
         race_columns = []
         fields = {'c': 'champ', 's': 'sail', 'n': 'name'}
         try:
@@ -416,11 +416,12 @@ class Csvcode:
         sailorids = []
         for count,row in enumerate(table[1:]):
             print(f'{count}/{len(table)-1} sailors enterd')
-            sailorids.append(self.import_sailor(field, row[info_column],row,info,nat, *[row[item].lower() for item in extra_data_cols]))
+            sailorids.append(self.import_sailor(field, row[info_column],row,info,nat,fullspeed=fullspeed, *[row[item].lower() for item in extra_data_cols]))
 
         races = []
         chars_to_strip = "abcdefghijklmnopqrstuvwxyz()"
         date = Base.dayssincetwothousand(Base.getdate("date", f"of the last day of {event_title}: "))
+        print('1 - Light\n2- Medium\n3 - Heavy')
         for race in race_columns:
             wind = Base.clean_input(f'What was the wind of {table[0][race]}: ', 'i', 1, 3)
             result = [int(float(table[x][race].lower().strip(chars_to_strip))) for x in range(1, len(table))]
@@ -474,15 +475,16 @@ class Csvcode:
                 made = True
 
     def add_event(self,event: dat.Event|None):
+        old_results = dat.old_results(self)
         if event is None:
             return None
         for race in event:
-            self.__addrace(race)
+            self.__addrace(race,old_results)
         self.__endevent(event.all_sailors, event.date)
         if not event.imported:
             self.__export_event(event)
 
-    def __addrace(self, race: dat.Race):
+    def __addrace(self, race: dat.Race,old_results=None):
         sailorids = race.results.sailorids
         positions = race.results.positions
         wind = race.wind
@@ -490,23 +492,18 @@ class Csvcode:
             currats = []
             currevents = []
             # if this is the run for wind specific rankings
-            if wind == 1:
-                infocode = 'l'
-                columnnum = 7
-            elif wind == 2:
-                infocode = 'm'
-                columnnum = 8
-            else:
-                infocode = 'h'
-                columnnum = 9
+            columnnum = wind + 6
 
             if x == 1:  # override if the run for overalls
-                infocode = 'o'
                 columnnum = 10
-
-            for sailor in sailorids:  # gets the current information on all the current sailors
-                currats.append(float(self.getinfo(sailor, infocode)))
-                currevents.append(int(self.getinfo(sailor, 'e')))
+            if old_results is not None:
+                for sailor in sailorids:  # gets the current information on all the current sailors
+                    currats.append(float(old_results.getinfo(sailor, columnnum)))
+                    currevents.append(int(old_results.getinfo(sailor, 'e')))
+            else:
+                for sailor in sailorids:  # gets the current information on all the current sailors
+                    currats.append(float(self.getinfo(sailor, columnnum)))
+                    currevents.append(int(self.getinfo(sailor, 'e')))
 
             newrat = self.elo.cycle(currats, currevents, positions)  # executes the maths
 

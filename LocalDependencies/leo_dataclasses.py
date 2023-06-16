@@ -1,5 +1,6 @@
 import datetime
 import LocalDependencies.General as Base
+from LocalDependencies.Main_core import Csvcode
 
 
 class Results:
@@ -100,7 +101,32 @@ class Event:
     def __iter__(self):
         return iter(self.races)
 
+class old_results():
+    def __init__(self,universe:Csvcode):
+        self.universe = universe
+        self.rowsfirst = universe.file.rowfirst
+        self.colsfirst = universe.file.columnfirst
+    def getinfo(self, sailorid: str, resulttype: str):
+        try:
+            row = self.colsfirst.index(sailorid)  # figures out what row the sailor id it
+        except ValueError:
+            raise IndexError('the sailor id {} could not be found'.format(sailorid))
 
+        findtypeloc = self.universe.getfieldnumber(resulttype)
+
+        if findtypeloc == -1:
+            result = ' '.join(
+                (self.file.getcell(row, 3), self.file.getcell(row, 4)))  # adds the 2 names with a space in the middle
+        elif findtypeloc == -2:
+            i = []
+            for x in range(14):
+                i.append(self.file.getcell(row, x))
+            result = ', '.join(i)  # bassicly outputs the raw csv line
+        elif findtypeloc > -1:  # pull the data from the row and column decided earlier
+            result = self.rowsfirst[row][findtypeloc]
+        else:
+            result = '0.1'
+        return result
 def main():
     # theres not even any point doing tests
     pass
