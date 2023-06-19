@@ -4,7 +4,8 @@ import sys
 #TODO: force ': ' input styling
 #TODO: use clean input boolen entering more
 #TODO: come up with principle on newline usage
-#todo: fix ranking
+#TODO: Refactor to a frontend-backend architecture
+#TODO: Finnish unit tests
 # initzalizations
 host = HostScript()
 

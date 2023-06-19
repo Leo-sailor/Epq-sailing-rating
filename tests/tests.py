@@ -1,6 +1,6 @@
 import unittest
 import LocalDependencies.General as g
-from LocalDependencies.Main_core import Universe_host
+from LocalDependencies.Main_core import UniverseHost
 from unittest.mock import patch
 import datetime
 
@@ -44,7 +44,7 @@ class TestSum(unittest.TestCase):
                     print(f"Passed - {line_num+1} - with output: {output}")
 
     def test_for_get_sailor_id(self):
-        csv = Universe_host("testing_uni", "Leo")
+        csv = UniverseHost("testing_uni", "Leo")
         with open("get_sailor_id.tests") as f:
             for line_num,line in enumerate(f):
                 line_parts = line.split(':')
