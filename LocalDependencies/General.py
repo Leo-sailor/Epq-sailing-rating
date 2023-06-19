@@ -258,10 +258,13 @@ def getnat() -> str:
     if basenat == '' :
         if __name__ == 'tests.py':
             print('starting network request')
-        ip = requests.get('https://geolocation-db.com/json').json()
+        try:
+            ip = requests.get('https://geolocation-db.com/json').json()
+            natname = ip['country_name']
+        except requests.exceptions.ConnectionError:
+            natname = 'Netherlands'
         if __name__ == 'tests.py':
             print('ending network request')
-        natname = ip['country_name']
         choice = input('\nAre the majority of competitors from the {}?\ny for yes and n for no'.format(natname))
         if choice.upper() == 'Y':
             # use py pi country info to get country
@@ -419,6 +422,8 @@ def force_int(inp:str|float|int)->int:
     for char in inp:
         if char in numbers_new:
             new_str.append(char)
+    if len(new_str) == 0:
+        return 0
     return int(float(''.join(new_str)))
 def clean_table(table: list[list[Any]]):
     intial_vals = table[1]
@@ -428,7 +433,7 @@ def clean_table(table: list[list[Any]]):
         for col in cols_to_remove:
             if table[row_index][col] != intial_vals[col]:
                 good_cols.append(col)
-            [cols_to_remove.pop(cols_to_remove.index(item)) for item in good_cols]
+        [cols_to_remove.pop(cols_to_remove.index(item)) for item in good_cols]
     cols_to_remove.sort(reverse=True)
     for loc,row in enumerate(table):
         for col in cols_to_remove:
@@ -436,6 +441,8 @@ def clean_table(table: list[list[Any]]):
                 table[loc].pop(col)
             except AttributeError:
                 table.pop(loc)
+            except IndexError:
+                pass
     return table
 
 def similar(a, b):

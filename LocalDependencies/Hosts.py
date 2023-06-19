@@ -1,6 +1,6 @@
 import requests
 
-from LocalDependencies.Main_core import Universe_host
+from LocalDependencies.Main_core import UniverseHost
 import LocalDependencies.General as Base
 from LocalDependencies.Csv_custom import Csvnew
 import LocalDependencies.leo_dataclasses as dat
@@ -8,7 +8,7 @@ import datetime
 from pickle import load as _load
 from os import remove as _remove
 from time import sleep as _sleep
-from LocalDependencies.Imports import Import_manager
+from LocalDependencies.Imports import ImportManager
 
 
 class HostScript:
@@ -20,9 +20,9 @@ class HostScript:
     def torun(self,*args):
         global universecsv
         if len(args) >2:
-            universecsv = Universe_host(args[1], args[2])
+            universecsv = UniverseHost(args[1], args[2])
         else:
-            universecsv = Universe_host()
+            universecsv = UniverseHost()
 
         while True:
             Base.text_blocks(1)
@@ -50,7 +50,7 @@ class HostScript:
                 case 8:
                     self.import_sailors()
     def import_sailors(self):
-        imp_mgr = Import_manager()
+        imp_mgr = ImportManager()
         sailors = imp_mgr.import_sailors()
         print('The following {len(sailors)} sailors have been imported')
         for line in sailors:
@@ -60,6 +60,7 @@ class HostScript:
         inpmethod = self.__getinputmethod()
         inp = Base.clean_input(f'(enter (_a) for all) \nPlease enter the sailor\'s {self.inputmethodname}:', 's')
         sailorid = universecsv.getsailorid(inpmethod, inp)
+        return sailorid
         # TODO make this work and finnish it
 
     def getsailorinfo(self):
@@ -299,7 +300,7 @@ class HostScript:
                                '(5) for importing an local file (html/htm/pdf)\n'
                                '(6) for importing a .event file\n'
                                '(0) to cancel\n',
-                               'i', rangehigh=5, rangelow=0)
+                               'i', rangehigh=6, rangelow=0)
         match inp:
             case 1:
                 event = self.addeventlazy()
@@ -317,12 +318,12 @@ class HostScript:
                 return None
         return event
 
-    def addeventlocal(self,file:str = None) -> dat.Event:
-        inp_mgr = Import_manager('F')
+    def addeventlocal(self) -> dat.Event:
+        inp_mgr = ImportManager('F')
         return inp_mgr.to_event(universecsv)
 
     def add_online_event(self) -> dat.Event:
-        inp_mgr = Import_manager('L')
+        inp_mgr = ImportManager('L')
         return inp_mgr.to_event(universecsv)
 
 

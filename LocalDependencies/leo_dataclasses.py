@@ -1,8 +1,6 @@
 import datetime
 import LocalDependencies.General as Base
-from LocalDependencies.Main_core import Universe_host
-
-
+from pickle import dumps as _dumps, loads as _loads
 class Results:
 
     def __init__(self, sailorids: [list[str]], positions: list[int] = None):
@@ -102,13 +100,13 @@ class Event:
         return iter(self.races)
 
 class old_results():
-    def __init__(self, universe:Universe_host):
+    def __init__(self, universe):
         self.universe = universe
-        self.rowsfirst = universe.file.rowfirst
-        self.colsfirst = universe.file.columnfirst
+        self.rowsfirst = _loads(_dumps(universe.file.rowfirst))
+        self.colsfirst = _loads(_dumps(universe.file.columnfirst))
     def getinfo(self, sailorid: str, resulttype: str):
         try:
-            row = self.colsfirst.index(sailorid)  # figures out what row the sailor id it
+            row = self.colsfirst[0].index(sailorid)  # figures out what row the sailor id it
         except ValueError:
             raise IndexError('the sailor id {} could not be found'.format(sailorid))
 

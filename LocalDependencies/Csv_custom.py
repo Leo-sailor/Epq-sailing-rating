@@ -3,6 +3,7 @@ import LocalDependencies.General as Base
 from sys import path
 from time import time
 import os
+from pickle import dumps as _dumps, loads as _loads
 
 
 class Csvnew:
@@ -85,34 +86,34 @@ class Csvnew:
 
     def sortoncol(self, column: int, ret: bool = False, reverse: bool = False,
                   targetcol: int = None, excluderows: int | list[int] = None, greaterthan: list[int, float] = None):
-        valid = self.rowfirst[:]
+        def get_element(lists:list):
+            return Base.force_int(lists[column])
+        valid = _loads(_dumps(self.rowfirst))
         new = []
         newnew = []
         if excluderows is not None:
             if isinstance(excluderows,int):
                 excluderows = [excluderows]
-            for x in range((len(valid) - 1), -1, -1):
-                try:
-                    if x in excluderows:
-                        new.append(valid.pop(x))
-                except ValueError:
-                    new.append(valid.pop(x))
+            excluderows.sort(reverse=True)
+            for row in excluderows:
+                valid.pop(row)
         if greaterthan is not None:
-            for x in range((len(valid) - 1), -1, -1):
-                try:
-                    if int(valid[x][greaterthan[0]]) < greaterthan[1]:
-                        new.append(valid.pop(x))
-                except ValueError:
-                    new.append(valid.pop(x))
+            origlen = len(valid)
+            for bad_loc,val in enumerate(reversed(_loads(_dumps(valid)))):
+                loc = origlen - 1 - bad_loc
+                if not int(val[greaterthan[0]]) >= greaterthan[1]:
+                    valid.pop(loc)
+
         if targetcol is not None:
-            valid.sort(reverse=reverse, key=lambda y: y[column])
+            valid.sort(reverse=reverse, key=get_element)
+            breakpoint()
             for x in range(0, len(valid)):
-                self.updatevalue((x + 1), valid[x][0], 11, bypass=True)
-        valid.sort(reverse=reverse, key=lambda y: y[column])
-        for x in range((len(new) - 1), -1, -1):
-            newnew.append(new[x])
-        newnew.append(valid)
+                self.updatevalue((x + 1), valid[x][0], targetcol, bypass=True)
         if ret:
+            valid.sort(reverse=reverse, key=lambda y: y[column])
+            for x in range((len(new) - 1), -1, -1):
+                newnew.append(new[x])
+            newnew.append(valid)
             return newnew
 
     def printcolumn(self, column, sperateline: bool, excudedrows: int | list[int] = None):

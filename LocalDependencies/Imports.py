@@ -4,9 +4,9 @@ from os import remove as _remove
 from tabula import read_pdf as _read_pdf
 import pandas as pd
 from typing import Any
+import LocalDependencies.leo_dataclasses as dat
 
-
-def __process_link() -> str:
+def process_link() -> str:
     fileloc = '______'
     file_types = ['.htm', 'html', '.pdf']
     while fileloc[-4:] not in file_types:
@@ -20,7 +20,7 @@ def __process_link() -> str:
     return temp_file
 
 
-def __process_file() -> str:
+def process_file() -> str:
     fileloc = '______'
     file_types = ['.htm', 'html', '.pdf']
     while fileloc[-4:] not in file_types:
@@ -30,15 +30,15 @@ def __process_file() -> str:
     return fileloc
 
 
-def __import_pdf(file_loc):
+def import_pdf(file_loc):
     all_pages = _read_pdf(file_loc, pages='all')
     dataframe = pd.concat(all_pages)
     table = dataframe.values.tolist()
-    table.insert(0, df.columns.tolist())
+    table.insert(0, dataframe.columns.tolist())
     return Base.findandreplace(table, '\r', ' ', preserve_type=True)
 
 
-def __import_html(file_loc):
+def import_html(file_loc):
     all_tables = pd.read_html(file_loc)
     mega_df = pd.concat(all_tables)
     mega_table = mega_df.values.tolist()
@@ -46,43 +46,45 @@ def __import_html(file_loc):
     return mega_table
 
 
-def __split_table(table: list[list[Any]]):
+def split_table(table: list[list[Any]]):
+    if table is None:
+        return None
     table_start_points = [1]  # the array which stores the locations of each new set of data
     first_col = [Base.force_int(row[0]) for row in table]
     previous = 0
-    for curr in first_col[1:]:
+    for val,curr in enumerate(first_col[1:]):
         if curr < previous:
-            table_start_points.append(curr)
+            table_start_points.append(val+1)
         previous = curr
 
     end = len(table)
     tables = []
     for start_point in reversed(table_start_points):  # reverse order to make sure nothing gets messed with
         small_table = table[start_point:end]  # splits data
-        small_table.insert(0, header)  # adds headers to each set
-        tables.insert(0, new_table)  # adds new table to list of tables
-        end = table_start_points[x]
+        small_table.insert(0, table[0][:])  # adds headers to each set
+        tables.insert(0, small_table)  # adds new table to list of tables
+        end = start_point
 
-    for loc, tab in tables:
+    for loc, tab in enumerate(tables):
         tables[loc] = Base.clean_table(tab)
     return tables
 
 
-class Import_manager:
+class ImportManager:
     def __init__(self, source: str = None):
         self.__files_to_remove = []
         self.chosen_table = None
         self.chosen_data_type = None
         file_loc = None
-        while not fileloc:
+        while not file_loc:
             if source is None:
                 source = Base.clean_input('Would you linke to import a link (L) or a file (F): ', 'str',
                                           length=1).upper()
             if source == 'L':
-                file_loc = __process_link()
+                file_loc = process_link()
                 self.__files_to_remove.append(file_loc)
             elif source == 'F':
-                file_loc = __process_file()
+                file_loc = process_file()
             else:
                 print('Please make sure to only enter either (L) or (F)')
                 source = None
@@ -93,13 +95,13 @@ class Import_manager:
                 self.type = 'html'
             case _:
                 self.type = 'Unknown'
-        if type == 'pdf':
-            self.all = __import_pdf(file_loc)
-        elif type == 'html':
-            self.all = __import_html(file_loc)
+        if self.type == 'pdf':
+            self.all = import_pdf(file_loc)
+        elif self.type == 'html':
+            self.all = import_html(file_loc)
         else:
             self.all = None
-        self.tables = __split_table(self.all)
+        self.tables = split_table(self.all)
 
     def __del__(self):
         for file in self.__files_to_remove:
@@ -122,7 +124,7 @@ class Import_manager:
         self.chosen_table = table_num
         return self.chosen_table
 
-    def to_event(self, universe: Universe_host) -> dat.Event:
+    def to_event(self, universe) -> dat.Event:
         if self.chosen_table is None:
             self.user_select_table()
         table = self[self.chosen_table]
@@ -132,7 +134,7 @@ class Import_manager:
         event_title = Base.clean_input('What is the event called: ', 'str')
         return universe.processtable(table, self.chosen_data_type, event_title)
 
-    def import_sailors_to_universe(self, universe: Universe_host) -> list[str]:
+    def import_sailors_to_universe(self, universe) -> list[str]:
         info = {'name': None, 'sail ': None, 'champ': None, 'nat': None}
         same_nat = Base.clean_input('Is everyone in the event from the same country', 'bool')
         nat = None

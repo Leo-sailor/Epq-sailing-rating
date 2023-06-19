@@ -1,5 +1,5 @@
 from numpy import sqrt
-k = 15
+k = 5
 
 class EloCalculations:
     def __init__(self, deviation, multiplier):

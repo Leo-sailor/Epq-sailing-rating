@@ -17,7 +17,7 @@ if "teststttt" in sys_path:
 col_width = [15,10,9,11,9,8,5,12,11,13,15,6,8,15,10]
 
 
-class Universe_host:
+class UniverseHost:
     global sys_path
     def __init__(self, universe: str=None, password:str=None):
         self.admin = False
@@ -49,7 +49,9 @@ class Universe_host:
         self.elo = EloCalculations(host.getcell(universeloc, 2), host.getcell(universeloc, 4))
         self.deviation = host.getcell(universeloc, 1)  # saves the deviation
 
-        self.adminrights(password)  # sees whether the user should have admin rights
+        self.adminrights(password)
+        self.file.sortoncol(10, reverse=True, targetcol=11, excluderows=0, greaterthan=[12, 5])
+        self.file.autosavefile()# sees whether the user should have admin rights
 
     def __linkuniverse(self, universe_name: str) -> str:
         if universe_name.upper() == 'N':
@@ -198,7 +200,10 @@ class Universe_host:
 
     def getfieldnumber(self, resulttype: str) -> int:
         #TODO: turn into a normal function, probabaly in base
-        resulttype.lower()
+        try:
+            resulttype.lower()
+        except AttributeError:
+            pass
         match resulttype:
             case 'n' | 'name':
                 findtypeloc = -1  # makes sure the next bit will be bypassed
@@ -417,7 +422,7 @@ class Universe_host:
         sailorids = []
         for count,row in enumerate(table[1:]):
             print(f'{count}/{len(table)-1} sailors enterd')
-            sailorids.append(self.import_sailor(field, row[info_column],row,info,nat,fullspeed=fullspeed, *[row[item].lower() for item in extra_data_cols]))
+            sailorids.append(self.import_sailor(field, row[info_column],row,info,nat,fullspeed, *[row[item].lower() for item in extra_data_cols]))
 
         races = []
         chars_to_strip = "abcdefghijklmnopqrstuvwxyz()"
@@ -457,9 +462,13 @@ class Universe_host:
         if not (os.path.exists(direc)):  # checks whether that universe exists
             os.mkdir(direc)
         made = False
+        if event.event_title is None:
+            date = str((Base.twothousandtodatetime(event.date)))
+        else:
+            date = event.event_title
         count = 0
         while not made:
-            newdirec = ''.join((direc, '\\', str((Base.twothousandtodatetime(event.date))), '-', str(count), '.event'))
+            newdirec = ''.join((direc, '\\', date, '-', str(count), '.event'))
             if os.path.exists(newdirec):
                 count += 1
             else:
@@ -477,10 +486,19 @@ class Universe_host:
         self.__endevent(event.all_sailors, event.date)
         if not event.imported:
             self.__export_event(event)
+        to_print = Base.clean_input('Would you like to print the rating chnages from this event', 'bool')
+        if to_print:
+            print('Event rating changes:')
+            for sailor in event.all_sailors:
+                print(f'{sailor}: light: {old_results.getinfo(sailor,7)} -> {self.getinfo(sailor,7)}   medium: {old_results.getinfo(sailor,8)} -> {self.getinfo(sailor,8)}\n'
+                      f'               heavy: {old_results.getinfo(sailor,9)} -> {self.getinfo(sailor,9)}   overall: {old_results.getinfo(sailor,10)} -> {self.getinfo(sailor,10)}\n'
+                      f'               rank: {old_results.getinfo(sailor,"r")} -> {self.getinfo(sailor,"r")} ')
 
-    def __addrace(self, race: dat.Race,old_results=None):
+
+    def __addrace(self, race: dat.Race,old_results):
         sailorids = race.results.sailorids
         positions = race.results.positions
+        # serious logic error here with currat ending up with 2x as many values
         wind = race.wind
         for x in range(0, 2):
             currats = []
@@ -490,20 +508,13 @@ class Universe_host:
 
             if x == 1:  # override if the run for overalls
                 columnnum = 10
-            if old_results is not None:
-                for sailor in sailorids:  # gets the current information on all the current sailors
-                    currats.append(float(old_results.getinfo(sailor, columnnum)))
-                    currevents.append(int(old_results.getinfo(sailor, 'e')))
-
+            currats = []
+            oldrats = []
             for sailor in sailorids:  # gets the current information on all the current sailors
                 currats.append(float(self.getinfo(sailor, columnnum)))
                 currevents.append(int(self.getinfo(sailor, 'e')))
-            if old_results is None:
-                oldrats = currats
-            else:
-                oldrats = []
-                for sailor in sailorids:  # gets the current information on all the current sailors
-                    oldrats.append(float(old_results.getinfo(sailor, columnnum)))
+            for sailor in sailorids:  # gets the current information on all the current sailors
+                oldrats.append(float(old_results.getinfo(sailor, columnnum)))
 
 
             newrat = self.elo.cycle(oldrats, currevents, positions,currats)  # executes the maths
