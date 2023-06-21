@@ -20,7 +20,6 @@ col_width = [15,10,9,11,9,8,5,12,11,13,15,6,8,15,10]
 class UniverseHost:
     global sys_path
     def __init__(self, universe: str=None, password:str=None):
-        breakpoint()
         self.admin = False
         self.cfile = ''
         print('\n UNIVERSE SELECTION TOOL:')
@@ -50,9 +49,7 @@ class UniverseHost:
         self.elo = EloCalculations(host.getcell(universeloc, 2), host.getcell(universeloc, 4))
         self.deviation = host.getcell(universeloc, 1)  # saves the deviation
 
-        self.adminrights(password)
-        self.file.sortoncol(10, reverse=True, targetcol=11, excluderows=0, greaterthan=[12, 5])
-        self.file.autosavefile()# sees whether the user should have admin rights
+        self.adminrights(password)# sees whether the user should have admin rights
 
     def __linkuniverse(self, universe_name: str) -> str:
         if universe_name.upper() == 'N':

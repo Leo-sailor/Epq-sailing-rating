@@ -74,7 +74,6 @@ class Csv_base:
         return toprint
 
     def save(self):
-        breakpoint()
         with open(self.filelocation, 'w', newline='') as csvfile:
             spamwriter = csv.writer(csvfile, delimiter=',',
                                     quotechar=',', quoting=csv.QUOTE_MINIMAL)
@@ -209,6 +208,7 @@ class Csvnew(Csv_base):
         super(Csvnew,self).removerow(rownum)
         self.autosavefile()
     def autosavefile(self):
+        breakpoint()
         filename = ''.join((self.universe, '-', str(self.sessionstart), '.csv'))
         folder = ''.join((path[0], '\\universes\\', self.universe, '\\'))
         cfile = ''.join((folder, filename))
