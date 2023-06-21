@@ -4,7 +4,7 @@ from time import time
 import os
 from LocalDependencies.ELO import EloCalculations
 import LocalDependencies.General as Base
-from LocalDependencies.Csv_custom import Csvnew
+from LocalDependencies.Csv_custom import Csvnew, Csv_base
 import LocalDependencies.leo_dataclasses as dat
 from binascii import unhexlify
 from pickle import dump as _dump, load as _load
@@ -20,26 +20,27 @@ col_width = [15,10,9,11,9,8,5,12,11,13,15,6,8,15,10]
 class UniverseHost:
     global sys_path
     def __init__(self, universe: str=None, password:str=None):
+        breakpoint()
         self.admin = False
         self.cfile = ''
         print('\n UNIVERSE SELECTION TOOL:')
         print('Avalible universes are:')
-        host = Csvnew(''.join((sys_path, UNIVERSES_, 'host.csv',)))  # stores it in [column][row]
+        host = Csv_base(''.join((sys_path, UNIVERSES_, 'host.csv',)))  # stores it in [column][row]
 
         host.printcolumn(0, True, 0)  # prints all the names of the universes
         if universe is None:
             universe = input(
-                '\nPlease enter the name of the universe you would like to acess or (n) for a new universe:').lower()
+                '\nPlease enter the name of the universe you would like to acess or (n) for a new universe: ').lower()
         while not (universe in host.getcolumn(0) or universe.upper() == 'N'):
             print('\nThat universe name was not valid, please try again')  # keeps trying unitl a valid input is entered
             universe = input(
-                '\nPlease enter the name of the universe you would like to acess or (n) for a new universe:').lower()
+                '\nPlease enter the name of the universe you would like to acess or (n) for a new universe: ').lower()
 
         self.universe = self.__linkuniverse(universe)  # passes it to the link unicerse for the universe to be imported
         self.sessiontime = int(time())  # sets the time for any new files
 
         if universe != self.universe:
-            host = Csvnew(''.join(
+            host = Csv_base(''.join(
                 (sys_path, UNIVERSES_, 'host.csv',)))  # if a new universe has been created, reopen the hist csv file
         # print(column) #--debuging line
 
@@ -60,8 +61,7 @@ class UniverseHost:
         try:  # used to cath any file opening erros, probable to much inside of the 'try' tho
             self.folder = ''.join((sys_path, '\\universes\\', universe_name, '\\'))
             self.host_file = ''.join((self.folder, 'host-', universe_name, '.csv'))
-
-            universe_host = Csvnew(self.host_file)  # opens the csv with the [rows][columns]
+            universe_host = Csv_base(self.host_file)  # opens the csv with the [rows][columns]
 
             self.base_file = ''.join((self.folder, universe_host.getcell(1, 2)))  # sets the objects current file location
             self.version_number = int(universe_host.getcell(1, 0))  # sets the version number for the current open file
@@ -79,7 +79,7 @@ class UniverseHost:
         return universe_name
 
     def __makeuniverse(self) -> str:
-        name = Base.clean_input('\nPlease enter your new ranking universe name: ', 's',
+        name = Base.clean_input('\nPlease enter your new ranking universe name: ', str,
                                 charlevel=1)  # gets the universe name
 
         direc = ''.join((sys_path, UNIVERSES_, name,))  # figures out the path of the new universe
@@ -92,20 +92,14 @@ class UniverseHost:
         firstfilename = ''.join((name, '-', curtime, '.csv'))  # creats the name for the first file
         firstfile = ''.join((direc, '\\', firstfilename))  # creats the directory of that file
         universe = name  # sets the universe variable to name, so code later can be simple copied
-
-        with open(firstfile, 'w', newline='') as csvfile:  # writes the current file  without any sailors
-            spamwriter = csv.writer(csvfile, delimiter=',',
-                                    quotechar=',', quoting=csv.QUOTE_MINIMAL)
-            spamwriter.writerow(['sailorID', 'champNum', 'sailNo', 'Firstname', 'Surname', 'Region', 'nat',
+        cfile = Csv_base(firstfile)
+        cfile.addrow(['sailorID', 'champNum', 'sailNo', 'Firstname', 'Surname', 'Region', 'nat',
                                  'lightRating', 'midRating', 'heavyRating', 'overallRating',
                                  'rank', 'events', 'lastEventDate'])
+        host = Csv_base(''.join(hostfile))
+        host.addrow(['versionNumber', 'creationDate', 'fileName', 'md5'])
+        host.addrow(['1', curtime, firstfilename, Base.hashfile(firstfile)])
 
-        with open(''.join(hostfile), 'w', newline='') as csvfile:  # creats the host file
-            spamwriter = csv.writer(csvfile, delimiter=',',
-                                    quotechar=',', quoting=csv.QUOTE_MINIMAL)
-            spamwriter.writerow(['versionNumber', 'creationDate', 'fileName', 'md5'])
-            spamwriter.writerow(
-                ['1', curtime, firstfilename, Base.hashfile(firstfile)])  # adds the row and has hashed the file
 
         temp = Base.clean_input('\nPlease enter a password for this universe: ',
                                'pn')  # makes a passowrd and returns the hash and salt
@@ -114,17 +108,13 @@ class UniverseHost:
 
         starting = Base.clean_input('\nWhat would you like the average rating of this '
                                    'universe to be?(450-3100)(default: 1500): ',
-                                   'i', rangehigh=3100, rangelow=450)
+                                   int, rangehigh=3100, rangelow=450)
         k = Base.clean_input('\nWhat would you like the speed of rating change '
                             'to be?(0.3 - 4)(Recomended - 1): ',
-                            'f', rangelow=0.3, rangehigh=4)  # random comment
+                            float, rangelow=0.3, rangehigh=4)  # random comment
         # generic input collecting
-
-        with open(''.join((sys_path, '\\universes\\host.csv')), 'a',
-                  newline='') as csvfile:  # writes all the inputs to the master host file
-            spamwriter = csv.writer(csvfile, delimiter=',',
-                                    quotechar=',', quoting=csv.QUOTE_MINIMAL)
-            spamwriter.writerow([name, starting, (starting / 5 + 100), self.passhash, k, self.passsalt, ''])
+        big_host = Csv_base(''.join((sys_path, '\\universes\\host.csv')))
+        big_host.addrow([name, starting, (starting / 5 + 100), self.passhash, k, self.passsalt, ''])
 
         print('{} universe has been created'.format(name))
         return universe
@@ -156,7 +146,7 @@ class UniverseHost:
         return self.admin  # checks whether the user should have admin eights
 
     def cleanup(self):
-        host = Csvnew(self.host_file)
+        host = Csv_base(self.host_file)
         length = host.numrows()
         hashes = []
         toremove = []
@@ -173,7 +163,7 @@ class UniverseHost:
             file_name = toremove[x]
             fileloc = ''.join((self.folder, file_name))
             os.remove(fileloc)
-            host.removerow(toremoverows[x], save=False)
+            host.removerow(toremoverows[x])
             host.save()
 
     def getinfo(self, sailorid: str, resulttype: str):
@@ -263,7 +253,7 @@ class UniverseHost:
         while working:
             inp = Base.clean_input('\nPlease type in a sailor id \nor press (n) to make a new sailor'
                                    '\nor press (t) to try again '
-                                   '\nor press (p) to get a list of all sailor id\'s: ', 's', charlevel=2).lower()
+                                   '\nor press (p) to get a list of all sailor id\'s: ', str, charlevel=2).lower()
             if inp == 'n':
                 if return_on_new:
                     return 0
@@ -290,7 +280,7 @@ class UniverseHost:
                 for line in self.file.getcolumn(0):
                     print(line)
             elif inp.lower().strip() == 't':
-                inp = input('\nPlease enter the search term again:')
+                inp = input('\nPlease enter the search term again: ')
                 return self.getsailorid(fieldnum, inp,return_on_new, *data)
             else:
                 print('\n That sailor id could not be found')
@@ -312,7 +302,7 @@ class UniverseHost:
                           self.file.getcell(locs[x], 2))
                 print((''.join(string)))
             finallocation = locs[(Base.clean_input('\nPlease enter the number of the correct sailor you are '
-                                                  'searching for: ', 'i', 1, len(locs))) - 1]
+                                                  'searching for: ', int, 1, len(locs))) - 1]
             index = int(finallocation)
             sailorid = self.file.getcell(index, 0)
             return sailorid
@@ -371,7 +361,7 @@ class UniverseHost:
             print(f'The original sailors information is: {self.getinfo(sailid, "a")}')
             print('\n(1). Append "-1" to the new sailor id and proceed to add'
                   '\n(2). Abort adding new sailor id')
-            inp = Base.clean_input('Which of those options do you want to use: ', 'i', rangelow=1, rangehigh=2)
+            inp = Base.clean_input('Which of those options do you want to use: ', int, rangelow=1, rangehigh=2)
             if inp == 1:
                 sailid += '-1'
                 count = 1
@@ -392,7 +382,7 @@ class UniverseHost:
 
     def processtable(self, table: list[list[str]], field: str, event_title = "the event") -> dat.Event:
         info = {'name': None, 'sail ': None, 'champ': None}
-        same_nat = Base.clean_input('Is everyone in the event from the same country','bool')
+        same_nat = Base.clean_input('Is everyone in the event from the same country',bool)
         nat = None
 
         if same_nat:
@@ -401,7 +391,7 @@ class UniverseHost:
             for key in info:
                 if key.upper() in item.upper():
                     info[key] = val
-        fullspeed = Base.clean_input('do you want sailors to be autocreated to speed up entry ', 'bool')
+        fullspeed = Base.clean_input('do you want sailors to be autocreated to speed up entry ', bool)
         race_columns = []
         fields = {'c': 'champ', 's': 'sail', 'n': 'name'}
         try:
@@ -429,7 +419,7 @@ class UniverseHost:
         date = Base.dayssincetwothousand(Base.getdate("date", f"of the last day of {event_title}: "))
         print('1 - Light\n2- Medium\n3 - Heavy')
         for race in race_columns:
-            wind = Base.clean_input(f'What was the wind of {table[0][race]}: ', 'i', 1, 3)
+            wind = Base.clean_input(f'What was the wind of {table[0][race]}: ', int, 1, 3)
             result = [int(float(table[x][race].lower().strip(chars_to_strip))) for x in range(1, len(table))]
             races.append(dat.Race(dat.Results(sailorids, result), wind, date))
         return dat.Event(races, date,event_title=event_title,nation = nat)
@@ -486,7 +476,8 @@ class UniverseHost:
         self.__endevent(event.all_sailors, event.date)
         if not event.imported:
             self.__export_event(event)
-        to_print = Base.clean_input('Would you like to print the rating chnages from this event', 'bool')
+        to_print = Base.clean_input('Would you like to print the rating chnages from this event', bool)
+        self.file.set_session()
         if to_print:
             print('Event rating changes:')
             for sailor in event.all_sailors:

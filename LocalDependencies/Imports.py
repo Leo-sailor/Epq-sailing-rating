@@ -12,12 +12,19 @@ def process_link() -> str:
     while fileloc[-4:] not in file_types:
         if fileloc != '______':
             print('that file is not of the correct type')
-        fileloc = Base.clean_input("please enter the link to the webpage: ", 'str')
+        fileloc = Base.clean_input("please enter the link to the webpage: ", str)
     temp_file = '.'.join(('webpage.temp', fileloc[-4:]))
     print('Downloading_file')
     page = _get(fileloc)  # gets the page as a response object
     open(temp_file, 'wb').write(page.content)  # writes the contents of the response object to a field
     return temp_file
+
+def removerowsincluding(table:list[list[Any]],term: Any):
+    out_table = []
+    for row in table:
+        if not Base.r_in(term,row):
+            out_table.append(row)
+    return out_table
 
 
 def process_file() -> str:
@@ -71,14 +78,14 @@ def split_table(table: list[list[Any]]):
 
 
 class ImportManager:
-    def __init__(self, source: str = None):
+    def __init__(self, source: str = None, removerowswith = None):
         self.__files_to_remove = []
         self.chosen_table = None
         self.chosen_data_type = None
         file_loc = None
         while not file_loc:
             if source is None:
-                source = Base.clean_input('Would you linke to import a link (L) or a file (F): ', 'str',
+                source = Base.clean_input('Would you linke to import a link (L) or a file (F): ', str,
                                           length=1).upper()
             if source == 'L':
                 file_loc = process_link()
@@ -101,6 +108,8 @@ class ImportManager:
             self.all = import_html(file_loc)
         else:
             self.all = None
+        if removerowswith is not None:
+            self.all = removerowsincluding(self.all,removerowswith)
         self.tables = split_table(self.all)
 
     def __del__(self):
@@ -115,12 +124,12 @@ class ImportManager:
         expected = False
         while not expected:
             table_num = Base.clean_input(
-                f'Please eneter the table number you would like to recive (-{tab_len} - {tab_len - 1}): ', 'int',
+                f'Please eneter the table number you would like to recive (-{tab_len} - {tab_len - 1}): ', int,
                 0 - tab_len, tab_len - 1)
             table = self[table_num]
             for line in table:
                 print(line)
-            expected = Base.clean_input('Was the table what you exepected', 'bool')
+            expected = Base.clean_input('Was the table what you exepected', bool)
         self.chosen_table = table_num
         return self.chosen_table
 
@@ -129,14 +138,14 @@ class ImportManager:
             self.user_select_table()
         table = self[self.chosen_table]
         if self.chosen_data_type is None:
-            self.chosen_data_type = Base.clean_input('What field would you like to read on the file (s,c,n): ', 'str',
+            self.chosen_data_type = Base.clean_input('What field would you like to read on the file (s,c,n): ', str,
                                                      length=1)
-        event_title = Base.clean_input('What is the event called: ', 'str')
+        event_title = Base.clean_input('What is the event called: ', str)
         return universe.processtable(table, self.chosen_data_type, event_title)
 
     def import_sailors_to_universe(self, universe) -> list[str]:
         info = {'name': None, 'sail ': None, 'champ': None, 'nat': None}
-        same_nat = Base.clean_input('Is everyone in the event from the same country', 'bool')
+        same_nat = Base.clean_input('Is everyone in the event from the same country', bool)
         nat = None
         if same_nat:
             nat = Base.getnat()
@@ -145,7 +154,7 @@ class ImportManager:
                 if key.upper() in item.upper():
                     info[key] = val
         if self.chosen_data_type is None:
-            self.chosen_data_type = Base.clean_input('What field would you like to prioritise (s,c,n): ', 'str',
+            self.chosen_data_type = Base.clean_input('What field would you like to prioritise (s,c,n): ', str,
                                                      length=1)
         match self.chosen_data_type:
             case 'c':

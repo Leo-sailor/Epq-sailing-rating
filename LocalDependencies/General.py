@@ -29,31 +29,35 @@ def getfilename(mode = 'r',**args)->str:
     file_getter.close()
     return file_getter.name
 
-def getdate(returnmethod='epoch', prompt = "")->int|str|datetime:
+def getdate(returnmethod:str ='epoch', prompt:str = "")->int|str|date:
     """
 
     :param returnmethod: epoch is seconds since epoch, text returns a text format, date returns a dateobject, datetime returns a datetime object
     :return:
     """
-    year = clean_input(f"Please enter the year {prompt}", 'i', 2000, 2100)
-    month = clean_input(f"Please enter the month {prompt}", 'i', 1, 12)
+    if prompt[-2:] == ': ':
+        prompt += ': '
+    year = clean_input(f"Please enter the year {prompt}", int, 2000, 2100)
+    month = clean_input(f"Please enter the month {prompt}", int, 1, 12)
     if month in [4,6,9,11]:
-        day = clean_input(f"Please enter the day {prompt}", 'i', 1, 30)
+        day = clean_input(f"Please enter the day {prompt}", int, 1, 30)
     elif month in [1,3,5,7,8,10,12]:
-        day = clean_input(f"Please enter the day {prompt}", 'i', 1, 31)
+        day = clean_input(f"Please enter the day {prompt}", int, 1, 31)
     else:
-        day = clean_input(f"Please enter the day {prompt}", 'i', 1, 28)
+        day = clean_input(f"Please enter the day {prompt}", int, 1, 28)
     current = date(year,month,day)
     match returnmethod:
         case 'epoch':
             epoch = date(1970,1,1)
-            return (current-epoch).total_seconds()
+            return int((current-epoch).total_seconds())
         case 'text':
             return str(current)
         case 'date':
             return current
         case 'datetime':
             return datetime(year,month,day)
+        case 'int':
+            return dayssincetwothousand(current)
 
 def twothousandtodatetime(days:int) -> datetime:
     thousand = date(2000,1,1)
@@ -72,7 +76,7 @@ def dayssincetwothousand(in_date: date | datetime = None) -> int:
 def check_consecutive(l:list) -> bool:
     n = len(l) - 1
     return (sum(np_diff(sorted(l)) == 1) >= n)
-def clean_input(prompt: str, datatype: str, rangelow: float = 0, rangehigh: float = 500, charlevel: int = 0,
+def clean_input(prompt: str, datatype: type|str, rangelow: float = 0, rangehigh: float = 500, charlevel: int = 0,
                 correcthash='', salt=''.encode(), length = None )-> str|float|int|bool|tuple[str,str]:
     """This function takes a prompt and a type and keeps taking an input from the user until it furfills the
     requirmetns attached
@@ -81,7 +85,7 @@ def clean_input(prompt: str, datatype: str, rangelow: float = 0, rangehigh: floa
     char level 2: character good for sailor id
     char level 3: character good for names
     for range high and range low, its less than or equal"""
-    if datatype == 's' or datatype == 'str':
+    if datatype == str:
         if charlevel == 0 or charlevel == '0':
             if length is None:
                 return input(prompt)
@@ -126,7 +130,7 @@ def clean_input(prompt: str, datatype: str, rangelow: float = 0, rangehigh: floa
                 inp = user_filterd_string(file_safe_chars, prompt)
             return inp
 
-    elif datatype == 'f' or datatype == 'float':
+    elif datatype == float:
         try:
             inp = float(input(prompt))
         except ValueError:
@@ -141,7 +145,7 @@ def clean_input(prompt: str, datatype: str, rangelow: float = 0, rangehigh: floa
                 inp = 5000000000
         return inp
 
-    elif datatype == 'i' or datatype == 'int':
+    elif datatype == int:
         try:
             inp = int(input(prompt))
         except ValueError:
@@ -162,7 +166,7 @@ def clean_input(prompt: str, datatype: str, rangelow: float = 0, rangehigh: floa
         same = False
         while not same:
             passworda = input(prompt)
-            passwordb = input('Please it again to confirm:')
+            passwordb = input('Please it again to confirm: ')
             same = passwordb == passworda
             if not same:
                 print('\nThose passwords did not match, Please try again')
@@ -181,8 +185,8 @@ def clean_input(prompt: str, datatype: str, rangelow: float = 0, rangehigh: floa
             else:
                 print('\nThat password was incorrect, please try again')
 
-    elif datatype == 'bool' or datatype == 'b' or datatype == 'boolean':
-        inp = clean_input(f'{prompt} - please enter 1 for yes and 0 for no','i',0,1)
+    elif datatype == bool:
+        inp = clean_input(f'{prompt} - please enter 1 for yes and 0 for no: ',int,0,1)
         if inp == 1:
             return True
         else:
@@ -202,8 +206,8 @@ def user_filterd_string(chars_allowed: list | tuple, prompt: str) -> str:
     new_str = ''.join(new)
     if old == new_str:
         return old
-    choice = input(f'\nYour string is "{new_str}" Please press (enter) to continue or (1) to retype')
-    if choice == '':
+    choice = clean_input(f'\nYour string is "{new_str}". Is this what you expected?',bool)
+    if choice:
         return new_str
     else:
         return user_filterd_string(chars_allowed,prompt)
@@ -248,6 +252,28 @@ def ordinal(num) -> str:
         suffix = suffixes.get(num % 10, 'th')
     return str(num) + suffix
 
+def is_iterable(inp:Any) -> bool:
+    try:
+        iter(inp)
+    except TypeError:
+        return False
+    return True
+
+def r_in(term, inp:list[Any]) -> bool:
+    if not is_iterable(inp):
+        if term == inp:
+            return True
+        else:
+            return False
+    else:
+        if term in inp:
+            return True
+        for item in inp:
+            if r_in(term, item):
+                return True
+        return False
+
+
 def getnat() -> str:
     """
     This function gets the current computer's adress and uses that to generate a suggested 3 letter country code
@@ -265,8 +291,8 @@ def getnat() -> str:
             natname = 'Netherlands'
         if __name__ == 'tests.py':
             print('ending network request')
-        choice = input('\nAre the majority of competitors from the {}?\ny for yes and n for no'.format(natname))
-        if choice.upper() == 'Y':
+        choice = clean_input(f'\nAre the majority of competitors from the {natname}?',bool)
+        if choice:
             # use py pi country info to get country
             country = CountryInfo(natname)
             basenat = country.iso(3)
@@ -468,6 +494,8 @@ def text_blocks(amount):
         print('(5) to get sailor info over time')
         print('(6) to print the universe')
         print('(7) to exit the universe')
+        print('(8) to import sailors')
+        print('(9) to graph sailors over time')
     elif amount == 2:
         # developer instructions with methods locations objects and modes and other parameters and explainations
         print('\nclass: General method: help parameters: mode explaination: if the mode is 0 basic instructions '

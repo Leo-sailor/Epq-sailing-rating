@@ -5,16 +5,8 @@ from time import time
 import os
 from pickle import dumps as _dumps, loads as _loads
 
-
-class Csvnew:
-    def __init__(self, filelocation, protectedrows: list[int] = None, protectedcols: list[int] = None, universe=None):
-        self.sessionstart = int(time())
-        if universe is not None:
-            folder = path[0]
-            self.hostfile = ''.join((folder, '\\universes\\', universe, '\\host-', universe, '.csv'))
-            self.hostfileold = Csvnew(self.hostfile)
-            self.prevversionnum = int(self.hostfileold.getcell(1, 0))
-            self.universe = universe
+class Csv_base:
+    def __init__(self, filelocation, protectedrows: list[int] = None, protectedcols: list[int] = None,):
         if protectedcols is None:
             protectedcols = []
         if protectedrows is None:
@@ -40,17 +32,20 @@ class Csvnew:
         for x in range(0, len(rows)):
             for y in range(0, len(rows[0])):
                 column[y].append(rows[x][y])
+        for bad_loc,col in enumerate(reversed(column)):
+            loc = 20 - bad_loc
+            if len(col) == 0:
+                column.pop(loc)
         self.columnfirst = column
         self.rowfirst = rows
-
     def getrow(self, row: int, miss: list[int] | int = None) -> list:
         if miss is None:
             return self.rowfirst[row]
-        elif type(miss) == int:
+        elif isinstance(miss, int):
             temp = self.rowfirst[row][:]
             temp.pop(miss)
             return temp
-        elif type(miss) == list:
+        elif isinstance(miss, list):
             miss.sort(reverse=True)
             temp = self.rowfirst[row][:]
             for index in miss:
@@ -58,11 +53,6 @@ class Csvnew:
             return temp
         else:
             raise TypeError
-
-    def updatevaluesingle(self, term, row: int, column: bool, bypass: bool = False):
-        self.updatevalue(term, row, column, 0, bypass)
-        self.autosavefile()
-
     def getcell(self, row: int, column: int):
         return self.rowfirst[row][column]
 
@@ -71,6 +61,80 @@ class Csvnew:
 
     def protectcols(self, columns: int | list[int]):
         self.protectedcol.append(columns)
+
+    def getcolumn(self, column, excluded_rows: int | list[int] = None):
+        if excluded_rows is None:
+            return self.columnfirst[column][:]
+        elif isinstance(excluded_rows, int):
+            excluded_rows = [excluded_rows]
+        excluded_rows.sort(reverse=True)
+        toprint = self.columnfirst[column][:]
+        for index in excluded_rows:
+            toprint.pop(index)
+        return toprint
+
+    def save(self):
+        breakpoint()
+        with open(self.filelocation, 'w', newline='') as csvfile:
+            spamwriter = csv.writer(csvfile, delimiter=',',
+                                    quotechar=',', quoting=csv.QUOTE_MINIMAL)
+            for x in range(0, len(self.rowfirst[0])):
+                spamwriter.writerow(self.rowfirst[x])
+
+    def __del__(self):
+        self.save()
+
+    def custom_iter(self, row_from:int=None, row_to:int=None):
+        if row_from is None and row_to is None:
+            return iter(self.rowfirst)
+        elif row_from is None:
+            return iter(self.rowfirst[:row_to])
+        elif row_to is None:
+            return iter(self.rowfirst[:row_from])
+        else:
+            return iter(self.rowfirst[row_from:row_to])
+
+    def index(self,val):
+        return self.rowfirst.index(val)
+    def printcolumn(self, column, sperateline: bool, excudedrows: int | list[int] = None):
+        if type(excudedrows) == int:
+            excudedrows = [excudedrows]
+        if sperateline:
+            for x in range(0, len(self.columnfirst[column])):
+                if x not in excudedrows:
+                    print(self.columnfirst[column][x])
+        else:
+            excudedrows.sort(reverse=True)
+            toprint = self.columnfirst[column][:]
+            for index in excudedrows:
+                toprint.pop(index)
+            print(toprint)
+
+    def getrownum(self, term: str, col: int):
+        return self.columnfirst[col].index(term)
+
+    def numcolumns(self):
+        return len(self.columnfirst)
+
+    def numrows(self):
+        return len(self.rowfirst)
+
+    def addrow(self, array: list):
+        for x in range(len(array)):
+            self.columnfirst[x].append(str(array[x]))
+        for val, item in enumerate(array):
+            array[val] = Base.findandreplace(item, ' ', '-', True)
+        self.rowfirst.append(array)
+
+    def addcol(self, array: list):
+        for x in range(len(array)):
+            self.rowfirst[x].append(str(array[x]))
+        self.columnfirst.append(array)
+
+    def removerow(self, rownum: int):
+        self.rowfirst.pop(rownum)
+        for col in self.rowfirst:
+            col.pop(rownum)
 
     def updatevalue(self, term, row: int | str, column: int, colsearch: int = None, bypass: bool = False):
         term = str(term)
@@ -83,6 +147,24 @@ class Csvnew:
             self.columnfirst[column][row] = term
         else:
             raise PermissionError("You do not have permissions to change this cell")
+
+
+class Csvnew(Csv_base):
+    def __init__(self, filelocation, protectedrows: list[int] = None, protectedcols: list[int] = None, universe=None):
+        super(Csvnew, self).__init__(filelocation, protectedrows,protectedcols)
+        self.set_session()
+        if universe is not None:
+            folder = path[0]
+            self.hostfile = ''.join((folder, '\\universes\\', universe, '\\host-', universe, '.csv'))
+            self.hostfileold = Csv_base(self.hostfile)
+            self.prevversionnum = int(self.hostfileold.getcell(1, 0))
+            self.universe = universe
+    def set_session(self):
+        self.sessionstart = int(time())
+
+    def updatevaluesingle(self, term, row: int, column: bool, bypass: bool = False):
+        self.updatevalue(term, row, column, 0, bypass)
+        self.autosavefile()
 
     def sortoncol(self, column: int, ret: bool = False, reverse: bool = False,
                   targetcol: int = None, excluderows: int | list[int] = None, greaterthan: list[int, float] = None):
@@ -106,7 +188,6 @@ class Csvnew:
 
         if targetcol is not None:
             valid.sort(reverse=reverse, key=get_element)
-            breakpoint()
             for x in range(0, len(valid)):
                 self.updatevalue((x + 1), valid[x][0], targetcol, bypass=True)
         if ret:
@@ -116,66 +197,17 @@ class Csvnew:
             newnew.append(valid)
             return newnew
 
-    def printcolumn(self, column, sperateline: bool, excudedrows: int | list[int] = None):
-        if type(excudedrows) == int:
-            excudedrows = [excudedrows]
-        if sperateline:
-            for x in range(0, len(self.columnfirst[column])):
-                if x not in excudedrows:
-                    print(self.columnfirst[column][x])
-        else:
-            excudedrows.sort(reverse=True)
-            toprint = self.columnfirst[column][:]
-            for index in excudedrows:
-                toprint.pop(index)
-            print(toprint)
-
-    def getcolumn(self, column, excudedrows: int | list[int] = None):
-        if excudedrows is None:
-            return self.columnfirst[column][:]
-        excudedrows.sort(reverse=True)
-        toprint = self.columnfirst[column][:]
-        for index in excudedrows:
-            toprint.pop(index)
-        return toprint
-
-    def getrownum(self, term: str, col: int):
-        return self.columnfirst[col].index(term)
-
-    def numcolumns(self):
-        return len(self.columnfirst)
-
-    def numrows(self):
-        return len(self.rowfirst)
-
     def addrow(self, array: list):
-        for x in range(len(array)):
-            self.columnfirst[x].append(str(array[x]))
-        for val,item in enumerate(array):
-            array[val] = Base.findandreplace(item, ' ', '-', True)
-        self.rowfirst.append(array)
+        super(Csvnew,self).addrow(array)
         self.autosavefile()
 
     def addcol(self, array: list):
-        for x in range(len(array)):
-            self.rowfirst[x].append(str(array[x]))
-        self.columnfirst.append(array)
+        super(Csvnew,self).addcol(array)
         self.autosavefile()
 
-    def removerow(self, rownum: int, save: bool = True):
-        self.rowfirst.pop(rownum)
-        for col in self.rowfirst:
-            col.pop(rownum)
-        if save:
-            self.save()
-
-    def save(self):
-        with open(self.filelocation, 'w', newline='') as csvfile:
-            spamwriter = csv.writer(csvfile, delimiter=',',
-                                    quotechar=',', quoting=csv.QUOTE_MINIMAL)
-            for x in range(0, len(self.rowfirst[0])):
-                spamwriter.writerow(self.rowfirst[x])
-
+    def removerow(self, rownum: int):
+        super(Csvnew,self).removerow(rownum)
+        self.autosavefile()
     def autosavefile(self):
         filename = ''.join((self.universe, '-', str(self.sessionstart), '.csv'))
         folder = ''.join((path[0], '\\universes\\', self.universe, '\\'))
@@ -204,20 +236,3 @@ class Csvnew:
                 spamwriter.writerow([self.prevversionnum + 1, self.sessionstart, filename, Base.hashfile(cfile)])
                 for x in range(1, len(self.hostfileold.rowfirst)):
                     spamwriter.writerow(self.hostfileold.getrow(x))
-
-    def mansavefile(self):  # useful but i dont think is used
-        self.autosavefile()
-        newfilename = ''.join((path[0], '\\universes\\', self.universe, '\\', self.universe, '-', str(self.sessionstart - 1), '.csv'))
-        os.rename(''.join((path[0], '\\universes\\', self.universe, '\\', self.universe, '-', str(self.sessionstart), '.csv')), newfilename)
-
-        with open(self.hostfile, 'w', newline='') as csvfile:
-            spamwriter = csv.writer(csvfile, delimiter=',',
-                                    quotechar=',', quoting=csv.QUOTE_MINIMAL)
-            spamwriter.writerow(self.hostfileold.getrow(0))
-            spamwriter.writerow([self.hostfileold.getcell(0, 1), self.hostfileold.getcell(1, 1), newfilename, self.hostfileold.getcell(3, 1)])
-            for x in range(2, len(self.hostfileold.rowfirst)):
-                spamwriter.writerow(self.hostfileold.getrow(x))
-        self.sessionstart = int(time())
-        self.prevversionnum += 1
-
-
