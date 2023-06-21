@@ -77,8 +77,8 @@ class Csv_base:
         with open(self.filelocation, 'w', newline='') as csvfile:
             spamwriter = csv.writer(csvfile, delimiter=',',
                                     quotechar=',', quoting=csv.QUOTE_MINIMAL)
-            for x in range(0, len(self.rowfirst[0])):
-                spamwriter.writerow(self.rowfirst[x])
+            for row in self.rowfirst:
+                spamwriter.writerow(row)
 
     def __del__(self):
         self.save()
