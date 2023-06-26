@@ -29,10 +29,11 @@ def getfilename(mode = 'r',**args)->str:
     file_getter.close()
     return file_getter.name
 
-def getdate(returnmethod:str ='epoch', prompt:str = "")->int|str|date:
+def getdate(return_method:str = 'epoch', prompt:str = "")-> int | str | date:
     """
 
-    :param returnmethod: epoch is seconds since epoch, text returns a text format, date returns a dateobject, datetime returns a datetime object
+    :param return_method: epoch is seconds since epoch, text returns a text format, date returns a dateobject, datetime returns a datetime object
+    :param prompt:
     :return:
     """
     if prompt[-2:] == ': ':
@@ -46,7 +47,7 @@ def getdate(returnmethod:str ='epoch', prompt:str = "")->int|str|date:
     else:
         day = clean_input(f"Please enter the day {prompt}", int, 1, 28)
     current = date(year,month,day)
-    match returnmethod:
+    match return_method:
         case 'epoch':
             epoch = date(1970,1,1)
             return int((current-epoch).total_seconds())
@@ -57,15 +58,51 @@ def getdate(returnmethod:str ='epoch', prompt:str = "")->int|str|date:
         case 'datetime':
             return datetime(year,month,day)
         case 'int':
-            return dayssincetwothousand(current)
+            return days_since_two_thousand(current)
 
-def twothousandtodatetime(days:int) -> datetime:
-    thousand = date(2000,1,1)
+def getfieldnumber(self, resulttype: str) -> int:
+    try:
+        resulttype.lower()
+    except AttributeError:
+        pass
+    match resulttype:
+        case 'n' | 'name':
+            findtypeloc = -1  # makes sure the next bit will be bypassed
+        case 'sail number' | 's' | 'sail':
+            findtypeloc = 2  # the column location of the data
+        case 'champ number' | 'championship number' | 'c' | 'champ':
+            findtypeloc = 1
+        case 'region' | 'z':
+            findtypeloc = 5
+        case 'nat' | 'nation' | 'nationality' | 't':
+            findtypeloc = 6
+        case 'l' | 'light wind rating' | 7:
+            findtypeloc = 7
+        case 'medium wind rating' | 'm' | 8:
+            findtypeloc = 8
+        case 'high wind rating' | 'h'| 9:
+            findtypeloc = 9
+        case 'ranking' | 'r':
+            findtypeloc = 11
+        case 'overall rating' | 'o'| 10:
+            findtypeloc = 10
+        case 'events completed' | 'e':
+            findtypeloc = 12
+        case 'date of last event' | 'd':
+            findtypeloc = 13
+        case '14' | 'a' | 'all':
+            findtypeloc = -2  # bypasses next stage
+        case _:
+            findtypeloc = 0
+    return findtypeloc
+
+def two_thousand_to_datetime(days:int) -> date:
+    thousand = date(2000, 1, 1)
     delta = timedelta(days)
     return thousand + delta
 
 
-def dayssincetwothousand(in_date: date | datetime = None) -> int:
+def days_since_two_thousand(in_date: date | datetime = None) -> int:
     thousand = date(2000, 1, 1)
     if in_date is None:
         now = date.today()
@@ -73,9 +110,11 @@ def dayssincetwothousand(in_date: date | datetime = None) -> int:
         now = in_date
     day = now - thousand
     return day.days
+
 def check_consecutive(l:list) -> bool:
     n = len(l) - 1
-    return (sum(np_diff(sorted(l)) == 1) >= n)
+    return sum(np_diff(sorted(l)) == 1) >= n
+
 def clean_input(prompt: str, datatype: type|str, rangelow: float = 0, rangehigh: float = 500, charlevel: int = 0,
                 correcthash='', salt=''.encode(), length = None )-> str|float|int|bool|tuple[str,str]:
     """This function takes a prompt and a type and keeps taking an input from the user until it furfills the
@@ -330,7 +369,7 @@ def csv_line_generate(sailorid: str, nat: str, sailno: str, first: str, surname:
         nat.upper()
         nat.strip()
 
-    parts = [sailorid, champnum, sailno, first, surname, region, nat, 1500, 1500, 1500, 1500, rank, dayssincetwothousand()]
+    parts = [sailorid, champnum, sailno, first, surname, region, nat, 1500, 1500, 1500, 1500, rank, days_since_two_thousand()]
 
     line = ','.join(parts)
 
@@ -356,7 +395,7 @@ def sort_on_element(sub_li: list[list], element: int, reverse: bool = True,zero_
     sub_li.sort(reverse=reverse, key=lambda x: x[element] if (x[element] == 0 and zero_is_big) else 9999999)
     return sub_li
 
-def multiindex(inlist: list, term: int | str) -> list[int]:
+def multiindex(inlist: list, term: Any) -> list[int]:
     """
     This function takes a list and finds all occourences of the term inside of that list,
     will not return the first one

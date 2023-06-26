@@ -44,12 +44,12 @@ class Race:
             self.date = (date - datetime.datetime(2000, 1, 1)).days
         if not(isinstance(wind, int) and 3 >= wind >= 1):
             raise ValueError("Wind must be between 1 and 3")
-        if not(isinstance(self.date, int) and 3500 <= self.date <= Base.dayssincetwothousand()):
+        if not(isinstance(self.date, int) and 3500 <= self.date <= Base.days_since_two_thousand()):
             raise ValueError("Date is not between 2010 and today")
 
     def __str__(self) -> str:
         wind_codes = {1: "1 - Light", 2: "2 - Medium", 3: "3 - Heavy"}
-        things_to_join = ["date:" + str(Base.twothousandtodatetime(self.date)) + " wind:" + wind_codes[self.wind],
+        things_to_join = ["date:" + str(Base.two_thousand_to_datetime(self.date)) + " wind:" + wind_codes[self.wind],
                           str(self.results)]
         return "\n".join(things_to_join)
 
@@ -73,7 +73,7 @@ class Event:
             self.date = date
         else:
             self.date = (date - datetime.datetime(2000, 1, 1)).days
-        if not(isinstance(self.date, int) and 3500 <= self.date <= Base.dayssincetwothousand()):
+        if not(isinstance(self.date, int) and 3500 <= self.date <= Base.days_since_two_thousand()):
             raise ValueError("Date is not between 2010 and today")
         self.all_sailors = set()
         for race in self.races:
@@ -99,7 +99,7 @@ class Event:
     def __iter__(self):
         return iter(self.races)
 
-class old_results():
+class oldResults:
     def __init__(self, universe):
         self.universe = universe
         self.rowsfirst = _loads(_dumps(universe.file.rowfirst))
@@ -113,12 +113,11 @@ class old_results():
         findtypeloc = self.universe.getfieldnumber(resulttype)
 
         if findtypeloc == -1:
-            result = ' '.join(
-                (self.file.getcell(row, 3), self.file.getcell(row, 4)))  # adds the 2 names with a space in the middle
+            result = ' '.join((self.rowsfirst[row][3], self.rowsfirst[row][4])) # adds the 2 names with a space in the middle
         elif findtypeloc == -2:
             i = []
             for x in range(14):
-                i.append(self.file.getcell(row, x))
+                i.append(self.rowsfirst[row][x])
             result = ', '.join(i)  # bassicly outputs the raw csv line
         elif findtypeloc > -1:  # pull the data from the row and column decided earlier
             result = self.rowsfirst[row][findtypeloc]

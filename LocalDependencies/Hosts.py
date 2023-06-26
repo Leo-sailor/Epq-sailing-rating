@@ -1,12 +1,11 @@
-import requests
-import LocalDependencies.Aditional_func as add_func
+global universe_csv
+import LocalDependencies.Aditional_func as addFunc
 from LocalDependencies.Main_core import UniverseHost
 import LocalDependencies.General as Base
-from LocalDependencies.Csv_custom import Csv_base
+from LocalDependencies.Csv_custom import csvBase
 import LocalDependencies.leo_dataclasses as dat
 import datetime
 from pickle import load as _load
-from os import remove as _remove
 from time import sleep as _sleep
 from LocalDependencies.Imports import ImportManager
 
@@ -18,7 +17,6 @@ class HostScript:
         self.inputmethodname = ''
 
     def torun(self,*args):
-        global universecsv
         if len(args) >2:
             universecsv = UniverseHost(args[1], args[2])
         else:
@@ -41,7 +39,7 @@ class HostScript:
                 case 4:
                     break
                 case 5:
-                    self.sailorratingovertime()
+                    self.sailor_rating_over_time()
                 case 6:
                     print()
                     print(universecsv)
@@ -52,20 +50,21 @@ class HostScript:
                 case 8:
                     self.import_sailors()
                 case 9:
-                    self.sailorratingovertime()
+                    self.sailor_rating_over_time()
 
-    def import_sailors(self):
+    @staticmethod
+    def import_sailors():
         imp_mgr = ImportManager()
         sailors = imp_mgr.import_sailors()
         print(f'The following {len(sailors)} sailors have been imported')
         for line in sailors:
-            print(universecsv.getinfo(line,'all'))
+            print(universe_csv.getinfo(line, 'all'))
 
-    def sailorratingovertime(self):
-        inpmethod = self.__getinputmethod()
+    def sailor_rating_over_time(self):
+        inp_method = self.__getinputmethod()
         inp = Base.clean_input(f'Please enter the sailor\'s {self.inputmethodname}: ', str)
-        sailorid = universecsv.getsailorid(inpmethod, inp)
-        universe_name = universecsv.universe
+        sailorid = universe_csv.getsailorid(inp_method, inp)
+        universe_name = universe_csv.universe
         start_date = Base.getdate('int','the first day of your range')
         end_date = Base.getdate('int', 'the last day of your range')
         info_codes = {'c': 'Championship Number', 's': 'Sail Number', 'l': 'Light wind rating',
@@ -77,7 +76,7 @@ class HostScript:
             print(f'({key}) for {val}')
         outtype = Base.clean_input("\nWhat would u like to recive: ", str)
         outtype.lower().strip()
-        add_func.plotsailors(start_date, sailorid,outtype,universe_name,end_date)
+        addFunc.plot_sailors(start_date, sailorid, outtype, universe_name, end_date)
 
 
 
@@ -98,8 +97,8 @@ class HostScript:
         inpmethod = self.__getinputmethod()
         inp = Base.clean_input(f'Please enter the sailor\'s {self.inputmethodname}: ', str)
 
-        sailorid = universecsv.getsailorid(inpmethod,inp)
-        out = universecsv.getinfo(sailorid, outtype)
+        sailorid = universe_csv.getsailorid(inpmethod, inp)
+        out = universe_csv.getinfo(sailorid, outtype)
 
         if outtype == 'd':
             twothousand = datetime.date(2000, 1, 1)
@@ -137,7 +136,7 @@ class HostScript:
         out = Base.generate_sailor_id(nat, sailno, first, sur)
         sailorid = out[0]
         nat = out[1]
-        if nat == 'GBR' and not(fullspeed):
+        if nat == 'GBR' and not fullspeed:
             region = Base.clean_input('\n SC - Scotland\n SE - London and South-east\n SW - South-west\n SO - South'
                                      '\n MD - Midlands\n NO - North\n NI - Northen Ireland\n WL - Wales\n EA - East'
                                      f'\n NA - Unknown\nPlease enter {first} {sur}\'s\'s 2 letter RYA region code: ',
@@ -146,7 +145,7 @@ class HostScript:
                 region = 'NA'
         else:
             region = 'NA'
-        return universecsv.addsailor(sailorid, first, sur, champ, sailno, region, nat)
+        return universe_csv.addsailor(sailorid, first, sur, champ, sailno, region, nat)
 
     def addeventlazy(self):
         inp = 2
@@ -196,21 +195,22 @@ class HostScript:
             event.append(dat.Race(info, wind, days))
         return event
 
-    def addeventcsv(self):
+    @staticmethod
+    def add_event_csv():
         racenum = Base.clean_input('\nPlease enter the number of races in the event (1-20): ', int, rangelow=1,
                                    rangehigh=20)
         days = Base.clean_input('\nHow many days ago was the final race of the event(0-500): ', int)
         event = dat.Event([],days)
         for x in range(racenum):
-            racetext = ' '.join(['Race', str(x + 1)])
-            print(f'\n{racetext.upper()} ENTRY WIZZARD')
-            fileloc = Base.clean_input(f'Please enter the full file location of the file for {racetext}: ', str)
-            currfile = Csv_base(fileloc)
-            wind = int(currfile.getcell(0, 1))
+            race_text = ' '.join(['Race', str(x + 1)])
+            print(f'\n{race_text.upper()} ENTRY WIZZARD')
+            file_loc = Base.clean_input(f'Please enter the full file location of the file for {race_text}: ', str)
+            curr_file = csvBase(file_loc)
+            wind = int(curr_file.getcell(0, 1))
 
-            currsailorids = currfile.getcolumn(0, excluded_rows= [0, 1])
-            positions = [int(x) for x in currfile.getcolumn(1, excluded_rows= [0, 1])]
-            results_obj = dat.Results(currsailorids,positions)
+            curr_sailorids = curr_file.getcolumn(0, excluded_rows= [0, 1])
+            positions = [int(x) for x in curr_file.getcolumn(1, excluded_rows= [0, 1])]
+            results_obj = dat.Results(curr_sailorids,positions)
             event.append(dat.Race(results_obj, wind, days))
         return event
 
@@ -226,7 +226,7 @@ class HostScript:
               "\nPress (d) when you are done\n"
               "Press (b) if you want to remove the last sailor\n")
         while working:
-            if speedprint != []:
+            if not speedprint:
                 print("\nPosition:    {}:    Sailor-id:".format(self.inputmethodname))
                 toprint = '\n'.join(speedprint)
                 print(toprint)
@@ -242,7 +242,7 @@ class HostScript:
                 rawinps.pop(-1)
             else:
                 inp.lower().strip()
-                sailor = universecsv.getsailorid(self.inpmethod, inp)
+                sailor = universe_csv.getsailorid(self.inpmethod, inp)
                 if sailor in sailorids:
                     print('\nThis sailor has already been entered, please try again')
                     position -= 1
@@ -291,6 +291,7 @@ class HostScript:
             self.inputmethodname = 'Sail Number'
         return ip
 
+    @staticmethod
     def import_pickled_event(self):
         fileloc = '_________'
         while fileloc[-6:] != '.event':
@@ -302,9 +303,9 @@ class HostScript:
         return event
 
     def import_event(self):
-        if not universecsv.admin:
+        if not universe_csv.admin:
             print('\nTo add an event you need admin rights')
-            if not universecsv.adminrights():
+            if not universe_csv.adminrights():
                 print('\nAdd event failed, please try with admin rights')
                 return None
 
@@ -317,14 +318,14 @@ class HostScript:
                                '(6) for importing a .event file\n'
                                '(0) to cancel\n'
                                'what is your choice: ',
-                               'i', rangehigh=6, rangelow=0)
+                               int, rangehigh=6, rangelow=0)
         match inp:
             case 1:
                 event = self.addeventlazy()
             case 2:
                 event = self.addeventproper()
             case 3:
-                event = self.addeventcsv()
+                event = self.add_event_csv()
             case 4:
                 event = self.add_online_event() #
             case 5:
@@ -332,20 +333,23 @@ class HostScript:
             case 6:
                 event = self.import_pickled_event()
             case _:
-                return None
+                event = None
         return event
 
+    @staticmethod
     def addeventlocal(self) -> dat.Event:
         inp_mgr = ImportManager('F')
-        return inp_mgr.to_event(universecsv)
+        return inp_mgr.to_event(universe_csv)
 
+    @staticmethod
     def add_online_event(self) -> dat.Event:
         inp_mgr = ImportManager('L')
-        return inp_mgr.to_event(universecsv)
+        return inp_mgr.to_event(universe_csv)
 
 
 def main():
-    HostScript.torun()
+    host = HostScript()
+    host.torun()
 
 if __name__ == '__main__':
     main()

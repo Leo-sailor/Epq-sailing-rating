@@ -1,14 +1,12 @@
 from sys import path
-import csv
 from time import time
 import os
 from LocalDependencies.ELO import EloCalculations
 import LocalDependencies.General as Base
-from LocalDependencies.Csv_custom import Csvnew, Csv_base
+from LocalDependencies.Csv_custom import Csvnew, csvBase
 import LocalDependencies.leo_dataclasses as dat
 from binascii import unhexlify
-from pickle import dump as _dump, load as _load
-from numpy import matrix as _mat, array as _array
+from pickle import dump as _dump
 
 UNIVERSES_ = '\\universes\\'
 sys_path = path[0]
@@ -24,7 +22,7 @@ class UniverseHost:
         self.cfile = ''
         print('\n UNIVERSE SELECTION TOOL:')
         print('Avalible universes are:')
-        host = Csv_base(''.join((sys_path, UNIVERSES_, 'host.csv',)))  # stores it in [column][row]
+        host = csvBase(''.join((sys_path, UNIVERSES_, 'host.csv',)))  # stores it in [column][row]
 
         host.printcolumn(0, True, 0)  # prints all the names of the universes
         if universe is None:
@@ -39,7 +37,7 @@ class UniverseHost:
         self.sessiontime = int(time())  # sets the time for any new files
 
         if universe != self.universe:
-            host = Csv_base(''.join(
+            host = csvBase(''.join(
                 (sys_path, UNIVERSES_, 'host.csv',)))  # if a new universe has been created, reopen the hist csv file
         # print(column) #--debuging line
 
@@ -58,7 +56,7 @@ class UniverseHost:
         try:  # used to cath any file opening erros, probable to much inside of the 'try' tho
             self.folder = ''.join((sys_path, '\\universes\\', universe_name, '\\'))
             self.host_file = ''.join((self.folder, 'host-', universe_name, '.csv'))
-            universe_host = Csv_base(self.host_file)  # opens the csv with the [rows][columns]
+            universe_host = csvBase(self.host_file)  # opens the csv with the [rows][columns]
 
             self.base_file = ''.join((self.folder, universe_host.getcell(1, 2)))  # sets the objects current file location
             self.version_number = int(universe_host.getcell(1, 0))  # sets the version number for the current open file
@@ -89,11 +87,11 @@ class UniverseHost:
         firstfilename = ''.join((name, '-', curtime, '.csv'))  # creats the name for the first file
         firstfile = ''.join((direc, '\\', firstfilename))  # creats the directory of that file
         universe = name  # sets the universe variable to name, so code later can be simple copied
-        cfile = Csv_base(firstfile)
+        cfile = csvBase(firstfile)
         cfile.addrow(['sailorID', 'champNum', 'sailNo', 'Firstname', 'Surname', 'Region', 'nat',
                                  'lightRating', 'midRating', 'heavyRating', 'overallRating',
                                  'rank', 'events', 'lastEventDate'])
-        host = Csv_base(''.join(hostfile))
+        host = csvBase(''.join(hostfile))
         host.addrow(['versionNumber', 'creationDate', 'fileName', 'md5'])
         host.addrow(['1', curtime, firstfilename, Base.hashfile(firstfile)])
 
@@ -110,7 +108,7 @@ class UniverseHost:
                             'to be?(0.3 - 4)(Recomended - 1): ',
                             float, rangelow=0.3, rangehigh=4)  # random comment
         # generic input collecting
-        big_host = Csv_base(''.join((sys_path, '\\universes\\host.csv')))
+        big_host = csvBase(''.join((sys_path, '\\universes\\host.csv')))
         big_host.addrow([name, starting, (starting / 5 + 100), self.passhash, k, self.passsalt, ''])
 
         print('{} universe has been created'.format(name))
@@ -143,7 +141,7 @@ class UniverseHost:
         return self.admin  # checks whether the user should have admin eights
 
     def cleanup(self):
-        host = Csv_base(self.host_file)
+        host = csvBase(self.host_file)
         length = host.numrows()
         hashes = []
         toremove = []
@@ -163,13 +161,13 @@ class UniverseHost:
             host.removerow(toremoverows[x])
             host.save()
 
-    def getinfo(self, sailorid: str, resulttype: str):
+    def getinfo(self, sailorid: str, resulttype: str|int):
         try:
             row = self.file.getrownum(sailorid, 0)  # figures out what row the sailor id it
         except ValueError:
             raise IndexError('the sailor id {} could not be found'.format(sailorid))
 
-        findtypeloc = self.getfieldnumber(resulttype)
+        findtypeloc = Base.getfieldnumber(resulttype)
 
         if findtypeloc == -1:
             result = ' '.join(
@@ -185,43 +183,6 @@ class UniverseHost:
             result = '0.1'
         return result
 
-    def getfieldnumber(self, resulttype: str) -> int:
-        #TODO: turn into a normal function, probabaly in base
-        try:
-            resulttype.lower()
-        except AttributeError:
-            pass
-        match resulttype:
-            case 'n' | 'name':
-                findtypeloc = -1  # makes sure the next bit will be bypassed
-            case 'sail number' | 's' | 'sail':
-                findtypeloc = 2  # the column location of the data
-            case 'champ number' | 'championship number' | 'c' | 'champ':
-                findtypeloc = 1
-            case 'region' | 'z':
-                findtypeloc = 5
-            case 'nat' | 'nation' | 'nationality' | 't':
-                findtypeloc = 6
-            case 'l' | 'light wind rating' | 7:
-                findtypeloc = 7
-            case 'medium wind rating' | 'm' | 8:
-                findtypeloc = 8
-            case 'high wind rating' | 'h'| 9:
-                findtypeloc = 9
-            case 'ranking' | 'r':
-                findtypeloc = 11
-            case 'overall rating' | 'o'| 10:
-                findtypeloc = 10
-            case 'events completed' | 'e':
-                findtypeloc = 12
-            case 'date of last event' | 'd':
-                findtypeloc = 13
-            case '14' | 'a' | 'all':
-                findtypeloc = -2  # bypasses next stage
-            case _:
-                findtypeloc = 0
-        return findtypeloc
-
     def get_data_locations(self,term, fieldnum) -> list[int]:
 
         term = str(term)  # makes sure the term to be searched for is a string
@@ -229,7 +190,7 @@ class UniverseHost:
             term = term[:-2]
         term.strip('0')
         if type(fieldnum) == str:
-            fieldnum = self.getfieldnumber(fieldnum)
+            fieldnum = Base.getfieldnumber(fieldnum)
 
         if fieldnum == -1:  # the exception for if its a name
             newterm = term.lower().split(' ', 1)
@@ -300,9 +261,9 @@ class UniverseHost:
                 print((''.join(string)))
             finallocation = locs[(Base.clean_input('\nPlease enter the number of the correct sailor you are '
                                                   'searching for: ', int, 1, len(locs))) - 1]
-            index = int(finallocation)
-            sailorid = self.file.getcell(index, 0)
-            return sailorid
+            location = int(finallocation)
+            curr_sailorid = self.file.getcell(location, 0)
+            return curr_sailorid
 
         def auto_tie_break() -> str:
             pointstracker = []
@@ -325,13 +286,13 @@ class UniverseHost:
                     sailorinfos[x] = sailorinfos[x][0].split(', ')
                     if str(item) in sailorinfos[x][:7]:
                         pointstracker[x] += 1
-            index = locations[
+            location = locations[
                 pointstracker.index(max(pointstracker))]  # gets the location of the sailor witht he most points
             if len(set(pointstracker)) != len(pointstracker):
-                locs = [locations[index] for index in Base.multiindex(pointstracker,max(pointstracker))]
+                locs = [locations[loc] for loc in Base.multiindex(pointstracker,max(pointstracker))]
                 return user_tie_break(locs)# makes sure there are no duplicates
-            sailorid = self.file.getcell(index, 0)
-            return sailorid
+            curr_sailorid = self.file.getcell(location, 0)
+            return curr_sailorid
         # main code for function
         locations = self.get_data_locations(term,fieldnum)
         if len(locations) == 0:  # deals with no sailor being found with that data
@@ -413,7 +374,7 @@ class UniverseHost:
 
         races = []
         chars_to_strip = "abcdefghijklmnopqrstuvwxyz()"
-        date = Base.dayssincetwothousand(Base.getdate("date", f"of the last day of {event_title}: "))
+        date = Base.days_since_two_thousand(Base.getdate("date", f"of the last day of {event_title}: "))
         print('1 - Light\n2- Medium\n3 - Heavy')
         for race in race_columns:
             wind = Base.clean_input(f'What was the wind of {table[0][race]}: ', int, 1, 3)
@@ -442,44 +403,24 @@ class UniverseHost:
         else:
             return self.getsailorid(field,data,*extra_info)
 
-    def __export_event(self, event: dat.Event):
-    #TODO: chnage this to a normal function
-        direc = ''.join(
-            (sys_path, UNIVERSES_, self.universe, '\\events'))  # figures out the path of the new universe
-        if not (os.path.exists(direc)):  # checks whether that universe exists
-            os.mkdir(direc)
-        made = False
-        if event.event_title is None:
-            date = str((Base.twothousandtodatetime(event.date)))
-        else:
-            date = event.event_title
-        count = 0
-        while not made:
-            newdirec = ''.join((direc, '\\', date, '-', str(count), '.event'))
-            if os.path.exists(newdirec):
-                count += 1
-            else:
-                with open(newdirec, 'xb',) as eventfile:
-                    _dump(event,eventfile,-1)
-
-                made = True
-
     def add_event(self,event: dat.Event|None):
-        old_results = dat.old_results(self)
+        old_results = dat.oldResults(self)
         if event is None:
             return None
         for race in event:
             self.__addrace(race,old_results)
         self.__endevent(event.all_sailors, event.date)
         if not event.imported:
-            self.__export_event(event)
+            export_event(event)
         to_print = Base.clean_input('Would you like to print the rating chnages from this event', bool)
         self.file.set_session()
         if to_print:
             print('Event rating changes:')
             for sailor in event.all_sailors:
-                print(f'{sailor}: light: {old_results.getinfo(sailor,7)} -> {self.getinfo(sailor,7)}   medium: {old_results.getinfo(sailor,8)} -> {self.getinfo(sailor,8)}\n'
-                      f'               heavy: {old_results.getinfo(sailor,9)} -> {self.getinfo(sailor,9)}   overall: {old_results.getinfo(sailor,10)} -> {self.getinfo(sailor,10)}\n'
+                print(f'{sailor}: light: {old_results.getinfo(sailor, "l")} -> {self.getinfo(sailor,"l")}'
+                      f'medium: {old_results.getinfo(sailor, "m")} -> {self.getinfo(sailor, "m")}\n'
+                      f'               heavy: {old_results.getinfo(sailor, "h")} -> {self.getinfo(sailor, "h")}'
+                      f'overall: {old_results.getinfo(sailor, "o")} -> {self.getinfo(sailor, "o")}\n'
                       f'               rank: {old_results.getinfo(sailor,"r")} -> {self.getinfo(sailor,"r")} ')
 
 
@@ -489,26 +430,24 @@ class UniverseHost:
         # serious logic error here with currat ending up with 2x as many values
         wind = race.wind
         for x in range(0, 2):
-            currats = []
-            currevents = []
+            curr_events = []
             # if this is the run for wind specific rankings
-            columnnum = wind + 6
-
+            column_num = wind + 6
             if x == 1:  # override if the run for overalls
-                columnnum = 10
-            currats = []
-            oldrats = []
+                column_num = 10
+            cur_rats = []
+            old_rats = []
             for sailor in sailorids:  # gets the current information on all the current sailors
-                currats.append(float(self.getinfo(sailor, columnnum)))
-                currevents.append(int(self.getinfo(sailor, 'e')))
+                cur_rats.append(float(self.getinfo(sailor, column_num)))
+                curr_events.append(int(self.getinfo(sailor, 'e')))
             for sailor in sailorids:  # gets the current information on all the current sailors
-                oldrats.append(float(old_results.getinfo(sailor, columnnum)))
+                old_rats.append(float(old_results.getinfo(sailor, column_num)))
 
 
-            newrat = self.elo.cycle(oldrats, currevents, positions,currats)  # executes the maths
+            newrat = self.elo.cycle(old_rats, curr_events, positions, cur_rats)  # executes the maths
 
             for z in range(0, len(newrat)):
-                self.file.updatevalue(newrat[z], sailorids[z], columnnum, bypass=True)
+                self.file.updatevalue(newrat[z], sailorids[z], column_num, bypass=True)
             self.file.autosavefile()
 
     def __endevent(self, used_sailorids: list | set, daysago: int):
@@ -546,3 +485,24 @@ class UniverseHost:
         self.file.autosavefile()
         self.file.sortoncol(10, reverse=True, targetcol=11, excluderows=0, greaterthan=[12, 5])
         self.file.autosavefile()
+
+def export_event(self, event: dat.Event):
+
+    direc = ''.join(
+        (sys_path, UNIVERSES_, self.universe, '\\events'))  # figures out the path of the new universe
+    if not (os.path.exists(direc)):  # checks whether that universe exists
+        os.mkdir(direc)
+    made = False
+    if event.event_title is None:
+        date = str((Base.two_thousand_to_datetime(event.date)))
+    else:
+        date = event.event_title
+    count = 0
+    while not made:
+        newdirec = ''.join((direc, '\\', date, '-', str(count), '.event'))
+        if os.path.exists(newdirec):
+            count += 1
+        else:
+            with open(newdirec, 'xb',) as eventfile:
+                _dump(event,eventfile,-1)
+            made = True

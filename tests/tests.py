@@ -1,5 +1,5 @@
 import unittest
-import LocalDependencies.General as g
+import LocalDependencies.General as base
 from LocalDependencies.Main_core import UniverseHost
 from unittest.mock import patch
 import datetime
@@ -39,7 +39,7 @@ class TestSum(unittest.TestCase):
                     c = None
                 test = Test(a,b,c)
                 with patch('builtins.input', return_value=test.keyboard_input):
-                    output = g.multiindex(*test.inps)
+                    output = base.multiindex(*test.inps)
                     self.assertEqual(output, test.out, f"Failed - {test}")
                     print(f"Passed - {line_num+1} - with output: {output}")
 

@@ -2,10 +2,10 @@ import csv
 import LocalDependencies.General as Base
 from sys import path
 from time import time
-import os
 from pickle import dumps as _dumps, loads as _loads
 
-class Csv_base:
+
+class csvBase:
     def __init__(self, filelocation, protectedrows: list[int] = None, protectedcols: list[int] = None,):
         if protectedcols is None:
             protectedcols = []
@@ -148,22 +148,27 @@ class Csv_base:
             raise PermissionError("You do not have permissions to change this cell")
 
 
-class Csvnew(Csv_base):
+def set_session():
+    return int(time())
+
+
+class Csvnew(csvBase):
     def __init__(self, filelocation, protectedrows: list[int] = None, protectedcols: list[int] = None, universe=None):
         super(Csvnew, self).__init__(filelocation, protectedrows,protectedcols)
-        self.set_session()
+        self.session_start = set_session()
         if universe is not None:
             folder = path[0]
-            self.hostfile = ''.join((folder, '\\universes\\', universe, '\\host-', universe, '.csv'))
-            self.hostfileold = Csv_base(self.hostfile)
-            self.prevversionnum = int(self.hostfileold.getcell(1, 0))
+            self.host_file = ''.join((folder, '\\universes\\', universe, '\\host-', universe, '.csv'))
+            self.host_file_old = csvBase(self.host_file)
+            self.prev_version_num = int(self.host_file_old.getcell(1, 0))
             self.universe = universe
-    def set_session(self):
-        self.sessionstart = int(time())
 
     def updatevaluesingle(self, term, row: int, column: bool, bypass: bool = False):
         self.updatevalue(term, row, column, 0, bypass)
         self.autosavefile()
+
+    def set_session(self):
+        self.session_start = set_session()
 
     def sortoncol(self, column: int, ret: bool = False, reverse: bool = False,
                   targetcol: int = None, excluderows: int | list[int] = None, greaterthan: list[int, float] = None):
@@ -209,7 +214,7 @@ class Csvnew(Csv_base):
         self.autosavefile()
     def autosavefile(self):
         breakpoint()
-        filename = ''.join((self.universe, '-', str(self.sessionstart), '.csv'))
+        filename = ''.join((self.universe, '-', str(self.session_start), '.csv'))
         folder = ''.join((path[0], '\\universes\\', self.universe, '\\'))
         cfile = ''.join((folder, filename))
         with open(cfile, 'w', newline='') as csvfile:  # saves the filr
@@ -218,21 +223,21 @@ class Csvnew(Csv_base):
             # print(len(self.currcolumn))
             for x in range(0, len(self.columnfirst[0])):  # number of rows # assembls the row
                 spamwriter.writerow(self.rowfirst[x])  # writes the row  # clears the row for the next one
-        if self.hostfileold.getcell(0, 1) == (self.prevversionnum + 1):  # checks how to record the temporry save
-            with open(self.hostfile, 'w', newline='') as csvfile:  # works as if its a second or more auto save
+        if self.host_file_old.getcell(0, 1) == (self.prev_version_num + 1):  # checks how to record the temporry save
+            with open(self.host_file, 'w', newline='') as csvfile:  # works as if its a second or more auto save
                 spamwriter = csv.writer(csvfile, delimiter=',',
                                         quotechar=',', quoting=csv.QUOTE_MINIMAL)
-                spamwriter.writerow(self.hostfileold.getrow(0))
-                row = self.hostfileold.getrow(1, miss=3)
+                spamwriter.writerow(self.host_file_old.getrow(0))
+                row = self.host_file_old.getrow(1, miss=3)
                 row.append(Base.hashfile(cfile))
                 spamwriter.writerow(row)
-                for x in range(2, len(self.hostfileold.rowfirst)):
-                    spamwriter.writerow(self.hostfileold.getrow(x))
+                for x in range(2, len(self.host_file_old.rowfirst)):
+                    spamwriter.writerow(self.host_file_old.getrow(x))
         else:
-            with open(self.hostfile, 'w', newline='') as csvfile:  # first auto save
+            with open(self.host_file, 'w', newline='') as csvfile:  # first auto save
                 spamwriter = csv.writer(csvfile, delimiter=',',
                                         quotechar=',', quoting=csv.QUOTE_MINIMAL)
-                spamwriter.writerow(self.hostfileold.getrow(0))
-                spamwriter.writerow([self.prevversionnum + 1, self.sessionstart, filename, Base.hashfile(cfile)])
-                for x in range(1, len(self.hostfileold.rowfirst)):
-                    spamwriter.writerow(self.hostfileold.getrow(x))
+                spamwriter.writerow(self.host_file_old.getrow(0))
+                spamwriter.writerow([self.prev_version_num + 1, self.session_start, filename, Base.hashfile(cfile)])
+                for x in range(1, len(self.host_file_old.rowfirst)):
+                    spamwriter.writerow(self.host_file_old.getrow(x))
