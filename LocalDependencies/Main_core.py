@@ -121,7 +121,7 @@ class UniverseHost:
             table = Base.sort_on_element(self.file.rowfirst, row_to_sort,False,zero_is_big=True)
         else:
             table = Base.sort_on_element(self.file.rowfirst, row_to_sort,True, zero_is_big=True)
-        return header + '\n'.join([''.join([f'{"".join((item,"                        "))[:col_width[val]]}' for val,item in enumerate(row)]) for row in table])
+        return '\n'.join([''.join([f'{"".join((item,"                        "))[:col_width[val]]}' for val,item in enumerate(row)]) for row in table])
 
     def adminrights(self, password:str=None):
         if password is not None:
