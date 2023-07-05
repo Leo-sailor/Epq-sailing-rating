@@ -89,12 +89,12 @@ class csvBase:
         elif row_from is None:
             return iter(self.rowfirst[:row_to])
         elif row_to is None:
-            return iter(self.rowfirst[:row_from])
+            return iter(self.rowfirst[row_from:])
         else:
             return iter(self.rowfirst[row_from:row_to])
 
     def index(self,val):
-        return self.rowfirst.index(val)
+        return self.columnfirst[0].index(val)
     def printcolumn(self, column, sperateline: bool, excudedrows: int | list[int] = None):
         if type(excudedrows) == int:
             excudedrows = [excudedrows]

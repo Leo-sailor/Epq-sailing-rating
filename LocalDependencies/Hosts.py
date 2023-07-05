@@ -17,15 +17,15 @@ class HostScript:
         self.inputmethodname = ''
 
     def torun(self,*args):
+        global universe_csv
         if len(args) >2:
-            universecsv = UniverseHost(args[1], args[2])
+            universe_csv = UniverseHost(args[1], args[2])
         else:
-            universecsv = UniverseHost()
-
+            universe_csv = UniverseHost()
         while True:
             Base.text_blocks(1)
 
-            choice = Base.clean_input('\nWhat would you like to do: ', int, rangelow=1, rangehigh=8)
+            choice = Base.clean_input('\nWhat would you like to do: ', int, rangelow=1, rangehigh=9)
             match choice:
                 case 1:
                     event = self.import_event()
@@ -61,12 +61,13 @@ class HostScript:
             print(universe_csv.getinfo(line, 'all'))
 
     def sailor_rating_over_time(self):
+        global universe_csv
         inp_method = self.__getinputmethod()
         inp = Base.clean_input(f'Please enter the sailor\'s {self.inputmethodname}: ', str)
         sailorid = universe_csv.getsailorid(inp_method, inp)
         universe_name = universe_csv.universe
-        start_date = Base.getdate('int','the first day of your range')
-        end_date = Base.getdate('int', 'the last day of your range')
+        start_date = Base.getdate('int', 'of the first day of your range')
+        end_date = Base.getdate('int', 'of the last day of your range')
         info_codes = {'c': 'Championship Number', 's': 'Sail Number', 'l': 'Light wind rating',
                       'm': 'Medium wind rating',
                       'h': 'Heavy wind rating', 'i': 'sailorid', 'o': 'Overall rating', 'r': 'Rank',
@@ -90,7 +91,7 @@ class HostScript:
         for key,val in info_codes.items(): # prints all the info_codes
             print(f'({key}) for {val}')
 
-        outtype = Base.clean_input("\nWhat would u like to recive: ", str)
+        outtype = Base.clean_input("What would u like to recive: ", str)
         outtype.lower().strip()
         outtypename = info_codes[outtype]
 

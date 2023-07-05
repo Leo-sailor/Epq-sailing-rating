@@ -38,14 +38,14 @@ def getdate(return_method:str = 'epoch', prompt:str = "")-> int | str | date:
     """
     if prompt[-2:] == ': ':
         prompt += ': '
-    year = clean_input(f"Please enter the year {prompt}", int, 2000, 2100)
-    month = clean_input(f"Please enter the month {prompt}", int, 1, 12)
+    year = clean_input(f"Please enter the *year* {prompt}", int, 2000, 2100)
+    month = clean_input(f"Please enter the *month* {prompt}", int, 1, 12)
     if month in [4,6,9,11]:
-        day = clean_input(f"Please enter the day {prompt}", int, 1, 30)
+        day = clean_input(f"Please enter the *day* {prompt}", int, 1, 30)
     elif month in [1,3,5,7,8,10,12]:
-        day = clean_input(f"Please enter the day {prompt}", int, 1, 31)
+        day = clean_input(f"Please enter the *day* {prompt}", int, 1, 31)
     else:
-        day = clean_input(f"Please enter the day {prompt}", int, 1, 28)
+        day = clean_input(f"Please enter the *day* {prompt}", int, 1, 28)
     current = date(year,month,day)
     match return_method:
         case 'epoch':
@@ -60,7 +60,8 @@ def getdate(return_method:str = 'epoch', prompt:str = "")-> int | str | date:
         case 'int':
             return days_since_two_thousand(current)
 
-def getfieldnumber(self, resulttype: str) -> int:
+@staticmethod
+def getfieldnumber(resulttype: str) -> int:
     try:
         resulttype.lower()
     except AttributeError:
@@ -550,9 +551,4 @@ def text_blocks(amount):
         print('class: General method: Csvlinegenerate Parameters')
 
 if __name__ == '__main__':
-    import unittest
-    import tests.tests as t
-
-    suite = unittest.TestLoader().loadTestsFromModule(t)
-    # run all tests with verbosity
-    unittest.TextTestRunner(verbosity=2).run(suite)
+    exit()
