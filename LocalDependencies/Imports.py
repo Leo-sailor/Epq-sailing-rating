@@ -13,7 +13,7 @@ def process_link() -> str:
         if fileloc != '______':
             print('that file is not of the correct type')
         fileloc = Base.clean_input("please enter the link to the webpage: ", str)
-    temp_file = '.'.join(('webpage.temp', fileloc[-4:]))
+    temp_file = ''.join(('webpage.temp', fileloc[-4:]))
     print('Downloading_file')
     page = _get(fileloc)  # gets the page as a response object
     open(temp_file, 'wb').write(page.content)  # writes the contents of the response object to a field
@@ -62,6 +62,8 @@ def split_table(table: list[list[Any]]):
     for val,curr in enumerate(first_col[1:]):
         if curr < previous:
             table_start_points.append(val+1)
+        if table[val][0] == 'nan' and table[val][1] == 'nan':
+            table_start_points.pop()
         previous = curr
 
     end = len(table)
@@ -165,8 +167,9 @@ class ImportManager:
                 data_loc = info['sail ']
             case _:
                 data_loc = 1
-        sailorids = []
+        sailor_ids = []
         for line in self.all[1:]:
-            sailor_ids.append(
-                universe.import_sailor(self.chosen_data_type, line[data_loc], line, info, nat, full_speed=True))
-        return sailorids
+            if not(line[0] == 'nan' and line[1] == 'nan'):
+                sailor_ids.append(
+                    universe.import_sailor(self.chosen_data_type, line[data_loc], line, info, nat, full_speed=True))
+        return sailor_ids

@@ -3,7 +3,7 @@ from time import time
 import os
 from LocalDependencies.ELO import EloCalculations
 import LocalDependencies.General as Base
-from LocalDependencies.Csv_custom import Csvnew, csvBase
+from LocalDependencies.Csv_custom import Csvnew, csv_base
 import LocalDependencies.leo_dataclasses as dat
 from binascii import unhexlify
 from pickle import dump as _dump
@@ -22,7 +22,7 @@ class UniverseHost:
         self.cfile = ''
         print('\n UNIVERSE SELECTION TOOL:')
         print('Avalible universes are:')
-        host = csvBase(''.join((sys_path, UNIVERSES_, 'host.csv',)))  # stores it in [column][row]
+        host = csv_base(''.join((sys_path, UNIVERSES_, 'host.csv',)))  # stores it in [column][row]
 
         host.printcolumn(0, True, 0)  # prints all the names of the universes
         if universe is None:
@@ -37,7 +37,7 @@ class UniverseHost:
         self.sessiontime = int(time())  # sets the time for any new files
 
         if universe != self.universe:
-            host = csvBase(''.join(
+            host = csv_base(''.join(
                 (sys_path, UNIVERSES_, 'host.csv',)))  # if a new universe has been created, reopen the hist csv file
         # print(column) #--debuging line
 
@@ -56,16 +56,13 @@ class UniverseHost:
         try:  # used to cath any file opening erros, probable to much inside of the 'try' tho
             self.folder = ''.join((sys_path, '\\universes\\', universe_name, '\\'))
             self.host_file = ''.join((self.folder, 'host-', universe_name, '.csv'))
-            universe_host = csvBase(self.host_file)  # opens the csv with the [rows][columns]
+            universe_host = csv_base(self.host_file)  # opens the csv with the [rows][columns]
 
-            self.base_file = ''.join((self.folder, universe_host.getcell(1, 2)))  # sets the objects current file location
-            self.version_number = int(universe_host.getcell(1, 0))  # sets the version number for the current open file
-            most_recent_data_file_hash = universe_host.getcell(1, 3)  # gets the hash of the most current file
+            self.base_file = ''.join((self.folder, universe_host.getcell(1, 2)))
+            self.version_number = int(universe_host.getcell(1, 0))# sets the version number for the current open file # gets the hash of the most current file
             print('{} universe opened and running\n'.format(universe_name))
             self.file = Csvnew(self.base_file, universe=universe_name)  # imports the current file
 
-            if Base.hashfile(self.base_file) != most_recent_data_file_hash and most_recent_data_file_hash != '0':
-                raise ValueError('The most recent data file is not as expected')
 
         except FileNotFoundError:
             raise FileNotFoundError('There was a error loading the file, the program will now exit ')
@@ -87,11 +84,11 @@ class UniverseHost:
         firstfilename = ''.join((name, '-', curtime, '.csv'))  # creats the name for the first file
         firstfile = ''.join((direc, '\\', firstfilename))  # creats the directory of that file
         universe = name  # sets the universe variable to name, so code later can be simple copied
-        cfile = csvBase(firstfile)
+        cfile = csv_base(firstfile)
         cfile.addrow(['sailorID', 'champNum', 'sailNo', 'Firstname', 'Surname', 'Region', 'nat',
                                  'lightRating', 'midRating', 'heavyRating', 'overallRating',
                                  'rank', 'events', 'lastEventDate'])
-        host = csvBase(''.join(hostfile))
+        host = csv_base(''.join(hostfile))
         host.addrow(['versionNumber', 'creationDate', 'fileName', 'md5'])
         host.addrow(['1', curtime, firstfilename, Base.hashfile(firstfile)])
 
@@ -108,14 +105,13 @@ class UniverseHost:
                             'to be?(0.3 - 4)(Recomended - 1): ',
                             float, rangelow=0.3, rangehigh=4)  # random comment
         # generic input collecting
-        big_host = csvBase(''.join((sys_path, '\\universes\\host.csv')))
+        big_host = csv_base(''.join((sys_path, '\\universes\\host.csv')))
         big_host.addrow([name, starting, (starting / 5 + 100), self.passhash, k, self.passsalt, ''])
 
         print('{} universe has been created'.format(name))
         return universe
 
     def __str__(self, row_to_sort: int = 11) -> str:
-        header = str(self.file.getrow(0)) + '\n'
         increasing_sort_vals = [11,12,0]
         if row_to_sort in increasing_sort_vals:
             table = Base.sort_on_element(self.file.rowfirst, row_to_sort,False,zero_is_big=True)
@@ -141,7 +137,7 @@ class UniverseHost:
         return self.admin  # checks whether the user should have admin eights
 
     def cleanup(self):
-        host = csvBase(self.host_file)
+        host = csv_base(self.host_file)
         length = host.numrows()
         hashes = []
         toremove = []
@@ -162,6 +158,8 @@ class UniverseHost:
             host.save()
 
     def getinfo(self, sailorid: str, resulttype: str|int):
+        if sailorid == '':
+            return 'aborted'
         try:
             row = self.file.getrownum(sailorid, 0)  # figures out what row the sailor id it
         except ValueError:
@@ -317,6 +315,7 @@ class UniverseHost:
         else:
             print('That sailor id already exists')
             print(f'The original sailors information is: {self.getinfo(sailid, "a")}')
+            print(f'The new sailors information is: {sailid}, {first} {sur}, {champ} and {sailno}')
             print('\n(1). Append "-1" to the new sailor id and proceed to add'
                   '\n(2). Abort adding new sailor id')
             inp = Base.clean_input('Which of those options do you want to use: ', int, rangelow=1, rangehigh=2)
@@ -382,21 +381,21 @@ class UniverseHost:
             races.append(dat.Race(dat.Results(sailorids, result), wind, date))
         return dat.Event(races, date,event_title=event_title,nation = nat)
 
-    def import_sailor(self, field, data, row, info,nat,fullspeed=False, *extra_info) -> str:
+    def import_sailor(self, field, data, row, info, nat, full_speed=False, *extra_info) -> str:
         sailor_info = [None if x is None else row[x] for x in info.values()]
 
         if nat is not None:
-            sailor_info.append(nat)
+            sailor_info[-1] = nat
         if len(self.get_data_locations(data,field)) == 0:
             res = 0
-            if not fullspeed:
-                res = self.user_select_sailor(data,field,True,fullspeed)
-            if isinstance(res,int) or fullspeed:
+            if not full_speed:
+                res = self.user_select_sailor(data, field, True, full_speed)
+            if isinstance(res,int) or full_speed:
                 while True:
                     from LocalDependencies.Hosts import HostScript
-                    a = HostScript.makenewsailor(*sailor_info,fullspeed=fullspeed)
+                    a = HostScript.makenewsailor(*sailor_info, full_speed=full_speed)
                     del HostScript
-                    if a[0]:  # checks whether the sailor was sucessfully made
+                    if a[0] or full_speed:  # checks whether the sailor was sucessfully made
                         return a[1]  # returns the sailor id just made
             else:
                 return res
@@ -411,7 +410,7 @@ class UniverseHost:
             self.__addrace(race,old_results)
         self.__endevent(event.all_sailors, event.date)
         if not event.imported:
-            export_event(event)
+            export_event(event,self.universe)
         to_print = Base.clean_input('Would you like to print the rating chnages from this event', bool)
         self.file.set_session()
         if to_print:
@@ -486,10 +485,10 @@ class UniverseHost:
         self.file.sortoncol(10, reverse=True, targetcol=11, excluderows=0, greaterthan=[12, 5])
         self.file.autosavefile()
 
-def export_event(self, event: dat.Event):
+def export_event(event: dat.Event,universe_name:str):
 
     direc = ''.join(
-        (sys_path, UNIVERSES_, self.universe, '\\events'))  # figures out the path of the new universe
+        (sys_path, UNIVERSES_, universe_name, '\\events'))  # figures out the path of the new universe
     if not (os.path.exists(direc)):  # checks whether that universe exists
         os.mkdir(direc)
     made = False

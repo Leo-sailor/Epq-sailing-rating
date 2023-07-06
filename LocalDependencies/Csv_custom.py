@@ -5,8 +5,8 @@ from time import time
 from pickle import dumps as _dumps, loads as _loads
 
 
-class csvBase:
-    def __init__(self, filelocation, protectedrows: list[int] = None, protectedcols: list[int] = None,):
+class csv_base:
+    def __init__(self, filelocation, protectedrows: list[int] = None, protectedcols: list[int] = None, ):
         if protectedcols is None:
             protectedcols = []
         if protectedrows is None:
@@ -20,8 +20,11 @@ class csvBase:
                 x = 0
                 rows = []
 
-                for line in spamreader:  # for each line in the csv
-                    rows.append(line[0])  # append the raw string of the line to the output
+                for line in spamreader:
+                    try:  # for each line in the csv
+                        rows.append(line[0])
+                    except IndexError:
+                        continue  # append the raw string of the line to the output
                     rows[x] = rows[x].split(',')  # takes the raw string and splits itnto an array
                     x += 1
         except FileNotFoundError:
@@ -32,12 +35,13 @@ class csvBase:
         for x in range(0, len(rows)):
             for y in range(0, len(rows[0])):
                 column[y].append(rows[x][y])
-        for bad_loc,col in enumerate(reversed(column)):
+        for bad_loc, col in enumerate(reversed(column)):
             loc = 20 - bad_loc
             if len(col) == 0:
                 column.pop(loc)
         self.columnfirst = column
         self.rowfirst = rows
+
     def getrow(self, row: int, miss: list[int] | int = None) -> list:
         if miss is None:
             return self.rowfirst[row]
@@ -53,6 +57,7 @@ class csvBase:
             return temp
         else:
             raise TypeError
+
     def getcell(self, row: int, column: int):
         return self.rowfirst[row][column]
 
@@ -83,7 +88,7 @@ class csvBase:
     def __del__(self):
         self.save()
 
-    def custom_iter(self, row_from:int=None, row_to:int=None):
+    def custom_iter(self, row_from: int = None, row_to: int = None):
         if row_from is None and row_to is None:
             return iter(self.rowfirst)
         elif row_from is None:
@@ -93,8 +98,9 @@ class csvBase:
         else:
             return iter(self.rowfirst[row_from:row_to])
 
-    def index(self,val):
+    def index(self, val):
         return self.columnfirst[0].index(val)
+
     def printcolumn(self, column, sperateline: bool, excudedrows: int | list[int] = None):
         if type(excudedrows) == int:
             excudedrows = [excudedrows]
@@ -120,7 +126,11 @@ class csvBase:
 
     def addrow(self, array: list):
         for x in range(len(array)):
-            self.columnfirst[x].append(str(array[x]))
+            try:
+                self.columnfirst[x].append(str(array[x]))
+            except IndexError:
+                self.columnfirst.append([])
+                self.columnfirst[x].append(str(array[x]))
         for val, item in enumerate(array):
             array[val] = Base.findandreplace(item, ' ', '-', True)
         self.rowfirst.append(array)
@@ -152,14 +162,14 @@ def set_session():
     return int(time())
 
 
-class Csvnew(csvBase):
+class Csvnew(csv_base):
     def __init__(self, filelocation, protectedrows: list[int] = None, protectedcols: list[int] = None, universe=None):
-        super(Csvnew, self).__init__(filelocation, protectedrows,protectedcols)
+        super(Csvnew, self).__init__(filelocation, protectedrows, protectedcols)
         self.session_start = set_session()
         if universe is not None:
             folder = path[0]
             self.host_file = ''.join((folder, '\\universes\\', universe, '\\host-', universe, '.csv'))
-            self.host_file_old = csvBase(self.host_file)
+            self.host_file_old = csv_base(self.host_file)
             self.prev_version_num = int(self.host_file_old.getcell(1, 0))
             self.universe = universe
 
@@ -172,20 +182,21 @@ class Csvnew(csvBase):
 
     def sortoncol(self, column: int, ret: bool = False, reverse: bool = False,
                   targetcol: int = None, excluderows: int | list[int] = None, greaterthan: list[int, float] = None):
-        def get_element(lists:list):
+        def get_element(lists: list):
             return Base.force_int(lists[column])
+
         valid = _loads(_dumps(self.rowfirst))
         new = []
         newnew = []
         if excluderows is not None:
-            if isinstance(excluderows,int):
+            if isinstance(excluderows, int):
                 excluderows = [excluderows]
             excluderows.sort(reverse=True)
             for row in excluderows:
                 valid.pop(row)
         if greaterthan is not None:
             origlen = len(valid)
-            for bad_loc,val in enumerate(reversed(_loads(_dumps(valid)))):
+            for bad_loc, val in enumerate(reversed(_loads(_dumps(valid)))):
                 loc = origlen - 1 - bad_loc
                 if not int(val[greaterthan[0]]) >= greaterthan[1]:
                     valid.pop(loc)
@@ -202,18 +213,22 @@ class Csvnew(csvBase):
             return newnew
 
     def addrow(self, array: list):
-        super(Csvnew,self).addrow(array)
+        super(Csvnew, self).addrow(array)
         self.autosavefile()
+        self.rowfirst = [[x for x in range(len(self.columnfirst))] for _ in range(len(self.columnfirst[0]))]
+        for x in range(len(self.columnfirst[0])):
+            for y in range(len(self.columnfirst)):
+                self.rowfirst[x][y] = self.columnfirst[y][x]
 
     def addcol(self, array: list):
-        super(Csvnew,self).addcol(array)
+        super(Csvnew, self).addcol(array)
         self.autosavefile()
 
     def removerow(self, rownum: int):
-        super(Csvnew,self).removerow(rownum)
+        super(Csvnew, self).removerow(rownum)
         self.autosavefile()
+
     def autosavefile(self):
-        breakpoint()
         filename = ''.join((self.universe, '-', str(self.session_start), '.csv'))
         folder = ''.join((path[0], '\\universes\\', self.universe, '\\'))
         cfile = ''.join((folder, filename))
