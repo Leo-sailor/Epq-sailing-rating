@@ -126,7 +126,7 @@ class ImportManager:
         expected = False
         while not expected:
             table_num = Base.clean_input(
-                f'Please eneter the table number you would like to recive (-{tab_len} - {tab_len - 1}): ', int,
+                f'Please eneter the table number you would like to recive ((-{tab_len}) - {tab_len - 1}): ', int,
                 0 - tab_len, tab_len - 1)
             table = self[table_num]
             for line in table:
@@ -151,7 +151,9 @@ class ImportManager:
         nat = None
         if same_nat:
             nat = Base.getnat()
-        for val, item in enumerate(self.all[0]):
+        if self.chosen_table is None:
+            table_num = self.user_select_table()
+        for val, item in enumerate(self.tables[table_num]):
             for key in info:
                 if key.upper() in item.upper():
                     info[key] = val
@@ -168,7 +170,7 @@ class ImportManager:
             case _:
                 data_loc = 1
         sailor_ids = []
-        for line in self.all[1:]:
+        for line in self.tables[table_num]:
             if not(line[0] == 'nan' and line[1] == 'nan'):
                 sailor_ids.append(
                     universe.import_sailor(self.chosen_data_type, line[data_loc], line, info, nat, full_speed=True))

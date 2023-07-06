@@ -125,17 +125,19 @@ class csv_base:
         return len(self.rowfirst)
 
     def addrow(self, array: list):
+        for val, item in enumerate(array):
+            array[val] = Base.findandreplace(item, ' ', '-', True)
         for x in range(len(array)):
             try:
                 self.columnfirst[x].append(str(array[x]))
             except IndexError:
                 self.columnfirst.append([])
                 self.columnfirst[x].append(str(array[x]))
-        for val, item in enumerate(array):
-            array[val] = Base.findandreplace(item, ' ', '-', True)
         self.rowfirst.append(array)
 
     def addcol(self, array: list):
+        for val, item in enumerate(array):
+            array[val] = Base.findandreplace(item, ' ', '-', True)
         for x in range(len(array)):
             self.rowfirst[x].append(str(array[x]))
         self.columnfirst.append(array)

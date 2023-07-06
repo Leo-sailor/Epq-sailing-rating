@@ -110,7 +110,7 @@ class oldResults:
         except ValueError:
             raise IndexError('the sailor id {} could not be found'.format(sailorid))
 
-        findtypeloc = self.universe.getfieldnumber(resulttype)
+        findtypeloc = Base.getfieldnumber(resulttype)
 
         if findtypeloc == -1:
             result = ' '.join((self.rowsfirst[row][3], self.rowsfirst[row][4])) # adds the 2 names with a space in the middle
@@ -124,6 +124,35 @@ class oldResults:
         else:
             result = '0.1'
         return result
+
+
+class constants(dict):
+    _self = None
+
+    def __new__(cls, fileloc: str = 'config.ini'):
+        if cls._self is None:
+            cls._self = super().__new__(cls)
+        return cls._self
+
+    def __init__(self, fileloc: str = 'config.ini'):
+        filedump = []
+        try:
+            with open(fileloc, 'r') as f:
+                for line in f:
+                    line = '  ' + line
+                    if line[-2] != ',' and line[-1] != '}':
+                        line += ','
+                    filedump.append(line)
+                whole_file = ' '.join(filedump)
+            whole_file = Base.findandreplace(whole_file, '\n', '', True)
+        except FileNotFoundError:
+            with open(fileloc,"x") as f:
+                f.writelines(["{","'hello':'world'","}"])
+            whole_file = '{}'
+        super().__init__(eval(whole_file))
+
+    def __getitem__(self, item):
+        return self.get(item)
 def main():
     # theres not even any point doing tests
     pass

@@ -335,7 +335,7 @@ class UniverseHost:
                          0, 0, day])
                 return True, sailid
             else:
-                return False, ''
+                return False, sailid
 
     def processtable(self, table: list[list[str]], field: str, event_title = "the event") -> dat.Event:
         info = {'name': None, 'sail ': None, 'champ': None}
@@ -385,8 +385,12 @@ class UniverseHost:
         sailor_info = [None if x is None else row[x] for x in info.values()]
 
         if nat is not None:
-            sailor_info[-1] = nat
+            try:
+                sailor_info[3] = nat
+            except IndexError:
+                sailor_info.append(nat)
         if len(self.get_data_locations(data,field)) == 0:
+            print('creating sailor')
             res = 0
             if not full_speed:
                 res = self.user_select_sailor(data, field, True, full_speed)
@@ -416,9 +420,9 @@ class UniverseHost:
         if to_print:
             print('Event rating changes:')
             for sailor in event.all_sailors:
-                print(f'{sailor}: light: {old_results.getinfo(sailor, "l")} -> {self.getinfo(sailor,"l")}'
+                print(f'{sailor}: light: {old_results.getinfo(sailor, "l")} -> {self.getinfo(sailor,"l")}  '
                       f'medium: {old_results.getinfo(sailor, "m")} -> {self.getinfo(sailor, "m")}\n'
-                      f'               heavy: {old_results.getinfo(sailor, "h")} -> {self.getinfo(sailor, "h")}'
+                      f'               heavy: {old_results.getinfo(sailor, "h")} -> {self.getinfo(sailor, "h")}  '
                       f'overall: {old_results.getinfo(sailor, "o")} -> {self.getinfo(sailor, "o")}\n'
                       f'               rank: {old_results.getinfo(sailor,"r")} -> {self.getinfo(sailor,"r")} ')
 
