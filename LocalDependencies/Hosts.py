@@ -1,21 +1,26 @@
 import LocalDependencies.Aditional_func as addFunc
 from LocalDependencies.Main_core import UniverseHost
 import LocalDependencies.General as Base
+from LocalDependencies.Framework import base_func as f_base
 from LocalDependencies.Csv_custom import csv_base
 import LocalDependencies.leo_dataclasses as dat
 import datetime
 from pickle import load as _load
 from time import sleep as _sleep
 from LocalDependencies.Imports import ImportManager
+from Framework.text_ui import text_ui
 
 global universe_csv
 
 
 class HostScript:
-
-    def __init__(self):
-        self.inpmethod = ''
-        self.inputmethodname = ''
+    def __init__(self, ui: text_ui, *sys_args):
+        self.inp_method = ''
+        self.input_method_name = ''
+        if sys_args is None:
+            sys_args = []
+        self.args = sys_args
+        self.ui = ui
 
     def torun(self, *args):
         global universe_csv
@@ -26,156 +31,140 @@ class HostScript:
         while True:
             Base.text_blocks(1)
 
-            choice = Base.clean_input('\nWhat would you like to do: ', int, rangelow=1, rangehigh=9)
+            choice = self.ui.g_int('\nWhat would you like to do: ', 1, 9)
             match choice:
                 case 1:
                     event = self.import_event()
                     if event is None:
-                        print('null event')
+                        self.ui.display_text('null event')
                     universe_csv.add_event(event)
                 case 2:
-                    self.makenewsailor()
+                    self.make_new_sailor(self.ui)
                 case 3:
-                    self.getsailorinfo()
+                    self.get_sailor_info()
                 case 4:
                     break
                 case 5:
                     self.sailor_rating_over_time()
                 case 6:
-                    print()
-                    print(universe_csv)
+                    self.ui.display_table(universe_csv.file.rowfirst)
                     _sleep(0.5)
                 case 7:
                     self.torun()
                     break
                 case 8:
-                    self.import_sailors()
+                    self.import_sailors(self.ui)
                 case 9:
                     self.sailor_rating_over_time()
 
     @staticmethod
-    def import_sailors():
-        imp_mgr = ImportManager()
+    def import_sailors(ui: text_ui):
+        imp_mgr = ImportManager(ui)
         sailors = imp_mgr.import_sailors_to_universe(universe_csv)
-        print(f'The following {len(sailors)} sailors have been imported')
+        ui.display_text(f'The following {len(sailors)} sailors have been imported')
         for line in sailors:
-            print(universe_csv.getinfo(line, 'all'))
+            ui.display_text(universe_csv.getinfo(line, 'all'))
 
     def sailor_rating_over_time(self):
         global universe_csv
-        inp_method = self.__getinputmethod()
-        inp = Base.clean_input(f'Please enter the sailor\'s {self.inputmethodname}: ', str)
+        inp_method = self.__get_input_method()
+        inp = self.ui.g_str(f'Please enter the sailor\'s {self.input_method_name}: ')
         sailorid = universe_csv.getsailorid(inp_method, inp)
         universe_name = universe_csv.universe
-        start_date = Base.getdate('int', 'of the first day of your range')
-        end_date = Base.getdate('int', 'of the last day of your range')
-        info_codes = {'c': 'Championship Number', 's': 'Sail Number', 'l': 'Light wind rating',
-                      'm': 'Medium wind rating',
-                      'h': 'Heavy wind rating', 'i': 'sailorid', 'o': 'Overall rating', 'r': 'Rank',
-                      'e': 'Total events', 'z': 'Zone/Region', 't': 'Territory/country', }
-        print('please enter type of information you would like to recive')
-        for key, val in info_codes.items():  # prints all the info_codes
-            print(f'({key}) for {val}')
-        outtype = Base.clean_input("\nWhat would u like to recive: ", str)
-        outtype.lower().strip()
-        addFunc.plot_sailors(start_date, sailorid, outtype, universe_name, end_date)
+        start_date = self.ui.g_date_int('of the first day of your range')
+        end_date = self.ui.g_date_int('of the last day of your range')
+        info_codes = ['Championship Number', 'Sail Number', 'Light wind rating', 'Medium wind rating',
+                      'Heavy wind rating', 'sailorid', 'Overall rating', 'Rank', 'Total events', 'Zone/Region',
+                      'Territory/country']
+        out_codes = ['c', 's', 'l', 'm', 'h', 'i', 'o', 'r', 'e', 'z', 't']
+        selected = self.ui.g_choose_options(info_codes, 'please enter type of information you would like to receive')
+        addFunc.plot_sailors(start_date, sailorid, out_codes[selected], universe_name, end_date)
 
-    def getsailorinfo(self):
-        info_codes = {'c': 'Championship Number', 's': 'Sail Number', 'l': 'Light wind rating',
-                      'm': 'Medium wind rating',
-                      'h': 'Heavy wind rating', 'n': 'Name', 'i': 'sailorid', 'o': 'Overall rating', 'r': 'Rank',
-                      'e': 'Total events', 'd': 'Date of last event', 'z': 'Zone/Region', 't': 'Territory/country',
-                      'a': 'All',
-                      'S': 'Sailor info'}
-        print('\nSAILOR INFO WIZZARD\n')
-        print('please enter type of information you would like to recive')
-        for key, val in info_codes.items():  # prints all the info_codes
-            print(f'({key}) for {val}')
+    def get_sailor_info(self):
+        info_codes = ['Championship Number', 'Sail Number', 'Light wind rating', 'Medium wind rating',
+                      'Heavy wind rating', 'Name', 'sailorid', 'Overall rating', 'Rank', 'Total events',
+                      'Date of last event', 'Zone/Region', 'Territory/country', 'All', 'Sailor info']
+        out_codes = ['c', 's', 'l', 'm', 'h', 'n', 'i', 'o', 'r', 'e', 'd', 'z', 't', 'a', 'S']
+        selected = self.ui.g_choose_options(info_codes, '\nSAILOR INFO WIZARD\nplease enter type of information you '
+                                                        'would like to receive')
+        out_type = out_codes[selected]
+        out_type_name = info_codes[selected]
 
-        outtype = Base.clean_input("What would u like to recive: ", str)
-        outtype.lower().strip()
-        outtypename = info_codes[outtype]
+        inp_method = self.__get_input_method()
+        inp = self.ui.g_str(f'Please enter the sailor\'s {self.input_method_name}: ')
 
-        inpmethod = self.__getinputmethod()
-        inp = Base.clean_input(f'Please enter the sailor\'s {self.inputmethodname}: ', str)
+        sailorid = universe_csv.getsailorid(inp_method, inp)
+        out = universe_csv.getinfo(sailorid, out_type)
 
-        sailorid = universe_csv.getsailorid(inpmethod, inp)
-        out = universe_csv.getinfo(sailorid, outtype)
+        if out_type == 'd':
+            two_thousand = datetime.date(2000, 1, 1)
+            out = two_thousand + datetime.timedelta(days=float(out))
 
-        if outtype == 'd':
-            twothousand = datetime.date(2000, 1, 1)
-            out = twothousand + datetime.timedelta(days=float(out))
-
-        print(f'\n{inp}\'s {outtypename} is {out}')
+        self.ui.display_text(f'\n{inp}\'s {out_type_name} is {out}')
 
     @staticmethod
-    def makenewsailor(name=None, sailno=None, champ=None, nat=None, full_speed=False):
+    def make_new_sailor(ui: text_ui, name=None, sailno=None, champ=None, nat=None, full_speed=False):
         if not full_speed:
-            print('\n NEW SAILOR WIZZARD')
+            ui.display_text('\n NEW SAILOR WIZARD')
         if name is None:
-            name = Base.clean_input('Please enter the sailor\'s Full name: ', str, charlevel=3)
+            name = ui.g_str('Please enter the sailor\'s Full name: ', char_level=3)
         name = name.split(' ', 1)
         first = name[0]
         try:
             sur = name[1]
         except IndexError:
-            sur = Base.clean_input('Please enter the sailor\'s  surname: ', str, charlevel=3)
+            sur = ui.g_str('Please enter the sailor\'s  surname: ', char_level=3)
         if champ is None:
-            champ = str(Base.clean_input('Please enter the sailor\'s Championship number '
-                                         '\n(Please enter (000) if the sailor does not have a Champ number): ',
-                                         int, rangehigh=999))
+            champ = str(ui.g_int('Please enter the sailor\'s Championship number '
+                                 '\n(Please enter (000) if the sailor does not have a Champ number): ',
+                                 range_high=999, range_low=0))
         else:
             champ = str(champ)
         if sailno is None:
-            sailno = str(Base.clean_input('Please enter the sailor\'s Sail number '
-                                          '\n(Please ignore any letters): ',
-                                          int, rangehigh=99999))
+            sailno = str(ui.g_int('Please enter the sailor\'s Sail number \n(Please ignore any letters): ',
+                                  range_high=999, range_low=0))
         else:
             sailno = str(sailno)
         if nat is None:
-            nat = Base.clean_input('\n(enter) for automatic\nPlease enter the sailor\'s 3 letter country code: ', str,
-                                   charlevel=3).upper()[:3]
+            nat = ui.g_nat(f'{first} {sur}', 1)
         nat = str(nat)
-        out = Base.generate_sailor_id(nat, sailno, first, sur)
+        out = Base.generate_sailor_id(ui, nat, sailno, first, sur)
         sailorid = out[0]
         nat = out[1]
         if nat == 'GBR' and not full_speed:
-            region = Base.clean_input('\n SC - Scotland\n SE - London and South-east\n SW - South-west\n SO - South'
-                                      '\n MD - Midlands\n NO - North\n NI - Northen Ireland\n WL - Wales\n EA - East'
-                                      f'\n NA - Unknown\nPlease enter {first} {sur}\'s\'s 2 letter RYA region code: ',
-                                      str, charlevel=3).upper()[:2]
-            if region not in ['SC', 'SE', 'SW', 'SO', 'MD', 'NO', 'NI', 'WL', 'EA']:
-                region = 'NA'
+            regions = ['Scotland', 'London and South-east', 'South-west', 'South', 'Midlands', 'North',
+                       'Northern Ireland', 'Wales', 'East', 'Unknown']
+            region_codes = ['SC', 'SE', 'SW', 'SO', 'MD', 'NO', 'NI', 'WL', 'EA', 'NA']
+
+            region_index = ui.g_choose_options(regions, f'Please enter {first} {sur}\'s\'s 2 letter RYA region code: ')
+            region = region_codes[region_index]
+
         else:
             region = 'NA'
         return universe_csv.addsailor(sailorid, first, sur, champ, sailno, region, nat)
 
-    def addeventlazy(self):
+    def add_event_lazy(self):
         inp = 2
         light_race_num = 0
         med = 0
         heavy = 0
         while inp != 1:
-            racenum = Base.clean_input('\nPlease enter the number of races in the event (1-20): ', int, rangelow=1,
-                                       rangehigh=20)
-            light_race_num = Base.clean_input(
-                '\nPlease enter the number of light wind (0-8kts) races in the event (0-{}): '.format(racenum), int,
-                rangehigh=racenum)
-            racenum -= light_race_num
-            med = Base.clean_input(
-                'Please enter the number of medium wind (9-16kts) races in the event (0-{}): '.format(racenum), int,
-                rangehigh=racenum)
-            racenum -= med
-            heavy = racenum
-            inp = Base.clean_input(
+            race_num = self.ui.g_int('\nPlease enter the number of races in the event (1-20): ',
+                                     range_low=1, range_high=20)
+            light_race_num = self.ui.g_int(f'\nPlease enter the number of light wind (0-8kts) races in the event '
+                                           f'(0-{race_num}): ', range_high=race_num, range_low=0)
+            race_num -= light_race_num
+            med = self.ui.g_int(f'Please enter the number of medium wind (9-16kts) races in the event (0-{race_num}): ',
+                                range_high=race_num, range_low=0)
+            race_num -= med
+            heavy = race_num
+            inp = self.ui.g_bool(
                 f'\nThat means there were\n{light_race_num} light wind races\n{med} medium wind races'
-                f'\n{heavy} strong wind races\n'
-                f'press (1) to confirm or press (2) to try again: ', int,
-                1, rangehigh=2)
+                f'\n{heavy} strong wind races\n')
 
-        days = Base.clean_input('\nHow many days ago was the final race of the event(0-500): ', int)
+        days = self.ui.g_date_int('of the last day of the event', latest=datetime.date.today())
         event = dat.Event([], days)
-        results_obj = self.__getranking('the event')
+        results_obj = self.__get_ranking('the event')
 
         for _ in range(light_race_num):
             event.append(dat.Race(results_obj, 1, days))
@@ -185,32 +174,31 @@ class HostScript:
             event.append(dat.Race(results_obj, 3, days))
         return event
 
-    def addeventproper(self):
-        racenum = Base.clean_input('\nPlease enter the number of races in the event (1-20): ', int, rangelow=1,
-                                   rangehigh=20)
-        days = Base.clean_input('\nHow many days ago was the final race of the event(0-500): ', int)
+    def add_event_proper(self):
+        race_num = self.ui.g_int('\nPlease enter the number of races in the event (1-20): ',
+                                 range_low=1, range_high=20)
+        days = self.ui.g_date_int('of the last day of the event', latest=datetime.date.today())
         event = dat.Event([], days)
-        for x in range(racenum):
-            racetext = ' '.join(['Race', str(x + 1)])
-            print(f'\n{racetext.upper()} ENTRY WIZZARD')
-            wind = Base.clean_input(f'\nPlease enter the wind strength for {racetext}\n'
-                                    f'(1) for light wind - 0-8kts\n'
-                                    f'(2) for medium wind - 9-16kts\n'
-                                    f'(3) for strong wind - 17+ kts: ', int, rangehigh=3, rangelow=1)
-            info = self.__getranking(racetext)
+        for x in range(race_num):
+            race_text = ' '.join(['Race', str(x + 1)])
+            self.ui.display_text(f'\n{race_text.upper()} ENTRY WIZARD')
+            wind = self.ui.g_choose_options(['light wind - 0-8kts', 'medium wind - 9-16kts', 'strong wind - 17+ kts'],
+                                            f'\nPlease enter the wind strength for {race_text}\n')
+            wind += 1
+            info = self.__get_ranking(race_text)
             event.append(dat.Race(info, wind, days))
         return event
 
-    @staticmethod
-    def add_event_csv():
-        racenum = Base.clean_input('\nPlease enter the number of races in the event (1-20): ', int, rangelow=1,
-                                   rangehigh=20)
-        days = Base.clean_input('\nHow many days ago was the final race of the event(0-500): ', int)
+    def add_event_csv(self):  # Legacy function
+        race_num = self.ui.g_int('\nPlease enter the number of races in the event (1-20): ',
+                                 range_low=1, range_high=20)
+        days = self.ui.g_date_int('of the last day of the event', latest=datetime.date.today())
         event = dat.Event([], days)
-        for x in range(racenum):
+        for x in range(race_num):
             race_text = ' '.join(['Race', str(x + 1)])
-            print(f'\n{race_text.upper()} ENTRY WIZZARD')
-            file_loc = Base.clean_input(f'Please enter the full file location of the file for {race_text}: ', str)
+            self.ui.display_text(f'\n{race_text.upper()} ENTRY WIZARD')
+            file_loc = self.ui.g_file_loc('r', title=f'Select the file location for {race_text}: ',
+                                          filetypes=('csv files', '.csv'))
             curr_file = csv_base(file_loc)
             wind = int(curr_file.getcell(0, 1))
 
@@ -220,145 +208,128 @@ class HostScript:
             event.append(dat.Race(results_obj, wind, days))
         return event
 
-    def __getranking(self, eventname: str) -> dat.Results:
-        self.__getinputmethod()
+    def __get_ranking(self, eventname: str) -> dat.Results:
+        self.__get_input_method()
         working = True
         position = 0
         positions = []
         sailorids = []
-        rawinps = []
-        speedprint = []
-        print("\nPlease do not include sailors that DNC but all other codes"
-              "\nPress (d) when you are done\n"
-              "Press (b) if you want to remove the last sailor\n")
+        raw_inps = []
+        speed_print = [['Position'], ['input info'], ['sailor-id']]
+        self.ui.display_text("\nPlease do not include sailors that DNC but all other codes"
+                             "\nPress (d) when you are done\n"
+                             "Press (b) if you want to remove the last sailor\n")
         while working:
-            if not speedprint:
-                print("\nPosition:    {}:    Sailor-id:".format(self.inputmethodname))
-                toprint = '\n'.join(speedprint)
-                print(toprint)
+            self.ui.display_table(speed_print)
             position += 1
-            inp = Base.clean_input(
-                f"\nPlease enter the {self.inputmethodname} of {Base.ordinal(position)} place in {eventname}: ",
-                str).lower()
+            inp = self.ui.g_str(f"\nPlease enter the {self.input_method_name} of {f_base.ordinal(position)} "
+                                f"place in {eventname}: ", ).lower()
             if inp == 'd':
                 working = False
             elif inp == 'b':
                 position -= 1
                 positions.pop(-1)
-                speedprint.pop(-1)
+                speed_print.pop(-1)
                 sailorids.pop(-1)
-                rawinps.pop(-1)
+                raw_inps.pop(-1)
             else:
                 inp.lower().strip()
-                sailor = universe_csv.getsailorid(self.inpmethod, inp)
+                sailor = universe_csv.getsailorid(self.inp_method, inp)
                 if sailor in sailorids:
-                    print('\nThis sailor has already been entered, please try again')
+                    self.ui.display_text('This sailor has already been entered, please try again')
                     position -= 1
                 else:
                     sailorids.append(sailor)
                     positions.append(position)
-                    rawinps.append(inp)
-                    speedprint.append(f'{position}            {inp}           {sailor}')
+                    raw_inps.append(inp)
+                    speed_print[0].append(str(position))
+                    speed_print[1].append(inp)
+                    speed_print[2].append(sailor)
         return dat.Results(sailorids, positions)
 
-    def __getinputmethod(self):
-        print('\n INPUT METHOD SELECTION')
-        inpmethods = ['c', 'n', 'i', 's']
-        if self.inpmethod in inpmethods:
-            if self.inpmethod == 'c':
-                self.inputmethodname = 'Championship Number'
-            elif self.inpmethod == 'n':
-                self.inputmethodname = 'Name'
-            elif self.inpmethod == 'i':
-                self.inputmethodname = 'Sailor-id'
+    def __get_input_method(self):
+        self.ui.display_text('INPUT METHOD SELECTION')
+        inp_methods = ['c', 'i', 'n', 's']
+        if self.inp_method in inp_methods:
+            if self.inp_method == 'c':
+                self.input_method_name = 'Championship Number'
+            elif self.inp_method == 'n':
+                self.input_method_name = 'Name'
+            elif self.inp_method == 'i':
+                self.input_method_name = 'Sailor-id'
             else:
-                self.inputmethodname = 'Sail Number'
-            inp = Base.clean_input((''.join(('\nYour current selected input method is: ', self.inputmethodname,
-                                             '\nWould you like to change it?\n(0) for no\n(1) for yes: '))), int,
-                                   rangehigh=1)
-            if inp == 1:
+                self.input_method_name = 'Sail Number'
+            inp = self.ui.g_bool(f'Your current selected input method is: {self.input_method_name} '
+                                 f'\nWould you like to change it?')
+            if inp:
                 ip = ''
             else:
-                ip = self.inpmethod
+                ip = self.inp_method
         else:
             ip = ''
-        while ip not in inpmethods:
-            ip = Base.clean_input('\nHow would you like to enter sailors information?\n'
-                                  '(c) for Championship Number\n'
-                                  '(i) for Sailor-id\n'
-                                  '(n) for Name\n'
-                                  '(s) for Sail Number: ', str).lower()
-        self.inpmethod = ip
-        if self.inpmethod == 'c':
-            self.inputmethodname = 'Championship Number'
-        elif self.inpmethod == 'n':
-            self.inputmethodname = 'Name'
-        elif self.inpmethod == 'i':
-            self.inputmethodname = 'Sailor-id'
-        else:
-            self.inputmethodname = 'Sail Number'
+        while ip not in inp_methods:
+            long_options = ['championship Number', 'Sailor-id', 'Name', 'Sail Number']
+            ip = inp_methods[self.ui.g_choose_options(long_options, 'How would you like to enter sailors information?')]
+        self.inp_method = ip
+        match ip:
+            case 'c':
+                self.input_method_name = 'Championship Number'
+            case 'n':
+                self.input_method_name = 'Name'
+            case 'i':
+                self.input_method_name = 'Sailor-id'
+            case _:
+                self.input_method_name = 'Sail Number'
         return ip
 
     @staticmethod
-    def import_pickled_event():
-        fileloc = '_________'
-        while fileloc[-6:] != '.event':
-            if fileloc != '_________':
-                print('that file is not of the correct type, please try again')
-            fileloc = Base.getfilename()
-        with open(fileloc, 'rb') as f:
+    def import_pickled_event(ui: text_ui):
+        file_loc = '_________'
+        while file_loc[-6:] != '.event':
+            if file_loc != '_________':
+                ui.display_text('that file is not of the correct type, please try again')
+            file_loc = ui.g_file_loc(filetypes=('event files', '.event'))
+        with open(file_loc, 'rb') as f:
             event = _load(f)
         return event
 
     def import_event(self):
         if not universe_csv.admin:
-            print('\nTo add an event you need admin rights')
+            self.ui.display_text('\nTo add an event you need admin rights')
             if not universe_csv.adminrights():
-                print('\nAdd event failed, please try with admin rights')
+                self.ui.display_text('\nAdd event failed, please try with admin rights')
                 return None
 
-        print("\nEVENT ENTRY WIZZARD")
-        inp = Base.clean_input('\n(1) for entering overall event results (less accurate - quicker)\n'
-                               '(2) for entering individual race results (higher accuracy - slower)\n'
-                               '(3) for importing previous race csv (needs previously entered csv)\n'
-                               '(4) for importing an online results file (needs internet - html/htm/pdf)\n'
-                               '(5) for importing an local file (html/htm/pdf)\n'
-                               '(6) for importing a .event file\n'
-                               '(0) to cancel\n'
-                               'what is your choice: ',
-                               int, rangehigh=6, rangelow=0)
+        self.ui.display_text("EVENT ENTRY WIZARD")
+        options = ['cancel', 'entering overall event results (less accurate - quicker)',
+                   'entering individual race results (higher accuracy - slower)'
+                   'importing previous race csv (needs previously entered csv)',
+                   'importing an online results file (needs internet - html/htm/pdf)',
+                   'importing an local file (html/htm/pdf)', 'importing a .event file']
+        inp = self.ui.g_choose_options(options, 'How would you like to import the event?')
         match inp:
             case 1:
-                event = self.addeventlazy()
+                event = self.add_event_lazy()
             case 2:
-                event = self.addeventproper()
+                event = self.add_event_proper()
             case 3:
                 event = self.add_event_csv()
             case 4:
-                event = self.add_online_event()  #
+                event = self.add_online_event(self.ui)
             case 5:
-                event = self.addeventlocal()
+                event = self.add_event_local(self.ui)
             case 6:
-                event = self.import_pickled_event()
+                event = self.import_pickled_event(self.ui)
             case _:
                 event = None
         return event
 
     @staticmethod
-    def addeventlocal() -> dat.Event:
-        inp_mgr = ImportManager('F')
+    def add_event_local(ui: text_ui) -> dat.Event:
+        inp_mgr = ImportManager(ui, 'F')
         return inp_mgr.to_event(universe_csv)
 
     @staticmethod
-    def add_online_event() -> dat.Event:
-        inp_mgr = ImportManager('L')
+    def add_online_event(ui: text_ui) -> dat.Event:
+        inp_mgr = ImportManager(ui, 'L')
         return inp_mgr.to_event(universe_csv)
-
-
-def main():
-    host = HostScript()
-    host.torun()
-
-
-if __name__ == '__main__':
-    main()

@@ -1,0 +1,87 @@
+import datetime
+from typing import Any, Type, TypeVar, NewType
+import base_func as base
+from bcrypt import gensalt
+
+
+class callback:
+    def display_text(self, text: str):
+        return None
+
+    def display_table(self, table:list[list[Any]]):
+        return None
+
+    def display_dict(self, dictionary:dict[Any:Any], delimiter: str = ' -> ', new_line:bool = True,raw:bool = False):
+        return None
+
+    def g_str(self, prompt: str, length: int = None) -> str:
+        return ''
+
+    def g_int(self, prompt: str) -> int:
+        return 0
+
+    def g_list(self,prompt: str, length: int = None) -> list:
+        return []
+
+    def g_float(self,prompt: str) -> float:
+        return 0.0
+
+    def g_date(self,prompt: str) -> datetime.date:
+        return datetime.date.today()
+
+    def g_datetime(self,prompt: str) -> datetime.datetime:
+        return datetime.datetime.now()
+
+    def g_bool(self,prompt: str) -> bool:
+        return True
+
+    def g_password_recive(self, prompt:str, correct_hash: bytes, hash_method: str, salt: bytes = None) -> bool:
+        prompt = 'Press (enter) to skip entering a password\n' + prompt
+        while True:
+            inp = self.g_str(prompt)
+            if base.password_hash(inp, hash_method, salt)[0] == correct_hash:
+                self.display_text('Password is correct')
+                return True
+            elif inp == '':
+                self.display_text('Password entry is skipped')
+                return False
+            else:
+                self.display_text('That password was incorrect, please try again')
+
+    def __g_new_password(self,prompt)-> str:
+        same = False
+        while not same:
+            passworda = self.g_str(prompt)
+            passwordb = self.g_str('Please it again to confirm: ')
+            same = passwordb == passworda
+            if not same:
+                print('\nThose passwords did not match, Please try again')
+        return passworda
+
+    def g_make_password_with_salt(self, prompt, hash_mathod) -> tuple[bytes,bytes]:
+        password = self.__g_new_password(prompt)
+        salt = gensalt()
+        tup = base.password_hash(password, hash_mathod, salt)
+        hashed = tup[0]
+        return hashed, salt
+
+    def g_make_password_without_salt(self,prompt, hash_mathod) -> bytes:
+        password = self.__g_new_password(prompt)
+        tup = base.password_hash(password, hash_mathod, '')
+        hashed = tup[0]
+        return hashed
+
+    def g_choose_options(self, options: list[str], prompt = None) -> int:
+        return 0
+
+    def g_file_loc(self,mode='r', **args) -> str:
+        return "c:\\Users\\"
+
+    def g_nat(self, obj_of_nationality: str, return_type: int = 1) -> str:
+        """
+        This function gets the current computer's address and uses that to generate a suggested 3-letter country code
+        :param obj_of_nationality:
+        :param return_type: 1 for 3-letter country code, 2 for country name, 3 for 2-letter code, 4 for telephone code
+        5 for capital, and 6 for location, 7 for boarders
+        """
+        return "GBR"
