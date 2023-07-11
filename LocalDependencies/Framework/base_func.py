@@ -10,7 +10,7 @@ import pyscrypt
 numbers = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
 
 
-def firstcap(word: str) -> str:
+def first_capital(word: str) -> str:
     """
     This function takes a string and returns that string with a capitalized first letter
     :param word:
@@ -19,8 +19,8 @@ def firstcap(word: str) -> str:
     word = word.lower()
     word = word.strip()
     try:
-        newword = word[0].upper() + word[1:]
-        return newword
+        new_word = word[0].upper() + word[1:]
+        return new_word
     except IndexError:
         return word
 
@@ -32,7 +32,7 @@ def sort_on_element(sub_li: list[list], element: int, reverse: bool = True, zero
 
 def multiindex(inlist: list, term: Any) -> list[int]:
     """
-    This function takes a list and finds all occourences of the term inside of that list,
+    This function takes a list and finds all occurrences of the term inside of that list,
     will not return the first one
     :param inlist: the list to be searched through
     :param term: the term to be searched for
@@ -43,19 +43,19 @@ def multiindex(inlist: list, term: Any) -> list[int]:
         if type(inlist[x]) != str:
             inlist[x] = str(inlist[x])
 
-    indexs = []
+    indices = []
     start = 0
     end = False
     while not end:
         try:
-            indexs.append(inlist.index(term, start))
-            start = indexs[-1] + 1
+            indices.append(inlist.index(term, start))
+            start = indices[-1] + 1
         except ValueError:
             end = True
-    return indexs
+    return indices
 
 
-def password_hash(password: str, hash_method: str, salt: bytes = None) -> tuple[bytes, bytes]:
+def password_hash(password: str, hash_method: str, salt: bytes | str = None) -> tuple[bytes, bytes]:
     """
     This function will hash a password using the password and a salt and will generate a salt if it is put in without it
     :param password:
@@ -115,22 +115,22 @@ def hashfile(file: str) -> str:
     :param file: the file address of the file to be hashed
     :return: the string of the md5 hash
     """
-    with open(file) as actualfile:
-        str2hash = actualfile.read()
+    with open(file) as actual_file:
+        str2hash = actual_file.read()
     result = md5(str2hash.encode()).hexdigest()
     return str(result)
 
 
 def findandreplace(inp, find: str, replace: str, preserve_type=False):
     """
-    a recussive find and replace algoritim which searchs through lists and thiers sub lits up to the recursion limit
-    in search of strings, when a string is found, a normal find and replace algoritim on is applied to the string.
+    a recursive find and replace algorithm which searches through lists and theirs sub it's up to the recursion limit
+    in search of strings, when a string is found, a normal find and replace algorithm on is applied to the string.
     intended side effect: all int
-    THIS IS A TIME CRITICAL FUNCTION, TIME TO RUN > READABILTY OR MAINAINABILITY OR LOC (LINES OF CODE)
+    THIS IS A TIME CRITICAL FUNCTION, TIME TO RUN > READABILITY OR MAINTAINABILITY OR LOC (LINES OF CODE)
     :param inp:
     :param find:
     :param replace:
-    :param preserve_type: if true, all types other than a string will stay in there origninal types, ohwise they will
+    :param preserve_type: if true, all types other than a string will stay in their original types, otherwise they will
     be converted
     :return:
     """
@@ -169,12 +169,12 @@ def force_int(inp: str | float | int) -> int:
 
 
 def clean_table(table: list[list[Any]]):
-    intial_vals = table[1]
+    initial_vals = table[1]
     cols_to_remove = list(range(len(table[1])))
     for row_index in range(1, len(table)):
         good_cols = []
         for col in cols_to_remove:
-            if table[row_index][col] != intial_vals[col]:
+            if table[row_index][col] != initial_vals[col]:
                 good_cols.append(col)
         [cols_to_remove.pop(cols_to_remove.index(item)) for item in good_cols]
     cols_to_remove.sort(reverse=True)

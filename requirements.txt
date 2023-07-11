@@ -3,7 +3,8 @@ future==0.18.3
 requests==2.31.0
 bcrypt==4.0.1
 pandas==2.0.3
-numpy==1.25.0
+numpy==1.25.1
 tabula-py==2.7.0
 matplotlib==3.7.2
 pyscrypt~=1.6.2
+argon2-cffi == 21.3.0

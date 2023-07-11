@@ -36,7 +36,7 @@ def process_file(ui: text_ui) -> str:
     while file_loc[-4:] not in file_types:
         if file_loc != '______':
             ui.display_text('that file is not of the correct type')
-        file_loc = ui.g_file_loc(file_types=('importable', '.htm .html .pdf'))
+        file_loc = ui.g_file_loc(filetypes=('importable', '.htm .html .pdf'))
     return file_loc
 
 
@@ -148,7 +148,7 @@ class ImportManager:
             self.chosen_data_type = data_types_short[self.ui.g_choose_options(data_types_long,
                                                                               'What field would you like to read?')]
         event_title = self.ui.g_str('What is the event called: ')
-        return universe.processtable(table, self.chosen_data_type, event_title)
+        return universe.process_table(table, self.chosen_data_type, event_title)
 
     def import_sailors_to_universe(self, universe) -> list[str]:
         info = {'name': None, 'sail ': None, 'champ': None, 'nat': None}

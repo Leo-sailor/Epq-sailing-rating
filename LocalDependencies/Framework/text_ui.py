@@ -3,7 +3,8 @@ from typing import Any
 from LocalDependencies.Framework import base_ui
 from tkinter import filedialog
 import requests
-from base_func import fixed_country_info as country_info
+from LocalDependencies.Framework.base_func import fixed_country_info as country_info
+
 base_nat = ''
 valid_nat = {'ALG', 'ASA', 'AND', 'ANT', 'ARG', 'ARM', 'ARU', 'AUS', 'AUT', 'AZE', 'BAH', 'ARN', 'BAR',
              'BLR', 'BEL', 'BIZ', 'BER', 'BRA', 'BOT', 'IVB', 'BRU', 'BUL', 'CAM', 'CAN', 'CAY', 'CHI',
@@ -25,7 +26,8 @@ class text_ui(base_ui.callback):
     def display_table(self, table: list[list[Any]]):
         header = str(table) + '\n'
         long_blank = "                        "
-        p = header + '\n'.join([''.join([f'{"".join((item, long_blank))[:15]}  ' for item in row])for row in table[1:]])
+        p = header + '\n'.join(
+            [''.join([f'{"".join((item, long_blank))[:15]}  ' for item in row]) for row in table[1:]])
         print(p)
 
     def display_dict(self, dictionary: dict[Any:Any], key_delimiter: str = ' -> ',
@@ -82,7 +84,7 @@ class text_ui(base_ui.callback):
             return new_str
         return self.g_str(prompt, length, chars_allowed=all_chars)
 
-    def g_int(self, prompt: str, range_low: int = None, range_high: int = None, allow_skip = False) -> int:
+    def g_int(self, prompt: str, range_low: int = None, range_high: int = None, allow_skip=False) -> int:
         if range_high is None:
             range_low = float('-inf')
         if range_low is None:
@@ -184,11 +186,11 @@ class text_ui(base_ui.callback):
             prompt = 'please select one of the following options'
         print(prompt)
         for val, item in enumerate(options):
-            print(f'({val+1}) - {item}')
+            print(f'({val + 1}) - {item}')
         if default:
-            res = self.g_int('Which would you like to choose: ', 1, len(options),allow_skip = True)
+            res = self.g_int('Which would you like to choose: ', 1, len(options), allow_skip=True)
             if res:
-                return res -1
+                return res - 1
             else:
                 return default
         else:
@@ -206,6 +208,7 @@ class text_ui(base_ui.callback):
         :param return_type: 1 for 3-letter country code, 2 for country name, 3 for 2-letter code, 4 for telephone code
         5 for capital, and 6 for location, 7 for boarders
         """
+
         def code_to_out(nat):
             global base_nat
             country = country_info(nat)

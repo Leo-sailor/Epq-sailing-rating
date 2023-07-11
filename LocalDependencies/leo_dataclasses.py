@@ -1,6 +1,8 @@
 import datetime
 import LocalDependencies.General as Base
 from pickle import dumps as _dumps, loads as _loads
+
+
 class Results:
 
     def __init__(self, sailorids: [list[str]], positions: list[int] = None):
@@ -29,10 +31,13 @@ class Results:
 
     def __getitem__(self, item) -> tuple[str, int]:
         return self.sailorids[self.positions.index(item)], item
+
     def __make_proxy_for_sort(self, sailorid):
         return self.positions[self.sailorids.index(sailorid)]
+
     def __iter__(self):
         return iter(sorted(self.sailorids, key=self.__make_proxy_for_sort))
+
 
 class Race:
     def __init__(self, results: Results, wind: int, date: int | datetime.datetime):
@@ -65,8 +70,10 @@ class Race:
     def __add__(self, other):
         return Event([self, other], max(self.date, other.date))
 
+
 class Event:
-    def __init__(self, races: list[Race], date: int | datetime.datetime, imported: bool = False, event_title: str = '',nation = None):
+    def __init__(self, races: list[Race], date: int | datetime.datetime, imported: bool = False, event_title: str = '',
+                 nation=None):
         self.imported = imported
         self.races = races
         if isinstance(date, int):
@@ -99,62 +106,37 @@ class Event:
     def __iter__(self):
         return iter(self.races)
 
-class oldResults:
+
+class old_results:
     def __init__(self, universe):
         self.universe = universe
-        self.rowsfirst = _loads(_dumps(universe.file.rowfirst))
-        self.colsfirst = _loads(_dumps(universe.file.columnfirst))
-    def getinfo(self, sailorid: str, resulttype: str):
+        self.rows_first = _loads(_dumps(universe.file.row_first))
+        self.cols_first = _loads(_dumps(universe.file.column_first))
+
+    def getinfo(self, sailorid: str, result_type: str):
         try:
-            row = self.colsfirst[0].index(sailorid)  # figures out what row the sailor id it
+            row = self.cols_first[0].index(sailorid)  # figures out what row the sailor id it
         except ValueError:
             raise IndexError('the sailor id {} could not be found'.format(sailorid))
 
-        findtypeloc = Base.getfieldnumber(resulttype)
+        find_type_loc = Base.get_field_number(result_type)
 
-        if findtypeloc == -1:
-            result = ' '.join((self.rowsfirst[row][3], self.rowsfirst[row][4])) # adds the 2 names with a space in the middle
-        elif findtypeloc == -2:
+        if find_type_loc == -1:
+            result = ' '.join((self.rows_first[row][3], self.rows_first[row][4]))
+        elif find_type_loc == -2:
             i = []
             for x in range(14):
-                i.append(self.rowsfirst[row][x])
-            result = ', '.join(i)  # bassicly outputs the raw csv line
-        elif findtypeloc > -1:  # pull the data from the row and column decided earlier
-            result = self.rowsfirst[row][findtypeloc]
+                i.append(self.rows_first[row][x])
+            result = ', '.join(i)  # basically outputs the raw csv line
+        elif find_type_loc > -1:  # pull the data from the row and column decided earlier
+            result = self.rows_first[row][find_type_loc]
         else:
             result = '0.1'
         return result
 
 
-class constants(dict):
-    _self = None
-
-    def __new__(cls, fileloc: str = 'config.ini'):
-        if cls._self is None:
-            cls._self = super().__new__(cls)
-        return cls._self
-
-    def __init__(self, fileloc: str = 'config.ini'):
-        filedump = []
-        try:
-            with open(fileloc, 'r') as f:
-                for line in f:
-                    line = '  ' + line
-                    if line[-2] != ',' and line[-1] != '}':
-                        line += ','
-                    filedump.append(line)
-                whole_file = ' '.join(filedump)
-            whole_file = Base.findandreplace(whole_file, '\n', '', True)
-        except FileNotFoundError:
-            with open(fileloc,"x") as f:
-                f.writelines(["{","'hello':'world'","}"])
-            whole_file = '{}'
-        super().__init__(eval(whole_file))
-
-    def __getitem__(self, item):
-        return self.get(item)
 def main():
-    # theres not even any point doing tests
+    # there's not even any point doing tests
     pass
     
 

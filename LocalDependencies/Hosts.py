@@ -8,7 +8,7 @@ import datetime
 from pickle import load as _load
 from time import sleep as _sleep
 from LocalDependencies.Imports import ImportManager
-from Framework.text_ui import text_ui
+from LocalDependencies.Framework.text_ui import text_ui
 
 global universe_csv
 
@@ -25,13 +25,14 @@ class HostScript:
     def torun(self, *args):
         global universe_csv
         if len(args) > 2:
-            universe_csv = UniverseHost(args[1], args[2])
+            universe_csv = UniverseHost(self.ui, args[1], args[2])
         else:
-            universe_csv = UniverseHost()
+            universe_csv = UniverseHost(self.ui)
         while True:
-            Base.text_blocks(1)
-
-            choice = self.ui.g_int('\nWhat would you like to do: ', 1, 9)
+            options = ['add a new event', 'add a new sailor', 'get a sailors information', 'quit',
+                       'get sailor info over time', 'print the universe', 'exit the universe', 'import sailors',
+                       'graph sailors over time']
+            choice = self.ui.g_choose_options(options, 'What would you like to do: ') + 1
             match choice:
                 case 1:
                     event = self.import_event()
@@ -47,7 +48,7 @@ class HostScript:
                 case 5:
                     self.sailor_rating_over_time()
                 case 6:
-                    self.ui.display_table(universe_csv.file.rowfirst)
+                    self.ui.display_table(universe_csv.file.row_first)
                     _sleep(0.5)
                 case 7:
                     self.torun()
@@ -69,7 +70,7 @@ class HostScript:
         global universe_csv
         inp_method = self.__get_input_method()
         inp = self.ui.g_str(f'Please enter the sailor\'s {self.input_method_name}: ')
-        sailorid = universe_csv.getsailorid(inp_method, inp)
+        sailorid = universe_csv.get_sailor_id(inp_method, inp)
         universe_name = universe_csv.universe
         start_date = self.ui.g_date_int('of the first day of your range')
         end_date = self.ui.g_date_int('of the last day of your range')
@@ -93,7 +94,7 @@ class HostScript:
         inp_method = self.__get_input_method()
         inp = self.ui.g_str(f'Please enter the sailor\'s {self.input_method_name}: ')
 
-        sailorid = universe_csv.getsailorid(inp_method, inp)
+        sailorid = universe_csv.get_sailor_id(inp_method, inp)
         out = universe_csv.getinfo(sailorid, out_type)
 
         if out_type == 'd':
@@ -141,7 +142,7 @@ class HostScript:
 
         else:
             region = 'NA'
-        return universe_csv.addsailor(sailorid, first, sur, champ, sailno, region, nat)
+        return universe_csv.add_sailor(sailorid, first, sur, champ, sailno, region, nat)
 
     def add_event_lazy(self):
         inp = 2
@@ -200,10 +201,10 @@ class HostScript:
             file_loc = self.ui.g_file_loc('r', title=f'Select the file location for {race_text}: ',
                                           filetypes=('csv files', '.csv'))
             curr_file = csv_base(file_loc)
-            wind = int(curr_file.getcell(0, 1))
+            wind = int(curr_file.get_cell(0, 1))
 
-            curr_sailorids = curr_file.getcolumn(0, excluded_rows=[0, 1])
-            positions = [int(x) for x in curr_file.getcolumn(1, excluded_rows=[0, 1])]
+            curr_sailorids = curr_file.get_column(0, excluded_rows=[0, 1])
+            positions = [int(x) for x in curr_file.get_column(1, excluded_rows=[0, 1])]
             results_obj = dat.Results(curr_sailorids, positions)
             event.append(dat.Race(results_obj, wind, days))
         return event
@@ -234,7 +235,7 @@ class HostScript:
                 raw_inps.pop(-1)
             else:
                 inp.lower().strip()
-                sailor = universe_csv.getsailorid(self.inp_method, inp)
+                sailor = universe_csv.get_sailor_id(self.inp_method, inp)
                 if sailor in sailorids:
                     self.ui.display_text('This sailor has already been entered, please try again')
                     position -= 1
@@ -296,7 +297,7 @@ class HostScript:
     def import_event(self):
         if not universe_csv.admin:
             self.ui.display_text('\nTo add an event you need admin rights')
-            if not universe_csv.adminrights():
+            if not universe_csv.admin_rights():
                 self.ui.display_text('\nAdd event failed, please try with admin rights')
                 return None
 

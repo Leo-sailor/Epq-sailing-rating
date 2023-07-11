@@ -1,54 +1,57 @@
 from numpy import sqrt
-k = 5
+from LocalDependencies.Framework.constants import constants
+c = constants()
+k = c.get('k')
+event_num = c.get('event_threshold')
 
 
-def updaterating(change: list[float], currat: list[float]):
+def update_rating(change: list[float], cur_rat: list[float]):
     """
     This function will take a 32-bit float and add that to the current rating and round it correctly
     :param change: 32-bit float to be added to the current rating
-    :param currat: the current rating
+    :param cur_rat: the current rating
     :return:
     """
     for y in range(0, len(change)):
-        currat[y] += change[y]
-        currat[y] = round(currat[y], 1)
-    return currat
+        cur_rat[y] += change[y]
+        cur_rat[y] = round(cur_rat[y], 1)
+    return cur_rat
 
 
 class EloCalculations:
     def __init__(self, deviation, multiplier):
         self.deviation = float(deviation)  # sets the rating difference that will deliver a 90% win chance
-        self.changemultiplier = float(multiplier)  # sets the k factor multiplier
+        self.change_multiplier = float(multiplier)  # sets the k factor multiplier
 
     def calc(self, rat1: float, rat2: float, result: float, k_fac: float) -> float:
         """
         Calculates the Elo change for sailor 1 (sailor 2's is inverted) after an event based
         off of the ratings going in and their results
-        :param rat1: sailor ones origninal rating
-        :param rat2: sailor 2 orignial rating
+        :param rat1: sailor ones original rating
+        :param rat2: sailor 2 original rating
         :param result: the result of the mini event (1 sailor 1 win) (0 sailor 1 lose) (0.5 draw)
-        :param k_fac: the k factor used for caluclation
-        :return: sailor 1 rating chnage
+        :param k_fac: the k factor used for calculation
+        :return: sailor 1 rating change
         """
         prediction = self.pred(rat1, rat2)
 
         change = k_fac * (result - prediction)  # **(3))
         return change
 
-    def pred(self, rata: float, ratb: float) -> float:
+    def pred(self, rat_a: float, rat_b: float) -> float:
         """
         Calculate the predicted result of a mini event
-        :param rata: rating of sailor 1
-        :param ratb: rating of sailor 2
+        :param rat_a: rating of sailor 1
+        :param rat_b: rating of sailor 2
         :return:
         """
-        prediction = 1 / (1 + 10 ** ((ratb - rata) / self.deviation))
+        prediction = 1 / (1 + 10 ** ((rat_b - rat_a) / self.deviation))
         return prediction
 
     def cycle(self, old_rat: list[float], events: list[int], position: list[int], cur_rat: list[float]):
         """
-        note: nth position's must be = to nth currat = nth sailor id (more like a 2d table)
-        This function take a list of ratings and their positions and returns thier updated ratings after an event
+        note: nth position's must be = to nth cur_rat = nth sailor id (more like a 2d table)
+        This function take a list of ratings and their positions and returns their updated ratings after an event
         :param old_rat:
         :param events:
         :param position:
@@ -57,9 +60,9 @@ class EloCalculations:
         """
         # no idea whether this work if the positions are not in the right order, but it should
         sailors = len(old_rat)
-        ratchange = []
+        rat_change = []
         for x in range(0, sailors):
-            ratchange.append(0)
+            rat_change.append(0)
         for x in range(sailors-1):
             for y in range(x+1, sailors):
                 if position[x] > position[y]:
@@ -69,10 +72,10 @@ class EloCalculations:
                 else:
                     result = 0.5
                 res = self.calc(old_rat[x], old_rat[y], result, self.__k(events[x], events[y], sailors))
-                ratchange[x] += res
-                ratchange[y] -= res
+                rat_change[x] += res
+                rat_change[y] -= res
 
-        new_ratings = updaterating(ratchange, cur_rat)
+        new_ratings = update_rating(rat_change, cur_rat)
         return new_ratings
 
     def __k(self, event_sailor1: int, event_sailor2: int, total_sailor: int):
@@ -83,7 +86,7 @@ class EloCalculations:
         :param total_sailor
         :return:
         """
-        kfac = (((15 / (event_sailor1 + 1)) + (15 / (event_sailor2 + 1))) * (1 / (sqrt(total_sailor)))) + k
-        kfac *= self.changemultiplier
-        # will make this intresting later when i 'realise' its crap
+        kfac = (((event_num / (event_sailor1 + 1)) + (event_num / (event_sailor2 + 1))) * (1 / (sqrt(total_sailor)))) + k
+        kfac *= self.change_multiplier
+        # will make this interesting later when i 'realise' its crap
         return kfac

@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 from time import time as _time
 from LocalDependencies.Csv_custom import csv_base
-import LocalDependencies.General as Base
+import LocalDependencies.Framework.base_func as f_base
 from sys import path as _path
 
 
@@ -22,11 +22,11 @@ def plot_sailors(start_date: int, sailorids: str | list[str], field_num: int, un
         for row in host_file.custom_iter(1):
             file_obj = csv_base(universe_loc + row[2])
             loc = file_obj.index(sailor)
-            date = Base.force_int(file_obj.getcell(loc, 13))
+            date = f_base.force_int(file_obj.get_cell(loc, 13))
             if start_date <= date <= end_date:
-                datapoint = [file_obj.getcell(loc, field_num), date]
+                datapoint = [file_obj.get_cell(loc, field_num), date]
                 to_graph[num].append(datapoint)
-        to_graph[num] = Base.sort_on_element(to_graph[num], 1, False, False)
+        to_graph[num] = f_base.sort_on_element(to_graph[num], 1, False, False)
         plt.plot([to_graph[num][x][1] for x in range(len(to_graph[num]))],
                  [to_graph[num][x][0] for x in range(len(to_graph[num]))])
     plt.xlabel("Number of days since 2000 of rating")

@@ -1,6 +1,6 @@
 import datetime
-from typing import Any, Type, TypeVar, NewType
-import base_func as base
+from typing import Any
+import LocalDependencies.Framework.base_func as base
 from bcrypt import gensalt
 
 
@@ -8,10 +8,11 @@ class callback:
     def display_text(self, text: str):
         return None
 
-    def display_table(self, table:list[list[Any]]):
+    def display_table(self, table: list[list[Any]]):
         return None
 
-    def display_dict(self, dictionary:dict[Any:Any], delimiter: str = ' -> ', new_line:bool = True,raw:bool = False):
+    def display_dict(self, dictionary: dict[Any:Any], delimiter: str = ' -> ', new_line: bool = True,
+                     raw: bool = False):
         return None
 
     def g_str(self, prompt: str, length: int = None) -> str:
@@ -20,22 +21,22 @@ class callback:
     def g_int(self, prompt: str) -> int:
         return 0
 
-    def g_list(self,prompt: str, length: int = None) -> list:
+    def g_list(self, prompt: str, length: int = None) -> list:
         return []
 
-    def g_float(self,prompt: str) -> float:
+    def g_float(self, prompt: str) -> float:
         return 0.0
 
-    def g_date(self,prompt: str) -> datetime.date:
+    def g_date(self, prompt: str) -> datetime.date:
         return datetime.date.today()
 
-    def g_datetime(self,prompt: str) -> datetime.datetime:
+    def g_datetime(self, prompt: str) -> datetime.datetime:
         return datetime.datetime.now()
 
-    def g_bool(self,prompt: str) -> bool:
+    def g_bool(self, prompt: str) -> bool:
         return True
 
-    def g_password_recive(self, prompt:str, correct_hash: bytes, hash_method: str, salt: bytes = None) -> bool:
+    def g_password_receive(self, prompt: str, correct_hash: bytes, hash_method: str, salt: bytes = None) -> bool:
         prompt = 'Press (enter) to skip entering a password\n' + prompt
         while True:
             inp = self.g_str(prompt)
@@ -48,33 +49,34 @@ class callback:
             else:
                 self.display_text('That password was incorrect, please try again')
 
-    def __g_new_password(self,prompt)-> str:
+    def __g_new_password(self, prompt) -> str:
+        password_a = None
         same = False
         while not same:
-            passworda = self.g_str(prompt)
-            passwordb = self.g_str('Please it again to confirm: ')
-            same = passwordb == passworda
+            password_a = self.g_str(prompt)
+            password_b = self.g_str('Please it again to confirm: ')
+            same = password_b == password_a
             if not same:
-                print('\nThose passwords did not match, Please try again')
-        return passworda
+                self.display_text('\nThose passwords did not match, Please try again')
+        return password_a
 
-    def g_make_password_with_salt(self, prompt, hash_mathod) -> tuple[bytes,bytes]:
+    def g_make_password_with_salt(self, prompt, hash_method) -> tuple[bytes, bytes]:
         password = self.__g_new_password(prompt)
         salt = gensalt()
-        tup = base.password_hash(password, hash_mathod, salt)
+        tup = base.password_hash(password, hash_method, salt)
         hashed = tup[0]
         return hashed, salt
 
-    def g_make_password_without_salt(self,prompt, hash_mathod) -> bytes:
+    def g_make_password_without_salt(self, prompt, hash_method) -> bytes:
         password = self.__g_new_password(prompt)
-        tup = base.password_hash(password, hash_mathod, '')
+        tup = base.password_hash(password, hash_method, '')
         hashed = tup[0]
         return hashed
 
-    def g_choose_options(self, options: list[str], prompt = None) -> int:
+    def g_choose_options(self, options: list[str], prompt=None) -> int:
         return 0
 
-    def g_file_loc(self,mode='r', **args) -> str:
+    def g_file_loc(self, mode='r', **args) -> str:
         return "c:\\Users\\"
 
     def g_nat(self, obj_of_nationality: str, return_type: int = 1) -> str:
