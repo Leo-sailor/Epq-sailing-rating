@@ -2,6 +2,7 @@ import LocalDependencies.Framework.base_func as f_base
 from LocalDependencies.Framework.text_ui import text_ui as text_ui
 from requests import get as _get
 from os import remove as _remove
+# noinspection PyPackageRequirements
 from tabula import read_pdf as _read_pdf
 import pandas as pd
 from typing import Any

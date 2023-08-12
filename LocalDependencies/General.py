@@ -5,7 +5,6 @@ from LocalDependencies.Framework.text_ui import valid_nat
 numbers = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
 
 
-
 def get_field_number(result_type: str) -> int:
     try:
         result_type.lower()
@@ -119,5 +118,3 @@ def csv_line_generate(sailorid: str, nat: str, sailno: str, first: str, surname:
     line = ','.join(parts)
     return line
 
-if __name__ == '__main__':
-    exit()

@@ -41,6 +41,7 @@ class csv_base:
                 column.pop(loc)
         self.column_first = column
         self.row_first = rows
+        self.open = open
 
     def get_row(self, row: int, miss: list[int] | int = None) -> list:
         if miss is None:
@@ -79,7 +80,7 @@ class csv_base:
         return to_print
 
     def save(self):
-        with open(self.file_location, 'w', newline='') as csvfile:
+        with self.open(self.file_location, 'w', newline='') as csvfile:
             spam_writer = csv.writer(csvfile, delimiter=',',
                                      quotechar=',', quoting=csv.QUOTE_MINIMAL)
             for row in self.row_first:

@@ -44,7 +44,7 @@ class HostScript:
                 case 3:
                     self.get_sailor_info()
                 case 4:
-                    break
+                    raise KeyboardInterrupt
                 case 5:
                     self.sailor_rating_over_time()
                 case 6:

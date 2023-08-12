@@ -94,6 +94,7 @@ class text_ui(base_ui.callback):
                 inp = input(prompt)
                 if inp == '':
                     if allow_skip:
+                        # noinspection PyTypeChecker
                         return None
                     inp = 0
                 else:

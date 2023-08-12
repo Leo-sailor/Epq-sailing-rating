@@ -6,10 +6,11 @@ import pickle
 import datetime
 
 
-class Fake_Input_Error(TypeError):
+class fake_input_error(TypeError):
     pass
 
 
+# noinspection PyMethodFirstArgAssignment
 class custom_string(str):
     def lower(self) -> str:
         self = custom_string(super().lower())
@@ -45,6 +46,7 @@ def call_default(func: callable, *args, **kwargs):
 
 
 class test_ui(callback):
+    # noinspection SpellCheckingInspection
     def __init__(self, inp_file: str, out_file: str = None, display_outs: callback | bool = None):
         if isinstance(display_outs, bool):
             if display_outs:
@@ -59,21 +61,23 @@ class test_ui(callback):
         self.use_canned_inps = True
         self.use_canned_outs = True
         inp_file = '    ' + inp_file
-        if inp_file[-4] not in ['ckle', 'inps', '.inp', 'puts', 'nput']:  # .pickle, .inps, .inp, .inputs, .input
+        if inp_file[-4] in ['inps', '.inp', 'puts', 'nput']:  # .inps, .inp, .inputs, .input
             with open(inp_file.strip(), encoding='utf-8') as f:
                 for line in f:
                     self.inps.append(eval(line))
-        else:
-            with open(inp_file) as f:
+        elif inp_file[-4] == 'ckle':  # .picle
+            with open(inp_file.strip()) as f:
                 self.inps = pickle.load(f)
+        else:
+            self.inps = []
         if out_file is not None:
             out_file = '    ' + out_file
-            if out_file[-4] not in ['ckle', 'outs', '.out', 'puts', 'tput']:  # .pickle, .outs, .out, .outputs . output
+            if out_file[-4] in ['outs', '.out', 'puts', 'tput']:  # .outs, .out, .outputs . output
                 with open(out_file.strip(), encoding='utf-8') as f:
                     for line in f:
                         self.inps.append(eval(line))
-            else:
-                with open(out_file) as f:
+            elif out_file[-4] == 'ckle':  # .picle
+                with open(out_file.strip()) as f:
                     self.inps = pickle.load(f)
         else:
             self.use_canned_outs = False
@@ -83,7 +87,7 @@ class test_ui(callback):
         if len(self.outs) == 0:
             self.use_canned_outs = False
 
-    def canned_user_input(self,expected_type:type,func:callable, *args, **kwargs) -> Any:
+    def canned_user_input(self, expected_type: type, func: callable, *args, **kwargs) -> Any:
         if self.use_canned_inps:
             self.inp_index += 1
             if self.inp_index == len(self.inps):
@@ -95,40 +99,40 @@ class test_ui(callback):
                 res = call_default(func, *args, **kwargs)
             else:
                 res = self.inps[self.inp_index]
-                print(f'--Input {self.inp_index +1}: {res}')
+                print(f'--Input {self.inp_index + 1}: {res}')
         else:
             res = call_default(func, *args, **kwargs)
         if isinstance(res, expected_type):
             return res
         else:
-            raise Fake_Input_Error(f'input number: {self.response_index} using canned inps: {self.use_canned_inps}\n'
+            raise fake_input_error(f'input number: {self.inp_index} using canned inps: {self.use_canned_inps}\n'
                                    f'expected type: {expected_type} got type: {type(res)}\n with input: {res}')
 
-    def force_output(self,out):
+    def force_output(self, out):
         if self.out_obj:
             self.out_obj.display_text(out)
         else:
             print(out)
 
-    def check_output(self, out, func,*args, **kwargs):
+    def check_output(self, out: Any, func: callable, *args, **kwargs):
         if self.use_canned_outs:
             self.out_index += 1
             if self.out_index == len(self.inps):
                 self.force_output('OUT OF EXPECTED OUTPUTS')
                 self.use_canned_outs = False
-            elif not compare_strings(self.outs[self.out_index], out):
-                raise AssertionError(f"Output is not as expected, expected: {self.answer[self.answer_index]} actual: {out}")
+            elif not compare_strings(self.outs[self.out_index], str(out)):
+                raise AssertionError(f"Output is not as expected, expected: {self.outs[self.out_index]} actual: {out}")
             else:
-                print(f'Test line: {self.out_index +1} passed')
+                print(f'Test line: {self.out_index + 1} passed')
         if self.out_obj:
-            return call_default(func,out,*args,**kwargs)
+            return call_default(func, out, *args, **kwargs)
         elif not self.use_canned_outs:
             print("All tests passed")
-            exit(0)
+            raise KeyboardInterrupt
         else:
             return None
 
-    def g_date_int(self, *args,**kwargs) -> int:
+    def g_date_int(self, *args, **kwargs) -> int:
         return self.canned_user_input(int, self.out_obj.g_date_int, *args, **kwargs)
 
     def display_text(self, obj, *args, **kwargs):
@@ -168,10 +172,35 @@ class test_ui(callback):
         return self.canned_user_input(str, self.out_obj.g_file_loc, *args, **kwargs)
 
     def g_nat(self, *args, **kwargs) -> str:
-        """
-        This function gets the current computer's address and uses that to generate a suggested 3-letter country code
-        :param obj_of_nationality:
-        :param return_type: 1 for 3-letter country code, 2 for country name, 3 for 2-letter code, 4 for telephone code
-        5 for capital, and 6 for location, 7 for boarders
-        """
         return self.canned_user_input(str, self.out_obj.g_nat, *args, **kwargs)
+
+
+class record(test_ui):
+
+    def __init__(self, inp_file: str, out_file: str, original_ui: callback):
+
+        if ('        ' + inp_file)[-7:] != '.pickle':
+            inp_file += '.pickle'
+        if ('        ' + out_file)[-7:] != '.pickle':
+            out_file += '.pickle'
+        self.input_file = inp_file
+        self.output_file = out_file
+        self.out_obj = original_ui
+        self.out = []
+        self.inp = []
+        self.open = open # fudging thr garbage collector at delete time
+
+    def check_output(self, out: Any, func: callable, *args, **kwargs) -> None:
+        self.out.append(out)
+        return call_default(func, out, *args, **kwargs)
+
+    def canned_user_input(self, expected_type: type, func: callable, *args, **kwargs) -> Any:
+        res = call_default(func, *args, **kwargs)
+        self.inp.append(res)
+        return res
+
+    def __del__(self):
+        with self.open(self.input_file, 'wb') as f:
+            pickle.dump(self.inp, f)
+        with self.open(self.output_file, 'wb') as f:
+            pickle.dump(self.out, f)

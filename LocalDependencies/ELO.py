@@ -78,15 +78,15 @@ class EloCalculations:
         new_ratings = update_rating(rat_change, cur_rat)
         return new_ratings
 
-    def __k(self, event_sailor1: int, event_sailor2: int, total_sailor: int):
+    def __k(self, event_sailor1: int, event_sailor2: int, num_sailors: int):
         """
         A function which returns the correct k factor for the sailors involved in the comparison
         :param event_sailor1
         :param event_sailor2
-        :param total_sailor
+        :param num_sailors
         :return:
         """
-        kfac = (((event_num / (event_sailor1 + 1)) + (event_num / (event_sailor2 + 1))) * (1 / (sqrt(total_sailor)))) + k
+        kfac = (((event_num / (event_sailor1 + 1)) + (event_num / (event_sailor2 + 1))) * (1 / (sqrt(num_sailors)))) + k
         kfac *= self.change_multiplier
         # will make this interesting later when i 'realise' its crap
         return kfac

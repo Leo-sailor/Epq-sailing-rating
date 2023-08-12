@@ -10,6 +10,7 @@ from binascii import unhexlify
 from pickle import dump as _dump
 from LocalDependencies.Framework.text_ui import text_ui
 
+
 UNIVERSES_ = '\\universes\\'
 sys_path = path[0]
 col_width = [15, 10, 9, 11, 9, 8, 5, 12, 11, 13, 15, 6, 8, 15, 10]
@@ -30,8 +31,10 @@ class UniverseHost:
             universe = self.ui.g_str(
                 '\nPlease enter the name of the universe you would like to access or (n) for a new universe: ').lower()
         while not (universe in host.get_column(0) or universe.upper() == 'N'):
-            self.ui.display_text('\nThat universe name was not valid, please try again')  # keeps trying until a valid input is entered
-            universe = self.ui.g_str('Please enter the name of the universe you would like to access or (n) for a new universe: ').lower()
+            self.ui.display_text('\nThat universe name was not valid, please try again')  # keeps trying until a
+            # valid input is entered
+            universe = self.ui.g_str('Please enter the name of the universe you would like to access or (n) for a new '
+                                     'universe: ').lower()
 
         self.universe = self.__link_universe(universe)  # passes it to the link universe for the universe to be imported
         self.session_time = int(time())  # sets the time for any new files
@@ -115,7 +118,7 @@ class UniverseHost:
                           in table])
 
     def admin_rights(self, password: str = None):
-        if password is not None: # for when the password is passed into the system
+        if password is not None:  # for when the password is passed into the system
             if base.password_hash(password, 'bcrypt', self.pass_salt)[0] == self.pass_hash:
                 self.admin = True
                 return True
@@ -243,7 +246,8 @@ class UniverseHost:
                 names.append(' '.join(nameparts))
             self.ui.display_text(f'\nThe search term \'{term}\' is ambiguous'
                                  '\nBelow is a list of names for that sailor')
-            options = [' - '.join([names[x], self.file.get_cell(locs[x], 1), self.file.get_cell(locs[x], 2)]) for x in range(len(locs))]
+            options = [' - '.join([names[x], self.file.get_cell(locs[x], 1), self.file.get_cell(locs[x], 2)])
+                       for x in range(len(locs))]
             final_location = locs[(self.ui.g_choose_options(options, 'Which sailor do you want to select?'))]
             location = int(final_location)
             curr_sailorid = self.file.get_cell(location, 0)

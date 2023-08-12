@@ -4,6 +4,7 @@ from difflib import SequenceMatcher
 from countryinfo import CountryInfo
 from numpy import diff as np_diff
 from typing import Any
+# noinspection PyPackageRequirements
 from argon2 import PasswordHasher
 import pyscrypt
 
@@ -232,6 +233,7 @@ def r_in(term, inp: list[Any]) -> bool:
 
 
 class fixed_country_info(CountryInfo):
+    # noinspection PyUnresolvedReferences
     def __init__(self, country_name):
         super().__init__(country_name)
         to_remove = ['wales', 'scotland']
