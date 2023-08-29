@@ -16,7 +16,7 @@ def de_pickle(array, display=False):
         with open(item + '.txt', 'x') as f:
             f.write('CHANGES WILL NOT AFFECT PICKLE FILE\n')
             if isinstance(data, list):
-                to_print = [str(i) for i in data]
+                to_print = [str(i) + '\n' for i in data]
                 f.writelines(to_print)
             else:
                 f.write(str(data))

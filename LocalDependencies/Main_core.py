@@ -3,17 +3,19 @@ from time import time
 import os
 from LocalDependencies.ELO import EloCalculations
 import LocalDependencies.Framework.base_func as base
-import LocalDependencies.General as L_base
+import LocalDependencies.General as custom_funcs
 from LocalDependencies.Csv_custom import csv_new, csv_base
 import LocalDependencies.leo_dataclasses as dat
 from binascii import unhexlify
 from pickle import dump as _dump
 from LocalDependencies.Framework.text_ui import text_ui
-
+from LocalDependencies.Framework.logger import log
 
 UNIVERSES_ = '\\universes\\'
 sys_path = path[0]
 col_width = [15, 10, 9, 11, 9, 8, 5, 12, 11, 13, 15, 6, 8, 15, 10]
+log = log()
+log.queue(0,'main_core imported successfully')
 
 
 class UniverseHost:
@@ -38,8 +40,10 @@ class UniverseHost:
 
         self.universe = self.__link_universe(universe)  # passes it to the link universe for the universe to be imported
         self.session_time = int(time())  # sets the time for any new files
+        log.queue(0,'session time set', self.session_time)
 
         if universe != self.universe:
+            log.queue(2,'new universe hase been created', self.universe)
             host = csv_base(''.join(
                 (sys_path, UNIVERSES_, 'host.csv',)))  # if a new universe has been created, reopen the hist csv file
 
@@ -48,7 +52,7 @@ class UniverseHost:
         self.pass_salt = unhexlify(host.get_cell(universe_loc, 5))  # saves the universe password salt to the object
         self.elo = EloCalculations(host.get_cell(universe_loc, 2), host.get_cell(universe_loc, 4))
         self.deviation = host.get_cell(universe_loc, 1)  # saves the deviation
-
+        log.queue(0,'all info extracted from host file', self.__dict__)
         self.admin_rights(password)  # sees whether the user should have admin rights
 
     def __link_universe(self, universe_name: str) -> str:
@@ -64,8 +68,10 @@ class UniverseHost:
             self.version_number = int(universe_host.get_cell(1, 0))
             self.ui.display_text('{} universe opened and running\n'.format(universe_name))
             self.file = csv_new(self.base_file, universe=universe_name)  # imports the current file
+            log.queue(2, ' universe opened and running', universe_name)
 
-        except FileNotFoundError:
+        except FileNotFoundError as err:
+            log.log(5,' critical error in opening files - program will exit', err)
             raise FileNotFoundError('There was a error loading the file, the program will now exit ')
         # filters through the current file and ignores empty lines
         self.cleanup()
@@ -73,9 +79,10 @@ class UniverseHost:
 
     def __make_universe(self) -> str:
         name = self.ui.g_str('\nPlease enter your new ranking universe name: ', char_level=1)  # gets the universe name
-
+        log.queue(2, 'making universe started', name)
         directory = ''.join((sys_path, UNIVERSES_, name,))  # figures out the path of the new universe
         if os.path.exists(directory):  # checks whether that universe exists
+            log.log(5, 'adding universe failed - name already taken',directory)
             raise FileExistsError('This universe already exists, please try again')
         else:
             os.mkdir(directory)
@@ -95,7 +102,7 @@ class UniverseHost:
         temp = self.ui.g_make_password_with_salt('\nPlease enter a password for this universe: ', 'bcrypt')
         self.pass_hash = temp[0]  # saves the salt and hash
         self.pass_salt = temp[1]
-
+        log.queue(0, 'password creation success', temp)
         starting = self.ui.g_int('\nWhat would you like the average rating of this universe to be?(450-3100)'
                                  '(default: 1500): ', range_high=3100, range_low=450)
         k = self.ui.g_float('\nWhat would you like the speed of rating change to be?(0.3 - 4)(Recommended - 1): ',
@@ -103,7 +110,7 @@ class UniverseHost:
         # generic input collecting
         big_host = csv_base(''.join((sys_path, '\\universes\\host.csv')))
         big_host.add_row([name, starting, (starting / 5 + 100), self.pass_hash, k, self.pass_salt, ''])
-
+        log.queue(0, ' host file created')
         self.ui.display_text('{} universe has been created'.format(name))
         return universe
 
@@ -130,9 +137,11 @@ class UniverseHost:
         self.ui.display_text('\n ADMIN RIGHTS')
         self.admin = self.ui.g_password_receive(f'or enter the admin password for the universe {self.universe}: ',
                                                 correct_hash=self.pass_hash, hash_method='bcrypt', salt=self.pass_salt)
+        log.queue(2,'password recived with bcrypt', self.admin)
         return self.admin  # checks whether the user should have admin eights
 
     def cleanup(self):
+        log.queue(0,'cleanup of identical host files triggerd')
         host = csv_base(self.host_file)
         length = host.num_rows()
         hashes = []
@@ -152,6 +161,8 @@ class UniverseHost:
             os.remove(file_loc)
             host.remove_row(to_remove_rows[x])
             host.save()
+            log.queue(1,'the following file has been removed in cleanup', to_remove[x])
+        log.queue(0, 'cleanup complete')
 
     def getinfo(self, sailorid: str, result_type: str | int):
         if sailorid == '':
@@ -159,9 +170,10 @@ class UniverseHost:
         try:
             row = self.file.get_row_num(sailorid, 0)  # figures out what row the sailor id it
         except ValueError:
+            log.log(4, 'sailorid could not be found', sailorid)
             raise IndexError('the sailor id {} could not be found'.format(sailorid))
 
-        find_type_loc = L_base.get_field_number(result_type)
+        find_type_loc = custom_funcs.get_field_number(result_type)
 
         if find_type_loc == -1:
             result = ' '.join(
@@ -175,6 +187,7 @@ class UniverseHost:
             result = self.file.get_cell(row, find_type_loc)
         else:
             result = '0.1'
+        log.log(2, 'sailor info taken without error', (sailorid,find_type_loc,result))
         return result
 
     def get_data_locations(self, term, field_num) -> list[int]:
@@ -184,7 +197,8 @@ class UniverseHost:
             term = term[:-2]
         term.strip('0')
         if type(field_num) == str:
-            field_num = L_base.get_field_number(field_num)
+            field_num = custom_funcs.get_field_number(field_num)
+        log.queue(0,'searching for info', (term, field_num))
 
         if field_num == -1:  # the exception for if it's a name
             new_term = term.lower().split(' ', 1)
@@ -197,18 +211,26 @@ class UniverseHost:
                 locations = [loc for loc in locations if new_term[1] == (self.file.get_cell(loc, 4))]
         else:
             locations = base.multiindex(self.file.get_column(field_num), term)
+        log.queue(0, 'sarch completed and found n items', len(locations))
         return locations
 
     def user_select_sailor(self, term, field_num, return_on_new: bool = False, *data) -> str | int:
         self.ui.display_text(f'\nA sailor could not be found with {term} in field number {field_num}')
         working = True
+        log.queue(0, 'forcing user to select a sailor themslevs with no help')
         while working:
             inp = self.ui.g_str('\nPlease type in a sailor id \nor press (n) to make a new sailor'
                                 '\nor press (t) to try again '
-                                '\nor press (p) to get a list of all sailor id\'s: ', char_level=2).lower()
-            if inp == 'n':
+                                '\nor press (p) to get a list of all sailor id\'s: '
+                                '\nor press (q) to exit', char_level=2).lower()
+            if inp == 'q':
+                log.log(2,'operatoin cancelled')
+                raise InterruptedError('operation cancelled')
+            elif inp == 'n':
                 if return_on_new:
+                    log.queue(0,'special case for returning to prev funxton when a new sailor is made')
                     return 0
+                log.queue(0 ,'start of circular import')
                 from LocalDependencies.Hosts import HostScript
                 match field_num:
                     case -1:
@@ -220,8 +242,10 @@ class UniverseHost:
                     case _:
                         a = HostScript.make_new_sailor(self.ui)
                 del HostScript
+                log.queue(0, 'end of circular import')
                 if not a[0]:  # checks whether the sailor was successfully made
-                    working = True  # makes the user try again
+                    working = True
+                    log.queue(3, 'error while making sailor')# makes the user try again
                 else:
                     return a[1]  # returns the sailor id just made
             elif inp in self.file.get_column(0):  # checks if what the user enter is a sailor id that exists
@@ -254,6 +278,7 @@ class UniverseHost:
             return curr_sailorid
 
         def auto_tie_break() -> str:
+            log.queue(0,'automatic tie break triggered')
             points_tracker = []
             sailorids = []
             dates = []
@@ -276,19 +301,23 @@ class UniverseHost:
                         points_tracker[x] += 1
             location = locations[
                 points_tracker.index(max(points_tracker))]  # gets the location of the sailor with the most points
-            if len(set(points_tracker)) != len(points_tracker):
+            if len(set(points_tracker)) != len(points_tracker): # exception for if  locations have the same max score
                 locs = [locations[loc] for loc in base.multiindex(points_tracker, max(points_tracker))]
+                log.queue(3,'failure to choose with automatic tie brek, resorting to user')
                 return user_tie_break(locs)  # makes sure there are no duplicates
             curr_sailorid = self.file.get_cell(location, 0)
+            log.queue(0,'automatic tiebreak',(points_tracker,curr_sailorid))
             return curr_sailorid
 
         # main code for function
         locations = self.get_data_locations(term, field_num)
+        log.queue(0,'locations found for sailor', (locations,term,field_num,data))
         if len(locations) == 0:  # deals with no sailor being found with that data
             return self.user_select_sailor(term, field_num, *data)
         elif len(locations) == 1:  # if the sailor could be found
             index = int(str(locations[0]))
             sailorid = self.file.get_cell(index, 0)
+            log.queue(0, 'saior id found', sailorid)
             return sailorid
         else:  # if  multiple sailors are found
             if data == ():
@@ -297,20 +326,23 @@ class UniverseHost:
                 return auto_tie_break()
 
     def add_sailor(self, sailorid: str, first: str, sur: str, champ, sailno, region: str, nat: str) -> tuple[bool, str]:
+        log.queue(2, 'adding new sailor with info:', (sailorid,first,sur,champ,sailno,region,nat))
         starting = ((self.elo.deviation - 100) * 5)
         day = 0
-        if not base.multiindex(self.file.get_column(0), sailorid):
+        if not base.multiindex(self.file.get_column(0), sailorid): # chcks the sailor id doesnt already exist
             self.file.add_row(
                 [sailorid, int(float(champ)), int(float(sailno)), first, sur, region, nat, starting, starting, starting,
                  starting,
                  0, 0, day])
             return True, sailorid
         else:
+            log.queue(1, 'new sailor id already exists', sailorid)
             t = (f'That sailor id already exists \nThe original sailors information is: {self.getinfo(sailorid, "a")}',
                  f'\nThe new sailors information is: {sailorid}, {first} {sur}, {champ} and {sailno}')
             options = ['Append "-1" to the new sailor id and proceed to add', 'Abort adding new sailor id']
             inp = self.ui.g_choose_options(options, ''.join(t))
             if inp == 0:
+                log.queue(0,'adding "-1" to the sailor id')
                 sailorid += '-1'
                 count = 1
                 unique = False
@@ -318,12 +350,12 @@ class UniverseHost:
                     if sailorid in self.file.get_column(0):
                         sailorid = sailorid[:-(len(str(count)))]
                         count += 1
-                        sailorid += count
+                        sailorid += str(count)
                     else:
                         unique = True
-                    self.file.add_row(
-                        [sailorid, champ, sailno, first, sur, region, nat, starting, starting, starting, starting,
-                         0, 0, day])
+                        self.file.add_row(
+                            [sailorid, champ, sailno, first, sur, region, nat, starting, starting, starting, starting,
+                            0, 0, day])
                 return True, sailorid
             else:
                 return False, sailorid
@@ -356,12 +388,14 @@ class UniverseHost:
         if info_column == -255:
             raise IndexError('That term could not be found')
         extra_data_cols = list(range(1, min(race_columns)))
-
+        log.queue(2, 'processing table with paramaters',
+                  (table, field, event_title, same_nat, nat, info, race_columns, info_column))
         sailorids = []
         for count, row in enumerate(table[1:]):
             self.ui.display_text(f'{count}/{len(table) - 1} sailors entered')
             sailorids.append(self.import_sailor(field, row[info_column], row, info, nat, full_speed,
                                                 *[row[item].lower() for item in extra_data_cols]))
+            log.queue(0, 'new sailor added to list',(count, row,sailorids[-1]))
 
         races = []
         chars_to_strip = "abcdefghijklmnopqrstuvwxyz()"
@@ -370,6 +404,8 @@ class UniverseHost:
         for race in race_columns:
             wind = self.ui.g_int(f'What was the wind of {table[0][race]}: ', range_low=1, range_high=3)
             result = [int(float(table[x][race].lower().strip(chars_to_strip))) for x in range(1, len(table))]
+            # goes through the table and gets the positions of people, knowing that the table order wont change
+            # it them marrys them with theyre sailor ids in order with dat.results
             races.append(dat.Race(dat.Results(sailorids, result), wind, date))
         return dat.Event(races, date, event_title=event_title, nation=nat)
 
@@ -383,6 +419,7 @@ class UniverseHost:
                 sailor_info.append(nat)
         if len(self.get_data_locations(data, field)) == 0:
             self.ui.display_text('creating sailor')
+            log.queue(1,'creating new sailor',sailor_info)
             res = 0
             if not full_speed:
                 res = self.user_select_sailor(data, field, True, full_speed)
@@ -394,11 +431,14 @@ class UniverseHost:
                     if a[0] or full_speed:  # checks whether the sailor was successfully made
                         return a[1]  # returns the sailor id just made
             else:
+                log.queue(0,'sailor importing success')
                 return res
         else:
+            log.queue(0, 'sailor importing success')
             return self.get_sailor_id(field, data, *extra_info)
 
     def add_event(self, event: dat.Event | None):
+        log.queue(2, 'adding event to universe', event)
         old_results = dat.old_results(self)
         if event is None:
             return None
@@ -409,6 +449,7 @@ class UniverseHost:
             export_event(event, self.universe)
         out = self.ui.g_bool('Would you like to print the rating changes from this event')
         self.file.set_session()
+        log.queue(2, 'event adding success')
         if out:
             self.ui.display_text('Event rating changes:')
             out = []
@@ -420,6 +461,7 @@ class UniverseHost:
                            f'               rank: {old_results.getinfo(sailor, "r")} -> {self.getinfo(sailor, "r")} ')
 
     def __add_race(self, race: dat.Race, old_results):
+        log.queue(0, ' adding race to the event')
         sailorids = race.results.sailorids
         positions = race.results.positions
         # serious logic error here with cur-rat ending up with 2x as many values
@@ -439,7 +481,7 @@ class UniverseHost:
                 old_rats.append(float(old_results.getinfo(sailor, column_num)))
 
             new_rat = self.elo.cycle(old_rats, curr_events, positions, cur_rats)  # executes the maths
-
+            log.queue(1,'race added to file',(sailorids,old_rats,new_rat))
             for z in range(0, len(new_rat)):
                 self.file.update_value(new_rat[z], sailorids[z], column_num, bypass=True)
             self.file.auto_save_file()
@@ -488,7 +530,7 @@ def export_event(event: dat.Event, universe_name: str):
         os.mkdir(directory)
     made = False
     if event.event_title is None:
-        date = str((L_base.two_thousand_to_datetime(event.date)))
+        date = str((custom_funcs.two_thousand_to_datetime(event.date)))
     else:
         date = event.event_title
     count = 0

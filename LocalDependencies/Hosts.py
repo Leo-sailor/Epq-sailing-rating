@@ -9,6 +9,8 @@ from pickle import load as _load
 from time import sleep as _sleep
 from LocalDependencies.Imports import ImportManager
 from LocalDependencies.Framework.text_ui import text_ui
+from LocalDependencies.Framework.logger import log
+log = log()
 
 global universe_csv
 
@@ -33,6 +35,8 @@ class HostScript:
                        'get sailor info over time', 'print the universe', 'exit the universe', 'import sailors',
                        'graph sailors over time']
             choice = self.ui.g_choose_options(options, 'What would you like to do: ') + 1
+            log.flush()
+            log.queue(2, f'user choses {options[choice]}')
             match choice:
                 case 1:
                     event = self.import_event()
@@ -44,11 +48,14 @@ class HostScript:
                 case 3:
                     self.get_sailor_info()
                 case 4:
-                    raise KeyboardInterrupt
+                    break
                 case 5:
                     self.sailor_rating_over_time()
                 case 6:
-                    self.ui.display_table(universe_csv.file.row_first)
+                    if self.ui.__class__ in ['text_ui', 'test_ui', 'record']:
+                        self.ui.display_text(str(universe_csv))
+                    else:
+                        self.ui.display_table(universe_csv.file.row_first)
                     _sleep(0.5)
                 case 7:
                     self.torun()

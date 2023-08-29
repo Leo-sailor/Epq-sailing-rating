@@ -2,3 +2,8 @@
 /.idea/
 *.pyc
 *.temp
+*.log
+/universes/
+!/universes/demo/
+/Data Validation suite/files/
+

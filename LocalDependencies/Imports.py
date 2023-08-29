@@ -7,19 +7,25 @@ from tabula import read_pdf as _read_pdf
 import pandas as pd
 from typing import Any
 import LocalDependencies.leo_dataclasses as dat
+from LocalDependencies.Framework.logger import log
+log = log()
 
 
 def process_link(ui: text_ui) -> str:
+    log.queue(0,'downloading_link, and getting it from user')
     file_loc = '______'
     file_types = ['.htm', 'html', '.pdf']
     while file_loc[-4:] not in file_types:
         if file_loc != '______':
             ui.display_text('that file is not of the correct type')
         file_loc = ui.g_str("please enter the link to the webpage: ")
+    log.queue(0,'download in porgress')
     temp_file = ''.join(('webpage.temp', file_loc[-4:]))
     ui.display_text('Downloading_file')
     page = _get(file_loc)  # gets the page as a response object
-    open(temp_file, 'wb').write(page.content)  # writes the contents of the response object to a field
+    with open(temp_file, 'wb') as f:
+        f.write(page.content) # writes the contents of the response object to a field
+    log.queue(0, 'file downloaded')
     return temp_file
 
 
@@ -38,22 +44,28 @@ def process_file(ui: text_ui) -> str:
         if file_loc != '______':
             ui.display_text('that file is not of the correct type')
         file_loc = ui.g_file_loc(filetypes=('importable', '.htm .html .pdf'))
+    log.queue(0, 'file name and location selected',fileloc)
     return file_loc
 
 
 def import_pdf(file_loc):
+    log.queue(0, 'importing a pdf')
     all_pages = _read_pdf(file_loc, pages='all')
+    log.queue(0, 'tabula passed',all_pages)
     dataframe = pd.concat(all_pages)
     table = dataframe.values.tolist()
     table.insert(0, dataframe.columns.tolist())
+    log.queue(0, 'pdf sucessulyy parsed',table)
     return f_base.findandreplace(table, '\r', ' ', preserve_type=True)
 
 
 def import_html(file_loc):
+    log.queue(0, 'importing html')
     all_tables = pd.read_html(file_loc)
     mega_df = pd.concat(all_tables)
     mega_table = mega_df.values.tolist()
     mega_table.insert(0, mega_df.columns.values.tolist())
+    log.queue(0, 'html sucesssfully parsed',mega_table)
     return mega_table
 
 
@@ -101,6 +113,7 @@ class ImportManager:
             else:
                 ui.display_text('Please make sure to only enter either (L) or (F)')
                 source = None
+        log.queue(0,'type of file source selected',source)
         match file_loc[-4:]:
             case '.pdf':
                 self.type = 'pdf'
@@ -108,6 +121,7 @@ class ImportManager:
                 self.type = 'html'
             case _:
                 self.type = 'Unknown'
+        log.queue(0,'file type chosen',self.type)
         if self.type == 'pdf':
             self.all = import_pdf(file_loc)
         elif self.type == 'html':
@@ -137,6 +151,7 @@ class ImportManager:
             self.ui.display_table(table)
             expected = self.ui.g_bool('Was the table what you expected')
         self.chosen_table = table_num
+        log.queue(0,'user chosen theyre table',self.chosen_table)
         return self.chosen_table
 
     def to_event(self, universe) -> dat.Event:
@@ -149,6 +164,7 @@ class ImportManager:
             self.chosen_data_type = data_types_short[self.ui.g_choose_options(data_types_long,
                                                                               'What field would you like to read?')]
         event_title = self.ui.g_str('What is the event called: ')
+        log.queue(0,'importing event with:',(table, self.chosen_data_type, event_title))
         return universe.process_table(table, self.chosen_data_type, event_title)
 
     def import_sailors_to_universe(self, universe) -> list[str]:
@@ -184,4 +200,5 @@ class ImportManager:
             if not(line[0] == 'nan' and line[1] == 'nan'):
                 sailor_ids.append(
                     universe.import_sailor(self.chosen_data_type, line[data_loc], line, info, nat, full_speed=True))
+                log.queue(0,'sailor id added',sailor_ids[-1])
         return sailor_ids

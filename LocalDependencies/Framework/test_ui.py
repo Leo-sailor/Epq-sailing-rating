@@ -4,7 +4,12 @@ from LocalDependencies.Framework.text_ui import text_ui
 from LocalDependencies.Framework import base_func as base
 import pickle
 import datetime
+from LocalDependencies.Framework.logger import log
+from colorama import Fore
 
+log = log()
+def green_print(*args):
+    print(Fore.GREEN + f'{args}' + Fore.RESET)
 
 class fake_input_error(TypeError):
     pass
@@ -38,10 +43,12 @@ def compare_strings(a: str, b: str) -> bool:
     b.lower()
     a.find_and_replace('\n', ' | ')
     b.find_and_replace('\n', ' | ')
+    log.queue(0, 'comparing strings', (a, b, a == b))
     return a == b
 
 
 def call_default(func: callable, *args, **kwargs):
+    log.queue(0,'calling a function from somewhere else', (str(func), args, kwargs))
     return func(*args, **kwargs)
 
 
@@ -61,52 +68,63 @@ class test_ui(callback):
         self.use_canned_inps = True
         self.use_canned_outs = True
         inp_file = '    ' + inp_file
-        if inp_file[-4] in ['inps', '.inp', 'puts', 'nput']:  # .inps, .inp, .inputs, .input
+        if inp_file[-4:] in ['inps', '.inp', 'puts', 'nput']:  # .inps, .inp, .inputs, .input
+            log.queue(1, 'reading faked inputs from text file')
             with open(inp_file.strip(), encoding='utf-8') as f:
                 for line in f:
                     self.inps.append(eval(line))
-        elif inp_file[-4] == 'ckle':  # .picle
-            with open(inp_file.strip()) as f:
+        elif inp_file[-4:] == 'ckle':  # .picle
+            log.queue(1, 'reading faked inputs from pickle file')
+            with open(inp_file.strip(), 'rb') as f:
                 self.inps = pickle.load(f)
         else:
+            log.queue(3, 'unable to recognise file format for faked inputs')
             self.inps = []
         if out_file is not None:
             out_file = '    ' + out_file
-            if out_file[-4] in ['outs', '.out', 'puts', 'tput']:  # .outs, .out, .outputs . output
+            if out_file[-4:] in ['outs', '.out', 'puts', 'tput']:
+                log.queue(1, 'reading expected outputs from text file')  # .outs, .out, .outputs . output
                 with open(out_file.strip(), encoding='utf-8') as f:
                     for line in f:
-                        self.inps.append(eval(line))
-            elif out_file[-4] == 'ckle':  # .picle
-                with open(out_file.strip()) as f:
-                    self.inps = pickle.load(f)
+                        self.outs.append(eval(line))
+            elif out_file[-4:] == 'ckle':  # .picle
+                log.queue(1, 'reading expected outputs from pickle file')
+                with open(out_file.strip(), 'rb') as f:
+                    self.outs = pickle.load(f)
         else:
+            log.queue(3, 'unable to recognise file format for expected outputs')
             self.use_canned_outs = False
             self.outs = []
         if len(self.inps) == 0:
             self.use_canned_inps = False
         if len(self.outs) == 0:
             self.use_canned_outs = False
+        log.flush()
 
     def canned_user_input(self, expected_type: type, func: callable, *args, **kwargs) -> Any:
         if self.use_canned_inps:
             self.inp_index += 1
             if self.inp_index == len(self.inps):
+                log.queue(2, 'out of preprogrammed inputs')
                 if self.out_obj:
                     self.out_obj.display_text('OUT OF PRE-PROGRAMMED INPUTS')
                 else:
-                    print('Out of PRE-PROGRAMMED INPUTS')
+                    print(Fore.RED + 'Out of PRE-PROGRAMMED INPUTS' + Fore.RESET)
                 self.use_canned_inps = False
                 res = call_default(func, *args, **kwargs)
             else:
                 res = self.inps[self.inp_index]
-                print(f'--Input {self.inp_index + 1}: {res}')
+                log.queue(0, 'pre programmed input used', ({self.inp_index + 1, res}))
+                green_print(f'--Input {self.inp_index + 1}: {res}')
         else:
             res = call_default(func, *args, **kwargs)
         if isinstance(res, expected_type):
             return res
         else:
-            raise fake_input_error(f'input number: {self.inp_index} using canned inps: {self.use_canned_inps}\n'
-                                   f'expected type: {expected_type} got type: {type(res)}\n with input: {res}')
+            message = f'input number: {self.inp_index} using canned inps: {self.use_canned_inps}\n' \
+                      f'expected type: {expected_type} got type: {type(res)}\n with input: {res}'
+            log.log(4, 'faked input typing error', message)
+            raise fake_input_error(message)
 
     def force_output(self, out):
         if self.out_obj:
@@ -117,18 +135,22 @@ class test_ui(callback):
     def check_output(self, out: Any, func: callable, *args, **kwargs):
         if self.use_canned_outs:
             self.out_index += 1
-            if self.out_index == len(self.inps):
+            if self.out_index == len(self.outs):
                 self.force_output('OUT OF EXPECTED OUTPUTS')
                 self.use_canned_outs = False
             elif not compare_strings(self.outs[self.out_index], str(out)):
-                raise AssertionError(f"Output is not as expected, expected: {self.outs[self.out_index]} actual: {out}")
+                message = f"Output is not as expected, expected: {self.outs[self.out_index]} actual: {out}"
+                log.log(4, 'output is not expected', message)
+                raise AssertionError(message)
             else:
-                print(f'Test line: {self.out_index + 1} passed')
+                log.queue(0, f'Test line [{self.out_index + 1}] succes', (self.outs[self.out_index], str(out)))
+                green_print(f'Test line [{self.out_index + 1}] : passed')
         if self.out_obj:
             return call_default(func, out, *args, **kwargs)
         elif not self.use_canned_outs:
-            print("All tests passed")
-            raise KeyboardInterrupt
+            green_print("All tests passed")
+            log.log(2, 'all tests passed')
+            exit(0)
         else:
             return None
 
@@ -178,7 +200,7 @@ class test_ui(callback):
 class record(test_ui):
 
     def __init__(self, inp_file: str, out_file: str, original_ui: callback):
-
+        log.queue(2, ' input and output recording started')
         if ('        ' + inp_file)[-7:] != '.pickle':
             inp_file += '.pickle'
         if ('        ' + out_file)[-7:] != '.pickle':
@@ -188,19 +210,23 @@ class record(test_ui):
         self.out_obj = original_ui
         self.out = []
         self.inp = []
-        self.open = open # fudging thr garbage collector at delete time
+        self.open = open  # fudging thr garbage collector at delete time
 
     def check_output(self, out: Any, func: callable, *args, **kwargs) -> None:
         self.out.append(out)
+        log.queue(0,'new output recoreded', out)
         return call_default(func, out, *args, **kwargs)
 
     def canned_user_input(self, expected_type: type, func: callable, *args, **kwargs) -> Any:
         res = call_default(func, *args, **kwargs)
         self.inp.append(res)
+        log.queue(0, 'new input recoreded')
         return res
 
     def __del__(self):
         with self.open(self.input_file, 'wb') as f:
             pickle.dump(self.inp, f)
+            log.queue(2, ' recorded inputs saved')
         with self.open(self.output_file, 'wb') as f:
             pickle.dump(self.out, f)
+            log.log(2, ' recorded outputs saved')

@@ -1,11 +1,15 @@
 # imports
+from LocalDependencies.Framework.logger import log
+location = __file__.split('\\')[:-1]
+location += ['log', 'epq.log']
+log = log('\\'.join(location))
 from LocalDependencies.Hosts import HostScript
 import sys
 from LocalDependencies.Framework.constants import constants
 from LocalDependencies.Framework import text_ui
 from LocalDependencies.Framework.test_ui import test_ui, record
-from LocalDependencies.Framework.logger import log
-
+import traceback
+log.log(0,'All imports complete')
 
 
 
@@ -15,24 +19,30 @@ from LocalDependencies.Framework.logger import log
 # TODO: fix issue of config files
 # initializations
 def main(args):
-    ui_options = {'text': text_ui.text_ui}
+    ui_options = {'text': text_ui.text_ui, 'pass':None}
     for _ in range(4):
         args.append('')
     match args[1]:
         case 'text':
             ui = text_ui.text_ui()
+            log.log(1,'text ui selected')
         case 'test':
+            log.log(1,'App initzialised for testing')
             if args[2] == '' or args[3] == '':
+                log.log(4,'Missing arguments for testing',args)
                 raise ArgsNotFoundError("Missing Arguments 2 and 3 for 'test'")
             func = ui_options.get(args[2])
             if func:
                 orig_ui = func()
+                log.log(1,'Ui chosen for testing',type(orig_ui))
             else:
                 orig_ui = None
+                log.log(3,'No ui chosen for testing - desired ui:',args[2])
             if args[4] == '':
                 args[4] = None
             ui = test_ui(args[3], args[4], orig_ui)
         case 'record':
+            log.log(1, 'App initialized for recording inputs')
             if args[2] == '' or args[3] == '' or args[4] == '':
                 raise ArgsNotFoundError("Missing Arguments 2,3 or 4 for 'record'")
             func = ui_options.get(args[2])
@@ -42,16 +52,19 @@ def main(args):
                 raise NotImplementedError('that uis not implemented yet')
             ui = record(args[3], args[4], orig_ui)
         case _:
+            log.queue(2,'default ui: text - has been selected')
             ui = text_ui.text_ui()
     constants()
     host = HostScript(ui, *args)
-    host.torun()
+    log.queue(0, 'constants and hosts loaded')
+    try:
+        host.torun()
+    except Exception as e:
+        log.queue(5,'Fatal error recived',(e, e.args,traceback.TracebackException.from_exception(e).print(),e.__context__))
+    log.flush()
 
 
 if __name__ == '__main__':
-    location = __file__.split('\\')[:-1]
-    location += ['log', 'epq.log']
-    log = log('\\'.join(location))
     log.log(2, 'Program Alive', sys.argv)
     main(sys.argv)
 

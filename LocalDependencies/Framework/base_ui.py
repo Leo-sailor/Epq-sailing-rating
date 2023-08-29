@@ -60,12 +60,12 @@ class callback:
                 self.display_text('\nThose passwords did not match, Please try again')
         return password_a
 
-    def g_make_password_with_salt(self, prompt, hash_method) -> tuple[bytes, bytes]:
+    def g_make_password_with_salt(self, prompt, hash_method) -> tuple[str, str]:
         password = self.__g_new_password(prompt)
         salt = gensalt()
         tup = base.password_hash(password, hash_method, salt)
         hashed = tup[0]
-        return hashed, salt
+        return hashed.hex(), salt.hex()
 
     def g_make_password_without_salt(self, prompt, hash_method) -> bytes:
         password = self.__g_new_password(prompt)
