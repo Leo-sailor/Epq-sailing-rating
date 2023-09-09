@@ -5,16 +5,23 @@ import sys
 from timeit import default_timer as ns_time
 from LocalDependencies.Framework.constants import constants
 from colorama import Fore
+from LocalDependencies.Framework.base_func import findandreplace
+
 c = constants()
 log_levels = {0: 'Debug', 1: 'Info', 2: 'Event', 3: 'Warning', 4: 'ERROR', 5: 'FATAL'}
 production_env = c.get('production')
 
+
 def green_print(*args):
     print(Fore.GREEN + f'{args}' + Fore.RESET)
+
+
 def line_factory(level: Literal[0, 1, 2, 3, 4, 5], message: str, data: Callable[[], str] = None, stack: list = None,
                  time_str: str = None) -> str:
     if data is None:
         data = ''
+    else:
+        data = findandreplace(data, '\n', '(\\n)')
     if stack is None:
         stack = get_stack()
     if time_str is None:
@@ -104,10 +111,9 @@ class _log:
             # f.write(line_factory(0, 'Logging queue flush'))
         self.queue_list = []
         end_time = ns_time()
-        self.queue(1,'flush complete, time takes in ms', (end_time-start_time)*1000)
+        self.queue(1, 'flush complete, time takes in ms', (end_time - start_time) * 1000)
         if not production_env:
-            green_print(f'{(end_time-start_time)*1000} milliseconds for flush')
-
+            green_print(f'{(end_time - start_time) * 1000} milliseconds for flush')
 
     def __del__(self):
         self.queue(2, 'Logger deleted and terminated')

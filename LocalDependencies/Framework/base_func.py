@@ -169,7 +169,7 @@ def force_int(inp: str | float | int) -> int:
     return int(float(''.join(new_str)))
 
 
-def clean_table(table: list[list[Any]]):
+def clean_table(table: list[list[Any]],wanted_type: type = None):
     initial_vals = table[1]
     cols_to_remove = list(range(len(table[1])))
     for row_index in range(1, len(table)):
@@ -187,6 +187,10 @@ def clean_table(table: list[list[Any]]):
                 table.pop(loc)
             except IndexError:
                 pass
+    if wanted_type is not None:
+        for row_num,row in enumerate(table):
+            for col_num,cell in enumerate(row):
+                table[row_num][col_num] = wanted_type(cell)
     return table
 
 
@@ -218,7 +222,7 @@ def check_consecutive(array: list) -> bool:
 
 
 def r_in(term, inp: list[Any]) -> bool:
-    if not is_iterable(inp):
+    if not is_iterable(inp) or len(inp) <= 1:
         if term == inp:
             return True
         else:

@@ -1,4 +1,3 @@
-# imports
 from LocalDependencies.Framework.logger import log
 location = __file__.split('\\')[:-1]
 location += ['log', 'epq.log']
@@ -14,9 +13,16 @@ log.log(0,'All imports complete')
 
 
 # TODO: come up with principle on newline usage
-# TODO: Finnish unit tests
 # TODO: make a table dataclass
-# TODO: fix issue of config files
+# TODO: sail_num by spaces
+# TODO: fiure out pennie,
+# TODO: sail triggering on sailor and no sail umbers,
+# TODO: sailor not counting as name, work on column recognition,
+# TODO: sailor id exists, need an overwirte option
+
+
+
+
 # initializations
 def main(args):
     ui_options = {'text': text_ui.text_ui, 'pass':None}
@@ -43,8 +49,10 @@ def main(args):
             ui = test_ui(args[3], args[4], orig_ui)
         case 'record':
             log.log(1, 'App initialized for recording inputs')
-            if args[2] == '' or args[3] == '' or args[4] == '':
-                raise ArgsNotFoundError("Missing Arguments 2,3 or 4 for 'record'")
+            if args[2] == '' or args[3] == '':
+                raise ArgsNotFoundError("Missing Arguments 2,3 for 'record'")
+            if args[4] == '':
+                args[4] = None
             func = ui_options.get(args[2])
             if func:
                 orig_ui = func()

@@ -7,16 +7,17 @@ import LocalDependencies.leo_dataclasses as dat
 import datetime
 from pickle import load as _load
 from time import sleep as _sleep
-from LocalDependencies.Imports import ImportManager
-from LocalDependencies.Framework.text_ui import text_ui
+from LocalDependencies.Imports import ImportManager,chose_source
+from LocalDependencies.Framework.base_ui import callback as ui_obj
 from LocalDependencies.Framework.logger import log
+import traceback
 log = log()
 
 global universe_csv
 
 
 class HostScript:
-    def __init__(self, ui: text_ui, *sys_args):
+    def __init__(self, ui: ui_obj, *sys_args):
         self.inp_method = ''
         self.input_method_name = ''
         if sys_args is None:
@@ -32,8 +33,8 @@ class HostScript:
             universe_csv = UniverseHost(self.ui)
         while True:
             options = ['add a new event', 'add a new sailor', 'get a sailors information', 'quit',
-                       'get sailor info over time', 'print the universe', 'exit the universe', 'import sailors',
-                       'graph sailors over time']
+                       'get sailor info over time', 'print the universe', 'switch universe', 'import sailors',
+                       'graph sailors over time', 'change a sailors information', 'Get admin rights']
             choice = self.ui.g_choose_options(options, 'What would you like to do: ') + 1
             log.flush()
             log.queue(2, f'user choses {options[choice]}')
@@ -64,14 +65,65 @@ class HostScript:
                     self.import_sailors(self.ui)
                 case 9:
                     self.sailor_rating_over_time()
+                case 10:
+                    self.edit_sailor_info(universe_csv)
+                case 11:
+                    universe_csv.admin_rights()
 
     @staticmethod
-    def import_sailors(ui: text_ui):
-        imp_mgr = ImportManager(ui)
-        sailors = imp_mgr.import_sailors_to_universe(universe_csv)
+    def import_sailors(ui: ui_obj):
+        sailors = set()
+        source = chose_source(ui)
+        if source == 'F':
+            files = ui.g_many_file_locs()
+            nat = None
+            if ui.g_bool('Is everyone in these events from the same country'):
+                nat = ui.g_nat('all of the sailors')
+            for file in files:
+                ui.display_text(f'Now importing {file}')
+                log.flush()
+                try:
+                    imp_mgr = ImportManager(ui,source,file_loc=file,full_speed=True)
+                    sailors.update(imp_mgr.import_sailors_to_universe(universe_csv,nat))
+                except Exception as err:
+                    ui.display_text(f"Error importing {file}:")
+                    traceback.print_exception(err)
+                    ui.display_text('Program will now resume with next file')
+        else:
+            imp_mgr = ImportManager(ui,source)
+            sailors += imp_mgr.import_sailors_to_universe(universe_csv)
         ui.display_text(f'The following {len(sailors)} sailors have been imported')
         for line in sailors:
             ui.display_text(universe_csv.getinfo(line, 'all'))
+
+    def edit_sailor_info(self, universe: UniverseHost):
+        info_codes = ['Championship Number', 'Sail Number', 'Name', 'sailorid', 'Total events',
+                      'Date of last event', 'Zone/Region', 'Territory/country']
+        out_codes = [1, 2, -1, 0, 12, 13, 5, 6]
+        selected = self.ui.g_choose_options(info_codes, '\nSAILOR INFO WIZARD\nplease enter type of information you '
+                                                        'would like to change')
+        change_column = out_codes[selected]
+        out_type_name = info_codes[selected]
+        inp_method = self.__get_input_method()
+        inp = self.ui.g_str(f'Please enter the sailor\'s {self.input_method_name}: ')
+        sailorid = universe_csv.get_sailor_id(inp_method, inp)
+        name = universe_csv.getinfo(sailorid, 'n')
+        if selected in [0, 1, 4]:
+            to_change = str(self.ui.g_int(f'What would you like to change {name}\'s {out_type_name} to:  '))
+        elif selected == 5:
+            to_change = str(self.ui.g_date_int(f'What would you like to change {name}\'s {out_type_name} to:  '))
+        else:
+            to_change = str(self.ui.g_str(f'What would you like to change {name}\'s {out_type_name} to:  ',
+                                          char_level=1))
+        if change_column == -1:
+            name = to_change.split(' ', 1)
+            universe.file.update_value(name[0], sailorid, 3, 0, universe.admin)
+            universe.file.update_value(name[1], sailorid, 4, 0, universe.admin)
+        else:
+            try:
+                universe.file.update_value(to_change, sailorid, change_column, 0, universe.admin)
+            except PermissionError:
+                self.ui.display_text('Permission denied to change this infomation')
 
     def sailor_rating_over_time(self):
         global universe_csv
@@ -111,26 +163,30 @@ class HostScript:
         self.ui.display_text(f'\n{inp}\'s {out_type_name} is {out}')
 
     @staticmethod
-    def make_new_sailor(ui: text_ui, name=None, sailno=None, champ=None, nat=None, full_speed=False):
+    def make_new_sailor(ui: ui_obj, name=None, sailno=None, champ=None, nat=None, full_speed=False):
         if not full_speed:
             ui.display_text('\n NEW SAILOR WIZARD')
         if name is None:
-            name = ui.g_str('Please enter the sailor\'s Full name: ', char_level=3)
+            name = ui.g_str(f'[{sailno}]Please enter the sailor\'s Full name: ', char_level=3)
         name = name.split(' ', 1)
         first = name[0]
         try:
             sur = name[1]
         except IndexError:
-            sur = ui.g_str('Please enter the sailor\'s  surname: ', char_level=3)
+            sur = ui.g_str(f'[{name}]Please enter the sailor\'s  surname: ', char_level=3)
         if champ is None:
-            champ = str(ui.g_int('Please enter the sailor\'s Championship number '
+            champ = str(ui.g_int(f'[{name}]Please enter the sailor\'s Championship number '
                                  '\n(Please enter (000) if the sailor does not have a Champ number): ',
                                  range_high=999, range_low=0))
+        elif champ == 'nan':
+            champ = '0'
         else:
             champ = str(champ)
         if sailno is None:
-            sailno = str(ui.g_int('Please enter the sailor\'s Sail number \n(Please ignore any letters): ',
-                                  range_high=999, range_low=0))
+            sailno = str(ui.g_int(f'[{name}]Please enter the sailor\'s Sail number \n(Please ignore any letters): ',
+                                  range_high=99999, range_low=0))
+        elif sailno == 'nan':
+            sailno = '0'
         else:
             sailno = str(sailno)
         if nat is None:
@@ -205,8 +261,7 @@ class HostScript:
         for x in range(race_num):
             race_text = ' '.join(['Race', str(x + 1)])
             self.ui.display_text(f'\n{race_text.upper()} ENTRY WIZARD')
-            file_loc = self.ui.g_file_loc('r', title=f'Select the file location for {race_text}: ',
-                                          filetypes=('csv files', '.csv'))
+            file_loc = self.ui.g_file_loc('r', title=f'Select the file location for {race_text}: ', )
             curr_file = csv_base(file_loc)
             wind = int(curr_file.get_cell(0, 1))
 
@@ -291,12 +346,12 @@ class HostScript:
         return ip
 
     @staticmethod
-    def import_pickled_event(ui: text_ui):
+    def import_pickled_event(ui: ui_obj):
         file_loc = '_________'
         while file_loc[-6:] != '.event':
             if file_loc != '_________':
                 ui.display_text('that file is not of the correct type, please try again')
-            file_loc = ui.g_file_loc(filetypes=('event files', '.event'))
+            file_loc = ui.g_file_loc()
         with open(file_loc, 'rb') as f:
             event = _load(f)
         return event
@@ -333,11 +388,11 @@ class HostScript:
         return event
 
     @staticmethod
-    def add_event_local(ui: text_ui) -> dat.Event:
+    def add_event_local(ui: ui_obj) -> dat.Event:
         inp_mgr = ImportManager(ui, 'F')
         return inp_mgr.to_event(universe_csv)
 
     @staticmethod
-    def add_online_event(ui: text_ui) -> dat.Event:
+    def add_online_event(ui: ui_obj) -> dat.Event:
         inp_mgr = ImportManager(ui, 'L')
         return inp_mgr.to_event(universe_csv)

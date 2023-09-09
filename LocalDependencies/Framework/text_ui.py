@@ -84,7 +84,7 @@ class text_ui(base_ui.callback):
             return new_str
         return self.g_str(prompt, length, chars_allowed=all_chars)
 
-    def g_int(self, prompt: str, range_low: int = None, range_high: int = None, allow_skip=False) -> int:
+    def g_int(self, prompt: str, range_low: int = None, range_high: int = None, allow_skip=False) -> int | None:
         if range_high is None:
             range_low = float('-inf')
         if range_low is None:
@@ -128,7 +128,7 @@ class text_ui(base_ui.callback):
             try:
                 inp = float(input(prompt))
             except ValueError:
-                self.display_text('That input was not a float, please enter a whole number')
+                self.display_text('That input was not a float (number), please enter a normal number')
                 continue
             if range_high >= inp >= range_low:
                 return inp
@@ -201,6 +201,16 @@ class text_ui(base_ui.callback):
         file_getter = filedialog.askopenfile(mode, **args)
         file_getter.close()
         return file_getter.name
+
+    def g_folder_loc(self, **args) -> str:
+        file_getter = filedialog.askdirectory(**args)
+        return file_getter
+
+    def g_many_file_locs(self, mode='r', **args) -> list[str]:
+        file_getter = filedialog.askopenfiles(mode, **args)
+        [file.close() for file in file_getter]
+        files = [file.name for file in file_getter]
+        return files
 
     def g_nat(self, obj_of_nationality: str, return_type: int = 1) -> str:
         """

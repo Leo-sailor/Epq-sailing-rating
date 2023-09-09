@@ -4,6 +4,7 @@
 *.temp
 *.log
 /universes/
+!/universes/host.csv
 !/universes/demo/
 /Data Validation suite/files/
 

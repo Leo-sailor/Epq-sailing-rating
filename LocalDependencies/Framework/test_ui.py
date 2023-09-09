@@ -8,8 +8,11 @@ from LocalDependencies.Framework.logger import log
 from colorama import Fore
 
 log = log()
+
+
 def green_print(*args):
     print(Fore.GREEN + f'{args}' + Fore.RESET)
+
 
 class fake_input_error(TypeError):
     pass
@@ -48,7 +51,7 @@ def compare_strings(a: str, b: str) -> bool:
 
 
 def call_default(func: callable, *args, **kwargs):
-    log.queue(0,'calling a function from somewhere else', (str(func), args, kwargs))
+    log.queue(0, 'calling a function from somewhere else', (str(func), args, kwargs))
     return func(*args, **kwargs)
 
 
@@ -175,6 +178,12 @@ class test_ui(callback):
     def g_list(self, *args, **kwargs) -> list:
         return self.canned_user_input(list, self.out_obj.g_list, *args, **kwargs)
 
+    def g_folder_loc(self, *args, **kwargs) -> str:
+        return self.canned_user_input(str, self.out_obj.g_folder_loc, *args, **kwargs)
+
+    def g_many_file_locs(self, *args, **kwargs) -> list[str]:
+        return self.canned_user_input(list, self.out_obj.g_many_file_locs, *args, **kwargs)
+
     def g_float(self, *args, **kwargs) -> float:
         return self.canned_user_input(float, self.out_obj.g_float, *args, **kwargs)
 
@@ -199,12 +208,13 @@ class test_ui(callback):
 
 class record(test_ui):
 
-    def __init__(self, inp_file: str, out_file: str, original_ui: callback):
+    def __init__(self, inp_file: str, out_file: str|None, original_ui: callback):
         log.queue(2, ' input and output recording started')
         if ('        ' + inp_file)[-7:] != '.pickle':
             inp_file += '.pickle'
-        if ('        ' + out_file)[-7:] != '.pickle':
-            out_file += '.pickle'
+        if out_file is not None:
+            if ('        ' + out_file)[-7:] != '.pickle':
+                out_file += '.pickle'
         self.input_file = inp_file
         self.output_file = out_file
         self.out_obj = original_ui
@@ -213,8 +223,9 @@ class record(test_ui):
         self.open = open  # fudging thr garbage collector at delete time
 
     def check_output(self, out: Any, func: callable, *args, **kwargs) -> None:
-        self.out.append(out)
-        log.queue(0,'new output recoreded', out)
+        if self.output_file is not None:
+            log.queue(0, 'new output recoreded', out)
+            self.out.append(out)
         return call_default(func, out, *args, **kwargs)
 
     def canned_user_input(self, expected_type: type, func: callable, *args, **kwargs) -> Any:
@@ -227,6 +238,7 @@ class record(test_ui):
         with self.open(self.input_file, 'wb') as f:
             pickle.dump(self.inp, f)
             log.queue(2, ' recorded inputs saved')
-        with self.open(self.output_file, 'wb') as f:
-            pickle.dump(self.out, f)
-            log.log(2, ' recorded outputs saved')
+        if self.output_file is not None:
+            with self.open(self.output_file, 'wb') as f:
+                pickle.dump(self.out, f)
+                log.log(2, ' recorded outputs saved')

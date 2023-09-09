@@ -1,4 +1,4 @@
-import datetime
+from datetime import date,datetime
 from typing import Any
 import LocalDependencies.Framework.base_func as base
 from bcrypt import gensalt
@@ -11,27 +11,34 @@ class callback:
     def display_table(self, table: list[list[Any]]):
         return None
 
-    def display_dict(self, dictionary: dict[Any:Any], delimiter: str = ' -> ', new_line: bool = True,
-                     raw: bool = False):
+    def display_dict(self, dictionary: dict[Any:Any], key_delimiter: str = ' -> ',
+                     delimiter: str = '\n', raw: bool = False):
         return None
 
-    def g_str(self, prompt: str, length: int = None) -> str:
+    def g_str(self, prompt: str, length: int = None, char_level: int = 0, chars_allowed: list[str] = None,
+              chars_not_allowed: list[str] = None) -> str:
         return ''
 
-    def g_int(self, prompt: str) -> int:
+    def g_int(self, prompt: str, range_low: int = None, range_high: int = None, allow_skip=False) -> int | None:
         return 0
 
     def g_list(self, prompt: str, length: int = None) -> list:
         return []
 
-    def g_float(self, prompt: str) -> float:
+    def g_float(self, prompt: str, range_low: int | float = None, range_high: int | float = None) -> float:
         return 0.0
 
-    def g_date(self, prompt: str) -> datetime.date:
-        return datetime.date.today()
+    def g_date(self, prompt: str, earliest: date | datetime = datetime(100, 1, 1),
+               latest: date | datetime = datetime(3100, 1, 1)) -> date:
+        return date.today()
 
-    def g_datetime(self, prompt: str) -> datetime.datetime:
-        return datetime.datetime.now()
+    def g_date_int(self, prompt: str, earliest: date | datetime = datetime(100, 1, 1),
+                   latest: date | datetime = datetime(3100, 1, 1)) -> int:
+        return 0
+
+    def g_datetime(self, prompt: str, earliest: date | datetime = datetime(100, 1, 1),
+                   latest: date | datetime = datetime(3100, 1, 1)) -> datetime:
+        return datetime.now()
 
     def g_bool(self, prompt: str) -> bool:
         return True
@@ -73,7 +80,7 @@ class callback:
         hashed = tup[0]
         return hashed
 
-    def g_choose_options(self, options: list[str], prompt=None) -> int:
+    def g_choose_options(self, options: list[str], prompt=None, default: int = None) -> int:
         return 0
 
     def g_file_loc(self, mode='r', **args) -> str:
@@ -87,3 +94,9 @@ class callback:
         5 for capital, and 6 for location, 7 for boarders
         """
         return "GBR"
+
+    def g_folder_loc(self, **args) -> str:
+        return "c:\\Users\\"
+
+    def g_many_file_locs(self, mode='r', **args) -> list[str]:
+        return ["c:\\Users\\"]
