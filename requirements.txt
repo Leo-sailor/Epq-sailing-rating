@@ -4,5 +4,5 @@ requests==2.31.0
 bcrypt==4.0.1
 pandas==2.0.3
 numpy==1.25.1
-tabula-py==2.7.0
+tabula-py==2.8.1
 matplotlib~=3.7.2
