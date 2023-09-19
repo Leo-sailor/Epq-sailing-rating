@@ -120,8 +120,11 @@ class csv_base:
         else:
             return iter(self.row_first[row_from:row_to])
 
-    def index(self, val):
-        return self.column_first[0].index(val)
+    def index(self, val, col = 0):
+        """
+        indexes the first column of the table unless otherwise specified
+        """
+        return self.column_first[col].index(val)
 
     def print_column(self, column, separate_line: bool, excluded_rows: int | list[int] = None) -> str:
         if type(excluded_rows) == int or excluded_rows is None:
@@ -173,7 +176,10 @@ class csv_base:
         log.queue(0, 'row removed from table', row_num)
         self.row_first.pop(row_num)
         for col in self.row_first:
-            col.pop(row_num)
+            try:
+                col.pop(row_num)
+            except:
+                breakpoint()
 
     def update_value(self, term, row: int | str, column: int, col_search: int = None, bypass: bool = False):
         #col search says what column to search in , only in the case row is a string and needs indexing

@@ -4,7 +4,11 @@ from LocalDependencies.Framework import base_ui
 from tkinter import filedialog
 import requests
 from LocalDependencies.Framework.base_func import fixed_country_info as country_info
+from LocalDependencies.Framework.constants import constants
+from LocalDependencies.Framework.logger import log
+log = log()
 
+c = constants()
 base_nat = ''
 valid_nat = {'ALG', 'ASA', 'AND', 'ANT', 'ARG', 'ARM', 'ARU', 'AUS', 'AUT', 'AZE', 'BAH', 'ARN', 'BAR',
              'BLR', 'BEL', 'BIZ', 'BER', 'BRA', 'BOT', 'IVB', 'BRU', 'BUL', 'CAM', 'CAN', 'CAY', 'CHI',
@@ -17,6 +21,14 @@ valid_nat = {'ALG', 'ASA', 'AND', 'ANT', 'ARG', 'ARM', 'ARU', 'AUS', 'AUT', 'AZE
              'POL', 'POR', 'PUR', 'QAT', 'ROM', 'RUS', 'SAM', 'SMR', 'SEN', 'SRB', 'SEY', 'SGP', 'SVK',
              'SLO', 'RSA', 'ESP', 'SRI', 'SKN', 'LCA', 'SUD', 'SWE', 'SUI', 'TAH', 'TAN', 'THA', 'TLS',
              'TTO', 'TUN', 'TUR', 'TKS', 'UGA', 'UKR', 'UAE', 'USA', 'URU', 'ISV', 'VAN', 'VEN', 'ZIM'}
+
+
+def check_breakpoint(inp):
+    if inp == 'breakpoint':
+        log.flush()
+        breakpoint()
+    if inp == 'flush':
+        log.flush()
 
 
 class text_ui(base_ui.callback):
@@ -69,6 +81,7 @@ class text_ui(base_ui.callback):
                     all_chars.pop(val)
         new = []
         old = input(prompt)
+        check_breakpoint(old)
         for char in old:
             if char in all_chars:
                 new.append(char)
@@ -92,6 +105,7 @@ class text_ui(base_ui.callback):
         while True:  # is it wrong
             try:
                 inp = input(prompt)
+                check_breakpoint(inp)
                 if inp == '':
                     if allow_skip:
                         # noinspection PyTypeChecker
@@ -109,6 +123,7 @@ class text_ui(base_ui.callback):
 
     def g_list(self, prompt: str, length: int = None) -> list:
         old = input(prompt)
+        check_breakpoint(old)
         new = old.split(',')
         if length is not None:
             new += [None] * length
@@ -126,7 +141,9 @@ class text_ui(base_ui.callback):
             range_low = float('inf')
         while True:  # is it wrong
             try:
-                inp = float(input(prompt))
+                inp = input(prompt)
+                check_breakpoint(inp)
+                inp = float(inp)
             except ValueError:
                 self.display_text('That input was not a float (number), please enter a normal number')
                 continue
@@ -243,14 +260,17 @@ class text_ui(base_ui.callback):
         global base_nat
         if base_nat == '':
             try:
+                print("Using internet to detect country")
                 ip = requests.get('https://geolocation-db.com/json').json()
                 nat_name = ip['country_name']
             except requests.exceptions.ConnectionError:
                 nat_name = 'Netherlands'
         else:
             nat_name = base_nat
-
-        choice = self.g_bool(f'Is {nat_name} the correct nationality of {obj_of_nationality}?')
+        if nat_name is not None:
+            choice = self.g_bool(f'Is {nat_name} the correct nationality of {obj_of_nationality}?')
+        else:
+            choice = False
         if choice:
             # use py pi country info to get country
             return code_to_out(nat_name)

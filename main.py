@@ -14,11 +14,8 @@ log.log(0,'All imports complete')
 
 # TODO: come up with principle on newline usage
 # TODO: make a table dataclass
-# TODO: sail_num by spaces
-# TODO: fiure out pennie,
-# TODO: sail triggering on sailor and no sail umbers,
-# TODO: sailor not counting as name, work on column recognition,
 # TODO: sailor id exists, need an overwirte option
+# TODO: splitling sail number by space / \ and ()
 
 
 

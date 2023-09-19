@@ -7,6 +7,7 @@ from typing import Any
 # noinspection PyPackageRequirements
 from argon2 import PasswordHasher
 import pyscrypt
+from pickle import loads as _load, dumps as _dump
 
 numbers = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
 
@@ -122,6 +123,35 @@ def hashfile(file: str) -> str:
     return str(result)
 
 
+def similar_names(inp: str | list[str]) -> str | list[str] | tuple[str]:
+    names = {' seb ': ' sebastian ', ' joe ': ' joesph ', ' josh ': ' joshua ', ' edward ': ' ed ',
+             ' finlay ': ' finn ', ' fin ': ' finn ', ' finley ': ' finn ', ' isabel ': ' isobel ',
+             ' beth ': ' elizabeth ', ' dom ': ' dominic ', ' daniel ': ' dan ', ' thomas ': ' tom ',
+             ' jess ': ' jessica ', ' kat ': ' katherine ', ' natasha ': 'nat ', ' natalie ': ' nat',
+             ' madeline ': ' maddie ', ' matt ': ' matthew ', ' olly ': ' oliver ', ' piotr ': 'peter ',
+             ' pete ': ' peter ', ' oli ': ' oliver ', ' william ': ' will ', ' joanna ': ' jo '}
+    if isinstance(inp, str):
+        inp = inp.lower()
+        inp = ' ' + inp
+        for key, val in names.items():
+            inp = inp.replace(key, val)
+        return inp[1:]
+    elif isinstance(inp, list) or isinstance(inp, tuple):
+        out = []
+        for item in inp:
+            item = item.lower()
+            item = ' ' + item
+            for key, val in names.items():
+                item = item.replace(key, val)
+            out.append(item[1:])
+        if isinstance(inp, list):
+            return out
+        else:
+            return tuple(out)
+    else:
+        raise TypeError
+
+
 def findandreplace(inp, find: str, replace: str, preserve_type=False):
     """
     a recursive find and replace algorithm which searches through lists and theirs sub it's up to the recursion limit
@@ -169,7 +199,7 @@ def force_int(inp: str | float | int) -> int:
     return int(float(''.join(new_str)))
 
 
-def clean_table(table: list[list[Any]],wanted_type: type = None):
+def clean_table(table: list[list[Any]], wanted_type: type = None, actions: callable = None):
     initial_vals = table[1]
     cols_to_remove = list(range(len(table[1])))
     for row_index in range(1, len(table)):
@@ -188,9 +218,12 @@ def clean_table(table: list[list[Any]],wanted_type: type = None):
             except IndexError:
                 pass
     if wanted_type is not None:
-        for row_num,row in enumerate(table):
-            for col_num,cell in enumerate(row):
+        for row_num, row in enumerate(table):
+            for col_num, cell in enumerate(row):
                 table[row_num][col_num] = wanted_type(cell)
+    for row_num, row in enumerate(table):
+        for col_num, cell in enumerate(row):
+            table[row_num][col_num] = cell.lower()
     return table
 
 
@@ -219,6 +252,18 @@ def is_iterable(inp: Any) -> bool:
 def check_consecutive(array: list) -> bool:
     n = len(array) - 1
     return sum(np_diff(sorted(array)) == 1) >= n
+
+
+def can_be_type(target_type: type, term: Any):
+    try:
+        target_type(term)
+        return True
+    except ValueError:
+        return False
+
+
+def deep_copy(inp: Any) -> Any:
+    return _load(_dump(inp))
 
 
 def r_in(term, inp: list[Any]) -> bool:

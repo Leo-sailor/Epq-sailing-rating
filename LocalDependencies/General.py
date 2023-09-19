@@ -13,14 +13,18 @@ def get_field_number(result_type: str) -> int:
     match result_type:
         case 'n' | 'name':
             find_type_loc = -1  # makes sure the next bit will be bypassed
-        case 'sail number' | 's' | 'sail':
+        case 'sail number' | 's' | 'sail'| 'sail num':
             find_type_loc = 2  # the column location of the data
-        case 'champ number' | 'championship number' | 'c' | 'champ':
+        case 'champ number' | 'championship number' | 'c' | 'champ'| 'champ num':
             find_type_loc = 1
         case 'region' | 'z':
             find_type_loc = 5
         case 'nat' | 'nation' | 'nationality' | 't':
             find_type_loc = 6
+        case 'first' | 'f':
+            find_type_loc = 3
+        case 'last' | 'sur' | 'surname':
+            find_type_loc = 4
         case 'l' | 'light wind rating' | 7:
             find_type_loc = 7
         case 'medium wind rating' | 'm' | 8:

@@ -78,7 +78,8 @@ class UniverseHost:
         return universe_name
 
     def __make_universe(self) -> str:
-        name = self.ui.g_str('\nPlease enter your new ranking universe name: ', char_level=1)  # gets the universe name
+
+        name = self.ui.g_str('\nPlease enter your new ranking universe name: ', char_level=1).lower()  # gets the universe name
         log.queue(2, 'making universe started', name)
         directory = ''.join((sys_path, UNIVERSES_, name,))  # figures out the path of the new universe
         if os.path.exists(directory):  # checks whether that universe exists
@@ -168,7 +169,7 @@ class UniverseHost:
         log.queue(0, 'cleanup complete')
 
     def getinfo(self, sailorid: str, result_type: str | int):
-        if sailorid == '':
+        if sailorid == '' or sailorid == 'nan':
             return 'aborted'
         try:
             row = self.file.get_row_num(sailorid, 0)  # figures out what row the sailor id it
@@ -194,9 +195,10 @@ class UniverseHost:
         return result
 
     def get_data_locations(self, term, field_num) -> list[int]:
-
+        if isinstance(term, list):
+            term = ' '.join(term)
         term = str(term)  # makes sure the term to be searched for is a string
-        if term[-2:] == '.0':
+        if term.endswith('.0'):
             term = term[:-2]
         term.strip('0')
         if type(field_num) == str:
@@ -205,9 +207,13 @@ class UniverseHost:
 
         if field_num == -1:  # the exception for if it's a name
             new_term = term.lower().split(' ', 1)
+            try:
+                new_term[1] = new_term[1].replace(' ','-')
+            except IndexError:
+                breakpoint()
             locations = []
             for loc, val in enumerate(self.file.get_column(3)):
-                score = base.similar(new_term[0], val)
+                score = base.similar(new_term[0], val.lower())
                 if score > 0.7 or val[:2] == new_term[0][:2]:
                     locations.append(loc)
             if len(locations) != 1:
@@ -272,7 +278,8 @@ class UniverseHost:
                 nameparts = (self.file.get_cell(locs[x], 3), self.file.get_cell(locs[x], 4))
                 names.append(' '.join(nameparts))
             self.ui.display_text(f'\nThe search term \'{term}\' is ambiguous'
-                                 '\nBelow is a list of names for that sailor')
+                                 f'\nBelow is a list of names for that sailor'
+                                 f'\nThe search term also comes with the data: {data}')
             options = [' - '.join([names[x], self.file.get_cell(locs[x], 1), self.file.get_cell(locs[x], 2)])
                        for x in range(len(locs))]
             final_location = locs[(self.ui.g_choose_options(options, 'Which sailor do you want to select?'))]
@@ -340,9 +347,13 @@ class UniverseHost:
             return True, sailorid
         else:
             log.queue(1, 'new sailor id already exists', sailorid)
+
+            x = lambda field: self.getinfo(sailorid,field)
+            if (sailorid,first,sur,champ,sailno) == (sailorid,x("f"),x("surname"),x("c"),x("s")):
+                return False, sailorid
             t = (f'That sailor id already exists \nThe original sailors information is: {self.getinfo(sailorid, "a")}',
                  f'\nThe new sailors information is: {sailorid}, {first} {sur}, {champ} and {sailno}')
-            options = ['Append "-1" to the new sailor id and proceed to add', 'Abort adding new sailor id']
+            options = ['Append "-1" to the new sailor id and proceed to add', 'Abort adding new sailor id', 'overwrite']
             inp = self.ui.g_choose_options(options, ''.join(t))
             if inp == 0:
                 log.queue(0, 'adding "-1" to the sailor id')
@@ -358,6 +369,11 @@ class UniverseHost:
                         unique = True
                         self.file.add_row(
                             [sailorid, champ, sailno, first, sur, region, nat, starting, starting, starting, starting,
+                             0, 0, day])
+                return True, sailorid
+            elif inp == 2:
+                self.file.remove_row(self.file.get_row_num(sailorid,0))
+                self.file.add_row([sailorid, champ, sailno, first, sur, region, nat, starting, starting, starting, starting,
                              0, 0, day])
                 return True, sailorid
             else:
@@ -412,21 +428,31 @@ class UniverseHost:
             races.append(dat.Race(dat.Results(sailorids, result), wind, date))
         return dat.Event(races, date, event_title=event_title, nation=nat)
 
-    def import_sailor(self, field, data, row, info, nat, full_speed=False, *extra_info) -> str:
+    def import_sailor(self, field: int, data: str, row: list[str], info: dict[str:slice | int | None], nat: str,
+                      full_speed: bool = False,
+                      *extra_info) -> str:
+        if isinstance(data,list):
+            data = ' '.join(data)
+        data = base.similar_names(data)
+        row = base.similar_names(row)
         sailor_info = [None if x is None else row[x] for x in info.values()]
-
+        for loc, item in enumerate(sailor_info):
+            if isinstance(item,list):
+                sailor_info[loc] = ' '.join(item)
         if nat is not None:
             try:
                 sailor_info[3] = nat
             except IndexError:
                 sailor_info.append(nat)
+        if data == 'nan':
+            return 'nan'
         if len(self.get_data_locations(data, field)) == 0:
             self.ui.display_text('creating sailor')
             log.queue(1, 'creating new sailor', sailor_info)
             res = 0
             if not full_speed:
                 res = self.user_select_sailor(data, field, True, full_speed)
-            if isinstance(res, int) or full_speed:
+            if isinstance(res, int) or full_speed: # if were going at full speed then we return when were making a new salor
                 while True:
                     from LocalDependencies.Hosts import HostScript
                     a = HostScript.make_new_sailor(self.ui, *sailor_info, full_speed=full_speed)
@@ -438,7 +464,7 @@ class UniverseHost:
                 return res
         else:
             log.queue(0, 'sailor importing success')
-            return self.get_sailor_id(field, data, *extra_info)
+            return self.get_sailor_id(field, data, *sailor_info ,*extra_info)
 
     def add_event(self, event: dat.Event | None):
         log.queue(2, 'adding event to universe', event)

@@ -22,6 +22,8 @@ def line_factory(level: Literal[0, 1, 2, 3, 4, 5], message: str, data: Callable[
         data = ''
     else:
         data = findandreplace(data, '\n', '(\\n)')
+        data = findandreplace(data, '\r', '(\\r)')
+        data = findandreplace(data, ',', '|')
     if stack is None:
         stack = get_stack()
     if time_str is None:
@@ -34,7 +36,7 @@ def line_factory(level: Literal[0, 1, 2, 3, 4, 5], message: str, data: Callable[
 
 def get_stack():
     stack = []
-    start = 2
+    start = 1
     while True:
         try:
             frame = sys._getframe(start + 1)
@@ -98,7 +100,7 @@ class _log:
         self.to_write = None
 
     def queue(self, level: Literal[0, 1, 2, 3, 4, 5], message: str, data: Any = None):
-        self.queue_list.append((level, message, data, get_stack(), datetime.utcnow()))
+        self.queue_list.append((level, message, str(data), get_stack(), datetime.utcnow()))
 
     def flush(self):
         start_time = ns_time()

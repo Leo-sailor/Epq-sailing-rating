@@ -37,7 +37,7 @@ class HostScript:
                        'graph sailors over time', 'change a sailors information', 'Get admin rights']
             choice = self.ui.g_choose_options(options, 'What would you like to do: ') + 1
             log.flush()
-            log.queue(2, f'user choses {options[choice]}')
+            log.queue(2, f'user choses {options[choice-1]}')
             match choice:
                 case 1:
                     event = self.import_event()
@@ -79,16 +79,23 @@ class HostScript:
             nat = None
             if ui.g_bool('Is everyone in these events from the same country'):
                 nat = ui.g_nat('all of the sailors')
-            for file in files:
-                ui.display_text(f'Now importing {file}')
-                log.flush()
+            imp_mgrs = []
+            for file_num,file in enumerate(files):
+                ui.display_text(f"Now loading: {file_num+1} / {len(files)}")
                 try:
-                    imp_mgr = ImportManager(ui,source,file_loc=file,full_speed=True)
-                    sailors.update(imp_mgr.import_sailors_to_universe(universe_csv,nat))
+                    imp = ImportManager(ui, source, file_loc=file, full_speed=True)
+                    imp.choose_table()
+                    imp_mgrs.append((file,imp))
+                    log.flush()
                 except Exception as err:
                     ui.display_text(f"Error importing {file}:")
                     traceback.print_exception(err)
                     ui.display_text('Program will now resume with next file')
+            imp_mgrs.sort(key = lambda mgr: mgr[1].get_data_quantity() * 1000 + len(mgr[1][mgr[1].choose_table()]),
+                          reverse=True)
+            for num,imp in enumerate(imp_mgrs):
+                ui.display_text(f'\nNow importing {num}/{len(imp_mgrs)} {imp[0]}')
+                sailors.update(imp[1].import_sailors_to_universe(universe_csv, nat))
         else:
             imp_mgr = ImportManager(ui,source)
             sailors += imp_mgr.import_sailors_to_universe(universe_csv)
@@ -168,7 +175,10 @@ class HostScript:
             ui.display_text('\n NEW SAILOR WIZARD')
         if name is None:
             name = ui.g_str(f'[{sailno}]Please enter the sailor\'s Full name: ', char_level=3)
-        name = name.split(' ', 1)
+        try:
+            name = name.split(' ', 1)
+        except AttributeError:
+            breakpoint()
         first = name[0]
         try:
             sur = name[1]
@@ -205,6 +215,7 @@ class HostScript:
 
         else:
             region = 'NA'
+        sur = sur.replace(' ','-')
         return universe_csv.add_sailor(sailorid, first, sur, champ, sailno, region, nat)
 
     def add_event_lazy(self):
