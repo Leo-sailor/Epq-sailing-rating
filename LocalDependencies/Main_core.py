@@ -213,11 +213,11 @@ class UniverseHost:
                 breakpoint()
             locations = []
             for loc, val in enumerate(self.file.get_column(3)):
-                score = base.similar(new_term[0], val.lower())
-                if score > 0.7 or val[:2] == new_term[0][:2]:
+                val = base.similar_names(val)
+                new_term[0] = base.similar_names(new_term[0])
+                if val == new_term[0]:
                     locations.append(loc)
-            if len(locations) != 1:
-                locations = [loc for loc in locations if new_term[1] == (self.file.get_cell(loc, 4))]
+                locations = [loc for loc in locations if new_term[1].replace('-','') == (self.file.get_cell(loc, 4).replace('-',''))]
         else:
             locations = base.multiindex(self.file.get_column(field_num), term)
         log.queue(0, 'sarch completed and found n items', len(locations))
@@ -335,7 +335,7 @@ class UniverseHost:
             else:
                 return auto_tie_break()
 
-    def add_sailor(self, sailorid: str, first: str, sur: str, champ, sailno, region: str, nat: str) -> tuple[bool, str]:
+    def add_sailor(self, sailorid: str, first: str, sur: str, champ, sailno:str, region: str, nat: str) -> tuple[bool, str]:
         log.queue(2, 'adding new sailor with info:', (sailorid, first, sur, champ, sailno, region, nat))
         starting = ((self.elo.deviation - 100) * 5)
         day = 0
@@ -379,50 +379,19 @@ class UniverseHost:
             else:
                 return False, sailorid
 
-    def process_table(self, table: list[list[str]], field: str, event_title="the event") -> dat.Event:
-        info = {'name': None, 'sail ': None, 'champ': None}
-        same_nat = self.ui.g_bool('Is everyone in the event from the same country')
-        nat = None
-
-        if same_nat:
-            nat = self.ui.g_nat('of all the sailors')
-        for val, item in enumerate(table[0]):
-            for key in info:
-                if key.upper() in item.upper():
-                    info[key] = val
-        full_speed = self.ui.g_bool('do you want sailors to be auto-created to speed up entry ')
+    def process_table(self, table: list[list[str]], event_title:str, nat:str, sailorids:list[str]) -> dat.Event:
         race_columns = []
-        fields = {'c': 'champ', 's': 'sail', 'n': 'name'}
-        try:
-            search_term = fields[field]
-        except KeyError:
-            search_term = 'name'
-        info_column = -255
         numbers = '0123456789'
         for loc, val in enumerate(table[0]):  # goes through the headers looking for races and the search colum
-            if (val[0]).upper() == 'R' and val[1] in numbers:
+            if val[0].upper() == 'R' and val[1] in numbers:
                 race_columns.append(loc)
-            if search_term in val.lower():
-                info_column = loc
-        if info_column == -255:
-            raise IndexError('That term could not be found')
-        extra_data_cols = list(range(1, min(race_columns)))
-        log.queue(2, 'processing table with paramaters',
-                  (table, field, event_title, same_nat, nat, info, race_columns, info_column))
-        sailorids = []
-        for count, row in enumerate(table[1:]):
-            self.ui.display_text(f'{count}/{len(table) - 1} sailors entered')
-            sailorids.append(self.import_sailor(field, row[info_column], row, info, nat, full_speed,
-                                                *[row[item].lower() for item in extra_data_cols]))
-            log.queue(0, 'new sailor added to list', (count, row, sailorids[-1]))
 
         races = []
-        chars_to_strip = "abcdefghijklmnopqrstuvwxyz()"
         date = self.ui.g_date_int(f"of the last day of {event_title}: ")
         self.ui.display_text('1 - Light\n2- Medium\n3 - Heavy')
         for race in race_columns:
             wind = self.ui.g_int(f'What was the wind of {table[0][race]}: ', range_low=1, range_high=3)
-            result = [int(float(table[x][race].lower().strip(chars_to_strip))) for x in range(1, len(table))]
+            result = [base.force_int(table[x][race]) for x in range(1, len(table))]
             # goes through the table and gets the positions of people, knowing that the table order wont change
             # it them marrys them with theyre sailor ids in order with dat.results
             races.append(dat.Race(dat.Results(sailorids, result), wind, date))
@@ -447,7 +416,7 @@ class UniverseHost:
         if data == 'nan':
             return 'nan'
         if len(self.get_data_locations(data, field)) == 0:
-            self.ui.display_text('creating sailor')
+            self.ui.display_text(f'creating sailor from {data}')
             log.queue(1, 'creating new sailor', sailor_info)
             res = 0
             if not full_speed:
@@ -463,8 +432,11 @@ class UniverseHost:
                 log.queue(0, 'sailor importing success')
                 return res
         else:
+
             log.queue(0, 'sailor importing success')
-            return self.get_sailor_id(field, data, *sailor_info ,*extra_info)
+            res = self.get_sailor_id(field, data, *sailor_info ,*extra_info)
+            self.ui.display_text(f'matched {data}, to sailor {res}')
+            return res
 
     def add_event(self, event: dat.Event | None):
         log.queue(2, 'adding event to universe', event)

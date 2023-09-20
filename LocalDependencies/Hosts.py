@@ -185,16 +185,22 @@ class HostScript:
         except IndexError:
             sur = ui.g_str(f'[{name}]Please enter the sailor\'s  surname: ', char_level=3)
         if champ is None:
-            champ = str(ui.g_int(f'[{name}]Please enter the sailor\'s Championship number '
-                                 '\n(Please enter (000) if the sailor does not have a Champ number): ',
-                                 range_high=999, range_low=0))
+            if not full_speed:
+                champ = str(ui.g_int(f'[{name}]Please enter the sailor\'s Championship number '
+                                     '\n(Please enter (000) if the sailor does not have a Champ number): ',
+                                     range_high=999, range_low=0))
+            else:
+                champ = '0'
         elif champ == 'nan':
             champ = '0'
         else:
             champ = str(champ)
         if sailno is None:
-            sailno = str(ui.g_int(f'[{name}]Please enter the sailor\'s Sail number \n(Please ignore any letters): ',
-                                  range_high=99999, range_low=0))
+            if not full_speed:
+                sailno = str(ui.g_int(f'[{name}]Please enter the sailor\'s Sail number \n(Please ignore any letters): ',
+                                      range_high=99999, range_low=0))
+            else:
+                sailno = '0'
         elif sailno == 'nan':
             sailno = '0'
         else:
@@ -380,7 +386,7 @@ class HostScript:
                    'importing previous race csv (needs previously entered csv)',
                    'importing an online results file (needs internet - html/htm/pdf)',
                    'importing an local file (html/htm/pdf)', 'importing a .event file']
-        inp = self.ui.g_choose_options(options, 'How would you like to import the event?')
+        inp = self.ui.g_choose_options(options, 'How would you like to import the event?') + 1
         match inp:
             case 1:
                 event = self.add_event_lazy()

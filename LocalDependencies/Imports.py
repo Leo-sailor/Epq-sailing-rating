@@ -10,6 +10,7 @@ import LocalDependencies.leo_dataclasses as dat
 from LocalDependencies.Framework.text_ui import valid_nat
 from LocalDependencies.Framework.logger import log
 from LocalDependencies.Framework.constants import constants
+from LocalDependencies.Main_core import UniverseHost
 
 log = log()
 c = constants()
@@ -106,7 +107,7 @@ def check_for_alternate_nan(table: list[list[Any]]) -> bool:
 
 
 def process_alternate_nan(table):
-    breakpoint()
+
     out = []
     done = False
     prev = 0
@@ -147,10 +148,9 @@ def split_table(table: list[list[Any]]):
     for val, curr in enumerate(first_col[1:]):
         if curr < previous:
             table_start_points.append(val + 1)
-        if table[val][0] == 'nan' and table[val][1] == 'nan':
-            table_start_points.pop()
+            if table[val][0] == 'nan' and table[val][1] == 'nan':
+                table_start_points.pop()
         previous = curr
-
     end = len(table)
     tables = []
     for start_point in reversed(table_start_points):  # reverse order to make sure nothing gets messed with
@@ -293,13 +293,16 @@ class ImportManager:
         return count
 
     def choose_data_type(self, columns: dict = None):
-        if self.chosen_data_type:
-            return self.chosen_data_type
         table = self.choose_table()
         if columns is None:
             info = discover_columns(self.tables[table][:3])
         else:
             info = columns
+        if self.chosen_data_type:
+            for key, val in info.items():
+                if val == self.chosen_data_type:
+                    field = key
+            return self.chosen_data_type, field
         options = []
         options_true = []
         for key, val in info.items():
@@ -332,6 +335,9 @@ class ImportManager:
             log.queue(0, 'fullspeed chosen theyre table', self.chosen_table)
             return self.chosen_table
         tab_len = len(self.tables)
+        if tab_len == 1:
+            self.chosen_table = 0
+            return 0
         expected = False
         table_num = None
         while not expected:
@@ -345,14 +351,24 @@ class ImportManager:
         log.queue(0, 'user chosen theyre table', self.chosen_table)
         return self.chosen_table
 
-    def to_event(self, universe) -> dat.Event:
-        self.choose_table()
-        table = self[self.chosen_table]
-        if self.chosen_data_type is None:
-            self.choose_data_type()
+    def to_event(self, universe: UniverseHost, nat = None) -> dat.Event:
+        if nat is None or nat.upper() not in valid_nat:
+            if self.ui.g_bool('Is everyone in the event from the same country'):
+                nat = self.ui.g_nat('the majority of sailors')
+            else:
+                nat = None
+        sailorids = self.import_sailors_to_universe(universe,nat)
+        table = f_base.deep_copy(self[self.chosen_table])
+        to_remove = []
+        for loc,sailor in enumerate(sailorids):
+            if sailor == 'nan':
+                to_remove.append(loc)
+        for loc in reversed(to_remove):
+            sailorids.pop(loc)
+            table.pop(loc +1)
         event_title = self.ui.g_str('What is the event called: ')
         log.queue(0, 'importing event with:', (table, self.chosen_data_type, event_title))
-        return universe.process_table(table, self.chosen_data_type, event_title)
+        return universe.process_table(table, event_title, nat, sailorids)
 
     def import_sailors_to_universe(self, universe, nat: str = None) -> list[str]:
         if nat is None or nat.upper() not in valid_nat:

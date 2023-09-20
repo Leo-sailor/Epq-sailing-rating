@@ -36,7 +36,7 @@ class text_ui(base_ui.callback):
         print(text)
 
     def display_table(self, table: list[list[Any]]):
-        header = str(table) + '\n'
+        header = str(table[0]) + '\n'
         long_blank = "                        "
         p = header + '\n'.join(
             [''.join([f'{"".join((item, long_blank))[:15]}  ' for item in row]) for row in table[1:]])
@@ -156,7 +156,7 @@ class text_ui(base_ui.callback):
                latest: date | datetime = datetime(3100, 1, 1)) -> date:
         if prompt[-2:] == ': ':
             prompt += ': '
-        year = self.g_int(f"Please enter the year {prompt}", -2000, 3000)
+        year = self.g_int(f"Please enter the year {prompt}", 1, 3000)
         month = self.g_int(f"Please enter the month {prompt}", 1, 12)
         if month in [4, 6, 9, 11]:
             day = self.g_int(f"Please enter the day {prompt}", 1, 30)
@@ -174,7 +174,7 @@ class text_ui(base_ui.callback):
     def g_date_int(self, prompt: str, earliest: date | datetime = datetime(100, 1, 1),
                    latest: date | datetime = datetime(3100, 1, 1)) -> int:
         now = self.g_date(prompt, earliest, latest)
-        thousand = date(2000, 1, 1)
+        thousand = datetime(2000, 1, 1)
         day = now - thousand
         return day.days
 

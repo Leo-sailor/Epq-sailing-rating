@@ -175,7 +175,7 @@ class csv_base:
     def remove_row(self, row_num: int):
         log.queue(0, 'row removed from table', row_num)
         self.row_first.pop(row_num)
-        for col in self.row_first:
+        for col in self.column_first:
             try:
                 col.pop(row_num)
             except:

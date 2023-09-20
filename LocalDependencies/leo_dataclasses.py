@@ -18,6 +18,7 @@ class Results:
         if not(all(isinstance(x, int) for x in self.positions)):
             raise ValueError("Positions must be integers")
         if len(set(sailorids)) != len(self.sailorids):
+            print(sailorids)
             raise ValueError("Sailorids must be unique")
 
     def __str__(self):

@@ -129,7 +129,8 @@ def similar_names(inp: str | list[str]) -> str | list[str] | tuple[str]:
              ' beth ': ' elizabeth ', ' dom ': ' dominic ', ' daniel ': ' dan ', ' thomas ': ' tom ',
              ' jess ': ' jessica ', ' kat ': ' katherine ', ' natasha ': 'nat ', ' natalie ': ' nat',
              ' madeline ': ' maddie ', ' matt ': ' matthew ', ' olly ': ' oliver ', ' piotr ': 'peter ',
-             ' pete ': ' peter ', ' oli ': ' oliver ', ' william ': ' will ', ' joanna ': ' jo '}
+             ' pete ': ' peter ', ' oli ': ' oliver ', ' william ': ' will ', ' joanna ': ' jo ', ' florence ': ' flo ',
+             ' alfred ': ' alfie ', ' torqul ': ' torquil ', }
     if isinstance(inp, str):
         inp = inp.lower()
         inp = ' ' + inp
