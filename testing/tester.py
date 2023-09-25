@@ -60,10 +60,7 @@ def excute_test(test_name, reset):
     run_path = path + '\\main.py'
     inp_path = path + f'\\testing\\tests\\{test_name}.inp.pickle'
     out_path = path + f' \\testing\\tests\\{test_name}.out.pickle'
-    try:
-        with open(out_path,'r'):
-            pass
-    except FileNotFoundError:
+    if not os.path.exists(out_path):
         out_path = ''
     cmd = os.system
     cmd(f'cd {path}')

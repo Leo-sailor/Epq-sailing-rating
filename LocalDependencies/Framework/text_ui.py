@@ -29,6 +29,8 @@ def check_breakpoint(inp):
         breakpoint()
     if inp == 'flush':
         log.flush()
+    if inp == 'quit':
+        exit(0)
 
 
 class text_ui(base_ui.callback):
@@ -156,7 +158,7 @@ class text_ui(base_ui.callback):
                latest: date | datetime = datetime(3100, 1, 1)) -> date:
         if prompt[-2:] == ': ':
             prompt += ': '
-        year = self.g_int(f"Please enter the year {prompt}", 1, 3000)
+        year = self.g_int(f"\nPlease enter the year {prompt}", 1, 3000)
         month = self.g_int(f"Please enter the month {prompt}", 1, 12)
         if month in [4, 6, 9, 11]:
             day = self.g_int(f"Please enter the day {prompt}", 1, 30)
@@ -168,7 +170,7 @@ class text_ui(base_ui.callback):
         if earliest < dates < latest:
             return dates
         else:
-            self.display_text(f"that date is not between {earliest} and {latest}. please try again.")
+            self.display_text(f"\nThat date is not between {earliest} and {latest}. please try again.")
             return self.g_date(prompt, earliest, latest)
 
     def g_date_int(self, prompt: str, earliest: date | datetime = datetime(100, 1, 1),
@@ -182,14 +184,14 @@ class text_ui(base_ui.callback):
                    latest: date | datetime = datetime(3100, 1, 1)) -> datetime:
         dates = self.g_date(prompt)
         year, month, day = dates.year, dates.month, dates.day
-        hours = self.g_int(f"Please enter the hour (24hr clock) {prompt}", 0, 24)
+        hours = self.g_int(f"\nPlease enter the hour (24hr clock) {prompt}", 0, 24)
         minutes = self.g_int(f"Please enter the minute {prompt} - (enter) to skip", 0, 60)
         seconds = self.g_int(f"Please enter the seconds {prompt} - (enter) to skip", 0, 60)
         dates = datetime(year, month, day, hours, minutes, seconds)
         if earliest < dates < latest:
             return dates
         else:
-            self.display_text(f"that date is not between {earliest} and {latest}. please try again.")
+            self.display_text(f"\nThat date is not between {earliest} and {latest}. please try again.")
             return self.g_datetime(prompt, earliest, latest)
 
     def g_bool(self, prompt: str) -> bool:
@@ -202,7 +204,7 @@ class text_ui(base_ui.callback):
     def g_choose_options(self, options: list[str], prompt=None, default: int = None) -> int:
         if prompt is None:
             prompt = 'please select one of the following options'
-        print(prompt)
+        print('\n' + prompt)
         for val, item in enumerate(options):
             print(f'({val + 1}) - {item}')
         if default:
@@ -216,6 +218,8 @@ class text_ui(base_ui.callback):
 
     def g_file_loc(self, mode='r', **args) -> str:
         file_getter = filedialog.askopenfile(mode, **args)
+        if file_getter is None:
+            return '       '
         file_getter.close()
         return file_getter.name
 
@@ -258,28 +262,19 @@ class text_ui(base_ui.callback):
                     return country.borders()
 
         global base_nat
-        if base_nat == '':
-            try:
-                print("Using internet to detect country")
-                ip = requests.get('https://geolocation-db.com/json').json()
-                nat_name = ip['country_name']
-            except requests.exceptions.ConnectionError:
-                nat_name = 'Netherlands'
-        else:
-            nat_name = base_nat
-        if nat_name is not None:
-            choice = self.g_bool(f'Is {nat_name} the correct nationality of {obj_of_nationality}?')
+        if base_nat != '':
+            choice = self.g_bool(f'Is {base_nat} the correct nationality of {obj_of_nationality}? ')
         else:
             choice = False
         if choice:
             # use py pi country info to get country
-            return code_to_out(nat_name)
+            return code_to_out(base_nat)
 
         else:
             while base_nat == '':
-                base_nat_possible = self.g_str(f'Please enter {obj_of_nationality}\'s 3 Letter country code', 3, 3)
+                base_nat_possible = self.g_str(f'Please enter {obj_of_nationality}\'s 3 Letter country code: ', 3, 3)
                 if base_nat_possible.upper() in valid_nat:
                     base_nat = base_nat_possible.upper()
                     return code_to_out(base_nat)
                 else:
-                    print('Sorry, that country code is not valid please try again')
+                    print('\nSorry, that country code is not valid please try again')

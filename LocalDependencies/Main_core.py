@@ -10,6 +10,7 @@ from binascii import unhexlify
 from pickle import dump as _dump
 from LocalDependencies.Framework.base_ui import callback as ui_obj
 from LocalDependencies.Framework.logger import log
+from LocalDependencies.Imports import prep_table_info, clear_dnc
 
 UNIVERSES_ = '\\universes\\'
 sys_path = path[0]
@@ -54,6 +55,7 @@ class UniverseHost:
         self.deviation = host.get_cell(universe_loc, 1)  # saves the deviation
         log.queue(0, 'all info extracted from host file', self.__dict__)
         self.admin_rights(password)  # sees whether the user should have admin rights
+        self.file.similar_names(base.similar_names, col=3)
 
     def __link_universe(self, universe_name: str) -> str:
         if universe_name.upper() == 'N':
@@ -100,10 +102,9 @@ class UniverseHost:
         host.add_row(['versionNumber', 'creationDate', 'fileName', 'md5'])
         host.add_row(['1', cur_time, first_file_name, base.hashfile(first_file)])
 
-        temp = self.ui.g_make_password_with_salt('\nPlease enter a password for this universe: ', 'bcrypt')
-        self.pass_hash = temp[0]  # saves the salt and hash
-        self.pass_salt = temp[1]
-        log.queue(0, 'password creation success', temp)
+        self.pass_hash, self.pass_salt = self.ui.g_make_password_with_salt('\nPlease enter a password for this universe: ', 'bcrypt')
+
+        log.queue(0, 'password creation success', (self.pass_hash, self.pass_salt))
         starting = self.ui.g_int('\nWhat would you like the average rating of this universe to be?(450-3100)'
                                  '(default: 1500): ', range_high=3100, range_low=450)
         k = self.ui.g_float('\nWhat would you like the speed of rating change to be?(0.3 - 4)(Recommended - 1): ',
@@ -174,7 +175,7 @@ class UniverseHost:
         try:
             row = self.file.get_row_num(sailorid, 0)  # figures out what row the sailor id it
         except ValueError:
-            log.log(4, 'sailorid could not be found', sailorid)
+            log.queue(4, 'sailorid could not be found', sailorid)
             raise IndexError('the sailor id {} could not be found'.format(sailorid))
 
         find_type_loc = custom_funcs.get_field_number(result_type)
@@ -191,7 +192,7 @@ class UniverseHost:
             result = self.file.get_cell(row, find_type_loc)
         else:
             result = '0.1'
-        log.log(2, 'sailor info taken without error', (sailorid, find_type_loc, result))
+        log.queue(1, 'sailor info taken without error', (sailorid, find_type_loc, result))
         return result
 
     def get_data_locations(self, term, field_num) -> list[int]:
@@ -206,18 +207,18 @@ class UniverseHost:
         log.queue(0, 'searching for info', (term, field_num))
 
         if field_num == -1:  # the exception for if it's a name
-            new_term = term.lower().split(' ', 1)
+            new_term = term.lower().strip().split(' ', 1)
+            new_term[0] = base.similar_names(new_term[0])
             try:
                 new_term[1] = new_term[1].replace(' ','-')
             except IndexError:
                 breakpoint()
             locations = []
+            # locations = [loc for loc,val in enumerate(self.file.get_column(3)) if val == new_term[0]]
             for loc, val in enumerate(self.file.get_column(3)):
-                val = base.similar_names(val)
-                new_term[0] = base.similar_names(new_term[0])
                 if val == new_term[0]:
                     locations.append(loc)
-                locations = [loc for loc in locations if new_term[1].replace('-','') == (self.file.get_cell(loc, 4).replace('-',''))]
+            locations = [loc for loc in locations if new_term[1].replace('-','') == (self.file.get_cell(loc, 4).replace('-',''))]
         else:
             locations = base.multiindex(self.file.get_column(field_num), term)
         log.queue(0, 'sarch completed and found n items', len(locations))
@@ -233,7 +234,7 @@ class UniverseHost:
                                 '\nor press (p) to get a list of all sailor id\'s: '
                                 '\nor press (q) to exit', char_level=2).lower()
             if inp == 'q':
-                log.log(2, 'operatoin cancelled')
+                log.queue(1, 'operatoin cancelled')
                 raise InterruptedError('operation cancelled')
             elif inp == 'n':
                 if return_on_new:
@@ -263,7 +264,9 @@ class UniverseHost:
                 self.ui.display_text(self.file.print_column(0, True))
             elif inp.lower().strip() == 't':
                 inp = self.ui.g_str('\nPlease enter the search term again: ')
-                return self.get_sailor_id(field_num, inp, return_on_new, *data)
+                res = self.get_sailor_id(field_num, inp, return_on_new, *data)
+                self.ui.display_text("Success")
+                return res
             else:
                 self.ui.display_text('\n That sailor id could not be found')
 
@@ -379,15 +382,19 @@ class UniverseHost:
             else:
                 return False, sailorid
 
-    def process_table(self, table: list[list[str]], event_title:str, nat:str, sailorids:list[str]) -> dat.Event:
+    def process_table(self, table: list[list[str]], event_title:str, nat:str, sailorids:list[str], date:int = None) -> dat.Event:
         race_columns = []
         numbers = '0123456789'
         for loc, val in enumerate(table[0]):  # goes through the headers looking for races and the search colum
-            if val[0].upper() == 'R' and val[1] in numbers:
+            sample_val1, sample_val2, is_number = prep_table_info(table,loc)
+            if (val[0].upper() == 'R' and val[1] in numbers and is_number) or 'race' in val or \
+                    ('unnamed:' in val and is_number and (len(sample_val1) <2 or len(sample_val2)<2)):
                 race_columns.append(loc)
+        table,sailorids = clear_dnc(table,race_columns,sailorids)
 
         races = []
-        date = self.ui.g_date_int(f"of the last day of {event_title}: ")
+        if date is None:
+            date = self.ui.g_date_int(f"of the last day of {event_title}: ")
         self.ui.display_text('1 - Light\n2- Medium\n3 - Heavy')
         for race in race_columns:
             wind = self.ui.g_int(f'What was the wind of {table[0][race]}: ', range_low=1, range_high=3)
@@ -402,8 +409,6 @@ class UniverseHost:
                       *extra_info) -> str:
         if isinstance(data,list):
             data = ' '.join(data)
-        data = base.similar_names(data)
-        row = base.similar_names(row)
         sailor_info = [None if x is None else row[x] for x in info.values()]
         for loc, item in enumerate(sailor_info):
             if isinstance(item,list):
@@ -460,6 +465,7 @@ class UniverseHost:
                            f'               heavy: {old_results.getinfo(sailor, "h")} -> {self.getinfo(sailor, "h")}  '
                            f'overall: {old_results.getinfo(sailor, "o")} -> {self.getinfo(sailor, "o")}\n'
                            f'               rank: {old_results.getinfo(sailor, "r")} -> {self.getinfo(sailor, "r")} ')
+            self.ui.display_text('\n'.join(out))
 
     def __add_race(self, race: dat.Race, old_results):
         log.queue(0, ' adding race to the event')
@@ -478,8 +484,8 @@ class UniverseHost:
             for sailor in sailorids:  # gets the current information on all the current sailors
                 cur_rats.append(float(self.getinfo(sailor, column_num)))
                 curr_events.append(int(self.getinfo(sailor, 'e')))
-            for sailor in sailorids:  # gets the current information on all the current sailors
-                old_rats.append(float(old_results.getinfo(sailor, column_num)))
+            for loc,sailor in enumerate(sailorids):  # gets the current information on all the current sailors
+                old_rats.append((float(old_results.getinfo(sailor, column_num)) + (cur_rats[loc] *2))/3)
 
             new_rat = self.elo.cycle(old_rats, curr_events, positions, cur_rats)  # executes the maths
             log.queue(1, 'race added to file', (sailorids, old_rats, new_rat))
@@ -519,7 +525,7 @@ class UniverseHost:
                 self.file.update_value(0.1, other_sailor, 8, bypass=True)
             if float(self.getinfo(other_sailor, 'l')) < 0.1:
                 self.file.update_value(0.1, other_sailor, 7, bypass=True)
-        self.file.auto_save_file()
+        self.file.auto_save_file(force=True)
         self.file.sort_on_col(10, reverse=True, target_col=11, exclude_rows=0, greater_than=[12, 5])
         self.file.auto_save_file()
 

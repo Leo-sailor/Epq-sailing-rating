@@ -13,9 +13,9 @@ def get_field_number(result_type: str) -> int:
     match result_type:
         case 'n' | 'name':
             find_type_loc = -1  # makes sure the next bit will be bypassed
-        case 'sail number' | 's' | 'sail'| 'sail num':
+        case 'sail number' | 's' | 'sail' | 'sail num':
             find_type_loc = 2  # the column location of the data
-        case 'champ number' | 'championship number' | 'c' | 'champ'| 'champ num':
+        case 'champ number' | 'championship number' | 'c' | 'champ' | 'champ num':
             find_type_loc = 1
         case 'region' | 'z':
             find_type_loc = 5
@@ -121,4 +121,3 @@ def csv_line_generate(sailorid: str, nat: str, sailno: str, first: str, surname:
              days_since_two_thousand()]
     line = ','.join(parts)
     return line
-

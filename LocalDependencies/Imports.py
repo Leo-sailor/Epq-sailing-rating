@@ -10,7 +10,11 @@ import LocalDependencies.leo_dataclasses as dat
 from LocalDependencies.Framework.text_ui import valid_nat
 from LocalDependencies.Framework.logger import log
 from LocalDependencies.Framework.constants import constants
-from LocalDependencies.Main_core import UniverseHost
+from datetime import datetime
+from pickle import load as _load, dump as _dump
+import os
+
+UniverseHost = object
 
 log = log()
 c = constants()
@@ -82,7 +86,7 @@ def import_pdf(file_loc):
     dataframe = pd.concat(all_pages)
     table = dataframe.values.tolist()
     table.insert(0, dataframe.columns.tolist())
-    log.queue(0, 'pdf sucessulyy parsed', table)
+    log.queue(0, 'pdf sucessulyy parsed')
     return f_base.findandreplace(table, '\r', ' ', preserve_type=True)
 
 
@@ -92,7 +96,7 @@ def import_html(file_loc):
     mega_df = pd.concat(all_tables)
     mega_table = mega_df.values.tolist()
     mega_table.insert(0, mega_df.columns.values.tolist())
-    log.queue(0, 'html sucesssfully parsed', mega_table)
+    log.queue(0, 'html sucesssfully parsed')
     return mega_table
 
 
@@ -106,8 +110,28 @@ def check_for_alternate_nan(table: list[list[Any]]) -> bool:
     return False
 
 
-def process_alternate_nan(table):
+@f_base.catcher
+def clear_dnc(table: list[list[str]], race_cols: list[int], sailorids: list[str] = None):
+    if sailorids is None:
+        sailorids = [0] * len(table)
+    rows_to_remove = []
+    for row_loc, row in enumerate(table):
+        bad_row = True
+        for col in race_cols:
+            if 'dn' not in row[col]:
+                bad_row = False
+                break
+        if bad_row:
+            rows_to_remove.append(row_loc)
+    for row_num in reversed(rows_to_remove):
+        table.pop(row_num)
+        sailorids.pop(row_num - 1)
+    if sailorids is None:
+        return table
+    return table, sailorids
 
+
+def process_alternate_nan(table):
     out = []
     done = False
     prev = 0
@@ -143,7 +167,7 @@ def split_table(table: list[list[Any]]):
         return None
     table_start_points = [1]  # the array which stores the locations of each new set of data
     first_col = [f_base.force_int(row[0]) for row in table]
-    log.queue(0, "splitting table with first col", first_col)
+    log.queue(0, "splitting table with first col")
     previous = 0
     for val, curr in enumerate(first_col[1:]):
         if curr < previous:
@@ -178,15 +202,17 @@ def chose_source(ui: ui_obj, source: Literal['F', 'L'] = None) -> Literal['F', '
     return source
 
 
-def prep_table_info(table, index):
-    sample_val1 = table[1][index].strip()
+def prep_table_info(table, col_num):
+    sample_val1 = table[1][col_num].strip().upper()
     if sample_val1.endswith('.0'):
         sample_val1 = sample_val1[:-2]
-    sample_val2 = table[2][index].strip()
+    sample_val2 = table[2][col_num].strip().upper()
     if sample_val2.endswith('.0'):
         sample_val2 = sample_val1[:-2]
-    is_number = f_base.can_be_type(float, sample_val1.strip('() ')) and f_base.can_be_type(float,
-                                                                                           sample_val2.strip('() '))
+    is_number = f_base.can_be_type(float, sample_val1.strip('() DSQUFN')) and \
+                f_base.can_be_type(float, sample_val2.strip('() DSQUFN'))
+    if sample_val2 == 'nan' and sample_val1 == 'nan':
+        is_number = false
     return sample_val1, sample_val2, is_number
 
 
@@ -225,7 +251,7 @@ def discover_columns(table: list[list[str]], same_nat=None) -> dict:
         info['name'] = None
     else:
         info['name'] = info['name'][0]
-    log.log(0, 'Info dict after loose pass', info)
+    log.queue(0, 'Info dict after loose pass', info)
     return info
 
 
@@ -259,15 +285,34 @@ class ImportManager:
                 self.type = 'pdf'
             case 'html' | '.htm':
                 self.type = 'html'
+            case 'port':
+                self.type = 'import'
             case _:
                 self.type = 'Unknown'
         log.queue(0, 'file type chosen', self.type)
-        if self.type == 'pdf':
+        cache_file_bits = '.'.join(file_loc.split('.')[:-1] + ['import']).split('/')
+        cache_file_bits[-1] = '.' + cache_file_bits[-1]
+        cache_file = '/'.join(cache_file_bits)
+        if os.path.exists(cache_file):
+            with open(cache_file, 'rb') as f:
+                self.all = _load(f)
+        elif self.type == 'pdf':
             self.all = import_pdf(file_loc)
+            with open(cache_file, 'wb') as f:
+                _dump(self.all, f)
         elif self.type == 'html':
             self.all = import_html(file_loc)
+            with open(file_loc, 'wb') as f:
+                _dump(self.all, f)
+        elif self.type == 'import':
+            with open(file_loc, 'rb') as f:
+                self.all = _load(f)
+            cache_file = file_loc
         else:
             self.all = None
+        command = f'attrib +h "{cache_file}"'
+        # print(f"using command: {command}")
+        os.system(command)
         self.all = trim_table(self.all, 'rank')
         if remove_rows_with is not None:
             self.all = remove_rows_including(self.all, remove_rows_with)
@@ -276,6 +321,7 @@ class ImportManager:
             if str(table[0]) == str(table[1]):
                 table.pop(0)
         log.queue(0, 'main import complete', self.tables)
+        self.file_loc = file_loc
 
     def __del__(self):
         for file in self.__files_to_remove:
@@ -324,14 +370,15 @@ class ImportManager:
     def choose_table(self):
         if self.chosen_table is not None:
             return self.chosen_table
+        curr_size = -1
+        curr_index = None
+        for val, table in enumerate(self.tables):
+            if table_size(table) > curr_size:
+                curr_index = val
+                curr_size = table_size(table)
+        large_table_index = curr_index
         if self.full_speed:
-            curr_size = -1
-            curr_index = None
-            for val, table in enumerate(self.tables):
-                if table_size(table) > curr_size:
-                    curr_index = val
-                    curr_size = table_size(table)
-            self.chosen_table = curr_index
+            self.chosen_table = large_table_index
             log.queue(0, 'fullspeed chosen theyre table', self.chosen_table)
             return self.chosen_table
         tab_len = len(self.tables)
@@ -340,6 +387,7 @@ class ImportManager:
             return 0
         expected = False
         table_num = None
+        self.ui.display_text(f"largest table is table number {large_table_index}")
         while not expected:
             table_num = self.ui.g_int(
                 f'Please enter the table number you would like to receive ((-{tab_len}) - {tab_len - 1}): ',
@@ -351,24 +399,31 @@ class ImportManager:
         log.queue(0, 'user chosen theyre table', self.chosen_table)
         return self.chosen_table
 
-    def to_event(self, universe: UniverseHost, nat = None) -> dat.Event:
+    def to_event(self, universe: UniverseHost, nat: str | None = None) -> dat.Event:
         if nat is None or nat.upper() not in valid_nat:
             if self.ui.g_bool('Is everyone in the event from the same country'):
                 nat = self.ui.g_nat('the majority of sailors')
             else:
                 nat = None
-        sailorids = self.import_sailors_to_universe(universe,nat)
+        sailorids = self.import_sailors_to_universe(universe, nat)
         table = f_base.deep_copy(self[self.chosen_table])
         to_remove = []
-        for loc,sailor in enumerate(sailorids):
+        for loc, sailor in enumerate(sailorids):
             if sailor == 'nan':
                 to_remove.append(loc)
         for loc in reversed(to_remove):
             sailorids.pop(loc)
-            table.pop(loc +1)
-        event_title = self.ui.g_str('What is the event called: ')
-        log.queue(0, 'importing event with:', (table, self.chosen_data_type, event_title))
-        return universe.process_table(table, event_title, nat, sailorids)
+            table.pop(loc + 1)
+
+        file_name = self.file_loc.split('/')[-1]
+        if len(str(f_base.force_int(file_name[:10]))) == 8:
+            event_title = file_name.split('.')[0][11:]
+            date = datetime.fromisoformat(file_name[:10])
+        else:
+            date = None
+            event_title = self.ui.g_str('What is the event called: ')
+        log.queue(0, 'importing event with:', (sailorids, self.chosen_data_type, event_title))
+        return universe.process_table(table, event_title, nat, sailorids, date)
 
     def import_sailors_to_universe(self, universe, nat: str = None) -> list[str]:
         if nat is None or nat.upper() not in valid_nat:
@@ -385,8 +440,7 @@ class ImportManager:
             for loc, val in enumerate(line):
                 line[loc] = remove_zeros(val)
             if not (line[0] == 'nan' and line[1] == 'nan'):
-                log.queue(0, 'adding sailor with line', (line, data_loc))
                 sailor_ids.append(
                     universe.import_sailor(field_name, line[data_loc], line, info, nat, full_speed=True))
-                log.queue(0, 'sailor id added', sailor_ids[-1])
+                log.queue(0, 'adding sailor with line', (line, data_loc, sailor_ids[-1]))
         return sailor_ids

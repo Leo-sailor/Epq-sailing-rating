@@ -30,8 +30,7 @@ def main():
             main()
             exit(0)
     cmd = os.system
-    inp = input(
-                'Press (0) to record an output file\n'
+    inp = input('Press (0) to record an output file\n'
                 'Press (1) to not record an expected output file(useful if likely to change: ')
     if int(inp) == 1:
         out_path= ''

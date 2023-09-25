@@ -8,6 +8,13 @@ from typing import Any
 from argon2 import PasswordHasher
 import pyscrypt
 from pickle import loads as _load, dumps as _dump
+names = {'seb': 'sebastian', 'joe': 'joseph', 'josh': 'joshua', 'edward': 'ed', 'finlay': 'finn', 'fin': 'finn',
+         'finley': 'finn', 'isabel': 'isobel', 'beth': 'elizabeth', 'dom': 'dominic', 'daniel': 'dan', 'thomas': 'tom',
+         'jess': 'jessica', 'kat': 'katherine', 'natasha': 'nat', 'natalie': 'nat', 'madeline': 'maddie',
+         'matt': 'matthew', 'ollie': 'oliver','olly': 'oliver', 'piotr': 'peter', 'pete': 'peter', 'oli': 'oliver', 'william': 'will',
+         'joanna': 'jo', 'florence': 'flo', 'alfred': 'alfie', 'torqul': 'torquil', 'elie': 'ellie', 'eddie': 'ed',
+         'christopher':'chris'}
+
 
 numbers = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
 
@@ -111,46 +118,50 @@ def password_hash(password: str, hash_method: str, salt: bytes | str = None) -> 
     return hashed, salt
 
 
-def hashfile(file: str) -> str:
+def hashfile(file: str, *, new_open = None) -> str:
     """
     This function takes a file address and opens it as a text file and produces a md5 hash of it
     :param file: the file address of the file to be hashed
     :return: the string of the md5 hash
     """
-    with open(file) as actual_file:
+    if new_open is None:
+        new_open = open
+    with new_open(file) as actual_file:
         str2hash = actual_file.read()
     result = md5(str2hash.encode()).hexdigest()
     return str(result)
 
 
+def check_all_nums_present(inp: list)->tuple[bool,int]:
+    s = inp
+    # Get the length of the list s
+    max_num = max(s)
+
+    # Create a set from the list s for faster membership checks
+    s_set = set(s)
+
+
+    for num in range(1, max_num + 1):
+        if num not in s_set:
+            return False,num  # Number is missing, return False
+
+    return True,max_num  # All numbers are present
+
+
 def similar_names(inp: str | list[str]) -> str | list[str] | tuple[str]:
-    names = {' seb ': ' sebastian ', ' joe ': ' joesph ', ' josh ': ' joshua ', ' edward ': ' ed ',
-             ' finlay ': ' finn ', ' fin ': ' finn ', ' finley ': ' finn ', ' isabel ': ' isobel ',
-             ' beth ': ' elizabeth ', ' dom ': ' dominic ', ' daniel ': ' dan ', ' thomas ': ' tom ',
-             ' jess ': ' jessica ', ' kat ': ' katherine ', ' natasha ': 'nat ', ' natalie ': ' nat',
-             ' madeline ': ' maddie ', ' matt ': ' matthew ', ' olly ': ' oliver ', ' piotr ': 'peter ',
-             ' pete ': ' peter ', ' oli ': ' oliver ', ' william ': ' will ', ' joanna ': ' jo ', ' florence ': ' flo ',
-             ' alfred ': ' alfie ', ' torqul ': ' torquil ', }
+    def replace_names(text):
+        text_bits = text.lower().split(' ')
+        for loc,text_bit in enumerate(text_bits):
+            if text_bit in names:
+                text_bits[loc] = names[text_bit]
+        return ' '.join(text_bits)
+
     if isinstance(inp, str):
-        inp = inp.lower()
-        inp = ' ' + inp
-        for key, val in names.items():
-            inp = inp.replace(key, val)
-        return inp[1:]
-    elif isinstance(inp, list) or isinstance(inp, tuple):
-        out = []
-        for item in inp:
-            item = item.lower()
-            item = ' ' + item
-            for key, val in names.items():
-                item = item.replace(key, val)
-            out.append(item[1:])
-        if isinstance(inp, list):
-            return out
-        else:
-            return tuple(out)
+        return replace_names(inp)
+    elif isinstance(inp, (list, tuple)):
+        return [replace_names(item) for item in inp]
     else:
-        raise TypeError
+        raise TypeError("Input must be a string, list, or tuple")
 
 
 def findandreplace(inp, find: str, replace: str, preserve_type=False):
@@ -187,7 +198,7 @@ def findandreplace(inp, find: str, replace: str, preserve_type=False):
                 raise TypeError('Expected type list or str or struct which str() can be applied not ' + str(type(inp)))
 
 
-def force_int(inp: str | float | int) -> int:
+def force_int(inp: str | float | int, default: int = None) -> int:
     inp = str(inp)
     numbers_new = numbers[:]
     numbers_new.append('.')
@@ -196,7 +207,10 @@ def force_int(inp: str | float | int) -> int:
         if char in numbers_new:
             new_str.append(char)
     if len(new_str) == 0:
-        return 0
+        if default is None:
+            return 0
+        else:
+            return default
     return int(float(''.join(new_str)))
 
 
@@ -243,11 +257,9 @@ def ordinal(num) -> str:
 
 
 def is_iterable(inp: Any) -> bool:
-    try:
-        iter(inp)
-    except TypeError:
-        return False
-    return True
+    if hasattr(inp, '__iter__'):
+        return True
+    return False
 
 
 def check_consecutive(array: list) -> bool:
@@ -261,6 +273,15 @@ def can_be_type(target_type: type, term: Any):
         return True
     except ValueError:
         return False
+
+
+def catcher(func):
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except:
+            breakpoint()
+    return wrapper
 
 
 def deep_copy(inp: Any) -> Any:

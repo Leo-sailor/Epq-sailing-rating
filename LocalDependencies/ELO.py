@@ -59,19 +59,18 @@ class EloCalculations:
         :return:
         """
         # no idea whether this work if the positions are not in the right order, but it should
-        sailors = len(old_rat)
-        rat_change = []
-        for x in range(0, sailors):
-            rat_change.append(0)
-        for x in range(sailors-1):
-            for y in range(x+1, sailors):
+        # it does
+        num_sailors = len(old_rat)
+        rat_change = [0] *num_sailors
+        for x in range(num_sailors-1):
+            for y in range(x+1, num_sailors):
                 if position[x] > position[y]:
                     result = 0
                 elif position[x] < position[y]:
                     result = 1
                 else:
                     result = 0.5
-                res = self.calc(old_rat[x], old_rat[y], result, self.__k(events[x], events[y], sailors))
+                res = self.calc(old_rat[x], old_rat[y], result, self.__k(events[x], events[y], num_sailors))
                 rat_change[x] += res
                 rat_change[y] -= res
 

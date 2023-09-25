@@ -12,10 +12,7 @@ log.log(0,'All imports complete')
 
 
 
-# TODO: come up with principle on newline usage
-# TODO: make a table dataclass
-# TODO: sailor id exists, need an overwirte option
-# TODO: splitling sail number by space / \ and ()
+# TODO: check lack of sorting in graphs
 
 
 
@@ -43,7 +40,14 @@ def main(args):
                 log.log(3,'No ui chosen for testing - desired ui:',args[2])
             if args[4] == '':
                 args[4] = None
-            ui = test_ui(args[3], args[4], orig_ui)
+            if args[5] == '':
+                args[5] = None
+            else:
+                try:
+                    args[5] = float(args[5])
+                except ValueError:
+                    args[5] = None
+            ui = test_ui(args[3], args[4], orig_ui, args[5])
         case 'record':
             log.log(1, 'App initialized for recording inputs')
             if args[2] == '' or args[3] == '':

@@ -25,12 +25,19 @@ class HostScript:
         self.args = sys_args
         self.ui = ui
 
+    def set_nat(self):
+        nat = None
+        if self.ui.g_bool('\nIs everyone in this from the same country'):
+            nat = self.ui.g_nat('all of the sailors')
+        self.nat = nat
+
     def torun(self, *args):
         global universe_csv
         if len(args) > 2:
             universe_csv = UniverseHost(self.ui, args[1], args[2])
         else:
             universe_csv = UniverseHost(self.ui)
+        self.set_nat()
         while True:
             options = ['add a new event', 'add a new sailor', 'get a sailors information', 'quit',
                        'get sailor info over time', 'print the universe', 'switch universe', 'import sailors',
@@ -70,15 +77,12 @@ class HostScript:
                 case 11:
                     universe_csv.admin_rights()
 
-    @staticmethod
-    def import_sailors(ui: ui_obj):
+
+    def import_sailors(self, ui: ui_obj):
         sailors = set()
         source = chose_source(ui)
         if source == 'F':
             files = ui.g_many_file_locs()
-            nat = None
-            if ui.g_bool('Is everyone in these events from the same country'):
-                nat = ui.g_nat('all of the sailors')
             imp_mgrs = []
             for file_num,file in enumerate(files):
                 ui.display_text(f"Now loading: {file_num+1} / {len(files)}")
@@ -95,7 +99,7 @@ class HostScript:
                           reverse=True)
             for num,imp in enumerate(imp_mgrs):
                 ui.display_text(f'\nNow importing {num}/{len(imp_mgrs)} {imp[0]}')
-                sailors.update(imp[1].import_sailors_to_universe(universe_csv, nat))
+                sailors.update(imp[1].import_sailors_to_universe(universe_csv, self.nat))
         else:
             imp_mgr = ImportManager(ui,source)
             sailors += imp_mgr.import_sailors_to_universe(universe_csv)
@@ -135,8 +139,10 @@ class HostScript:
     def sailor_rating_over_time(self):
         global universe_csv
         inp_method = self.__get_input_method()
-        inp = self.ui.g_str(f'Please enter the sailor\'s {self.input_method_name}: ')
-        sailorid = universe_csv.get_sailor_id(inp_method, inp)
+        inp_list = self.ui.g_str(f'Please enter the sailor\'s {self.input_method_name} seperated by commas: ').split(',')
+        sailorid = []
+        for inp in inp_list:
+            sailorid.append(universe_csv.get_sailor_id(inp_method, inp.strip()))
         universe_name = universe_csv.universe
         start_date = self.ui.g_date_int('of the first day of your range')
         end_date = self.ui.g_date_int('of the last day of your range')
@@ -145,7 +151,9 @@ class HostScript:
                       'Territory/country']
         out_codes = ['c', 's', 'l', 'm', 'h', 'i', 'o', 'r', 'e', 'z', 't']
         selected = self.ui.g_choose_options(info_codes, 'please enter type of information you would like to receive')
-        addFunc.plot_sailors(start_date, sailorid, out_codes[selected], universe_name, end_date)
+        file_loc = addFunc.plot_sailors(start_date, sailorid, out_codes[selected], universe_name, end_date, info_codes[selected])
+        self.ui.display_text(f"Graph file has been saved to : {file_loc}")
+
 
     def get_sailor_info(self):
         info_codes = ['Championship Number', 'Sail Number', 'Light wind rating', 'Medium wind rating',
@@ -208,6 +216,7 @@ class HostScript:
         if nat is None:
             nat = ui.g_nat(f'{first} {sur}', 1)
         nat = str(nat)
+        first = f_base.similar_names(first)
         out = Base.generate_sailor_id(ui, nat, sailno, first, sur)
         sailorid = out[0]
         nat = out[1]
@@ -395,21 +404,20 @@ class HostScript:
             case 3:
                 event = self.add_event_csv()
             case 4:
-                event = self.add_online_event(self.ui)
+                event = self.add_online_event()
             case 5:
-                event = self.add_event_local(self.ui)
+                event = self.add_event_local()
             case 6:
                 event = self.import_pickled_event(self.ui)
             case _:
                 event = None
         return event
 
-    @staticmethod
-    def add_event_local(ui: ui_obj) -> dat.Event:
-        inp_mgr = ImportManager(ui, 'F')
-        return inp_mgr.to_event(universe_csv)
+    def add_event_local(self) -> dat.Event:
+        inp_mgr = ImportManager(self.ui, 'F',)
+        return inp_mgr.to_event(universe_csv, self.nat)
 
-    @staticmethod
-    def add_online_event(ui: ui_obj) -> dat.Event:
-        inp_mgr = ImportManager(ui, 'L')
-        return inp_mgr.to_event(universe_csv)
+
+    def add_online_event(self) -> dat.Event:
+        inp_mgr = ImportManager(self.ui, 'L')
+        return inp_mgr.to_event(universe_csv,self.nat)

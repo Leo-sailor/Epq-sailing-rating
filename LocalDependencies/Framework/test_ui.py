@@ -1,3 +1,4 @@
+import time
 from typing import Any
 from LocalDependencies.Framework.base_ui import callback
 from LocalDependencies.Framework.text_ui import text_ui
@@ -46,7 +47,6 @@ def compare_strings(a: str, b: str) -> bool:
     b.lower()
     a.find_and_replace('\n', ' | ')
     b.find_and_replace('\n', ' | ')
-    log.queue(0, 'comparing strings', (a, b, a == b))
     return a == b
 
 
@@ -57,7 +57,10 @@ def call_default(func: callable, *args, **kwargs):
 
 class test_ui(callback):
     # noinspection SpellCheckingInspection
-    def __init__(self, inp_file: str, out_file: str = None, display_outs: callback | bool = None):
+    def __init__(self, inp_file: str, out_file: str = None, display_outs: callback | bool = None, wait_time:float|int = 0.0):
+        if wait_time is None:
+            wait_time = 0.0
+        self.wait_time = wait_time
         if isinstance(display_outs, bool):
             if display_outs:
                 display_outs = text_ui()
@@ -83,7 +86,7 @@ class test_ui(callback):
         else:
             log.queue(3, 'unable to recognise file format for faked inputs')
             self.inps = []
-        if out_file is not None:
+        if out_file is not None and out_file != '_':
             out_file = '    ' + out_file
             if out_file[-4:] in ['outs', '.out', 'puts', 'tput']:
                 log.queue(1, 'reading expected outputs from text file')  # .outs, .out, .outputs . output
@@ -106,6 +109,7 @@ class test_ui(callback):
 
     def canned_user_input(self, expected_type: type, func: callable, *args, **kwargs) -> Any:
         if self.use_canned_inps:
+            time.sleep(self.wait_time)
             self.inp_index += 1
             if self.inp_index == len(self.inps):
                 log.queue(2, 'out of preprogrammed inputs')
@@ -117,7 +121,7 @@ class test_ui(callback):
                 res = call_default(func, *args, **kwargs)
             else:
                 res = self.inps[self.inp_index]
-                log.queue(0, 'pre programmed input used', ({self.inp_index + 1, res}))
+                log.queue(0, 'pre programmed input used', (self.inp_index + 1, res))
                 green_print(f'--Input {self.inp_index + 1}: {res}')
         else:
             res = call_default(func, *args, **kwargs)
@@ -212,9 +216,8 @@ class record(test_ui):
         log.queue(2, ' input and output recording started')
         if ('        ' + inp_file)[-7:] != '.pickle':
             inp_file += '.pickle'
-        if out_file is not None:
-            if ('        ' + out_file)[-7:] != '.pickle':
-                out_file += '.pickle'
+        if out_file is not None and ('        ' + out_file)[-7:] != '.pickle':
+            out_file += '.pickle'
         self.input_file = inp_file
         self.output_file = out_file
         self.out_obj = original_ui

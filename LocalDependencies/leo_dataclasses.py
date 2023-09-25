@@ -1,5 +1,6 @@
 import datetime
 import LocalDependencies.General as Base
+import LocalDependencies.Framework.base_func as f_base
 from pickle import dumps as _dumps, loads as _loads
 
 
@@ -11,20 +12,31 @@ class Results:
             self.positions = list(range(len(sailorids)))
         else:
             self.positions = positions
-        if len(self.sailorids) != len(self.positions):
-            raise ValueError("Sailorids and positions must be the same length")
-        if not(all(isinstance(x, str) for x in self.sailorids)):
-            raise ValueError("Sailorids must be strings")
-        if not(all(isinstance(x, int) for x in self.positions)):
-            raise ValueError("Positions must be integers")
-        if len(set(sailorids)) != len(self.sailorids):
-            print(sailorids)
-            raise ValueError("Sailorids must be unique")
+        try:
+            if len(self.sailorids) != len(self.positions):
+                raise ValueError("Sailorids and positions must be the same length")
+            if not(all(isinstance(x, str) for x in self.sailorids)):
+                raise ValueError("Sailorids must be strings")
+            if not(all(isinstance(x, int) for x in self.positions)):
+                raise ValueError("Positions must be integers")
+            if len(set(sailorids)) != len(self.sailorids):
+                print(sailorids)
+                raise ValueError("Sailorids must be unique")
+        except ValueError:
+            breakpoint()
+        while not f_base.check_all_nums_present(self.positions)[0]:
+            num = f_base.check_all_nums_present(self.positions)[1]
+            for loc, val in enumerate(self.positions):
+                if num < val:
+                    self.positions[loc] -= 1
 
     def __str__(self):
         things_to_join = []
-        for x in range(1, len(self.positions)+1):
-            things_to_join.append(str(x) + " - " + str(self.sailorids[self.positions.index(x)]))
+        try:
+            for place,sailor in enumerate(self):
+                things_to_join.append(str(place +1) + " - " + str(sailor))
+        except ValueError:
+            breakpoint()
         return "\n".join(things_to_join)
 
     def __len__(self) -> int:

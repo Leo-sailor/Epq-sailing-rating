@@ -4,11 +4,16 @@ from sys import path
 from time import time
 from pickle import dumps as _dumps, loads as _loads
 from LocalDependencies.Framework.logger import log
+
 log = log()
 
+
 class csv_base:
-    def __init__(self, file_location, protected_rows: list[int] = None, protected_cols: list[int] = None, ):
-        log.queue(0, 'opening file with:', (protected_cols,protected_rows,file_location))
+    def __init__(self, file_location, protected_rows: list[int] = None, protected_cols: list[int] = None, *,
+                 new_open=None):
+        log.queue(0, 'opening file with:', (protected_cols, protected_rows, file_location))
+        if new_open is None:
+            new_open = open
         if protected_cols is None:
             protected_cols = []
         if protected_rows is None:
@@ -17,8 +22,8 @@ class csv_base:
         self.protected_row = protected_rows
         self.protected_col = protected_cols
         try:
-            with open(file_location, newline='') as csvfile:
-                log.queue(2,'opening file with', file_location)
+            with new_open(file_location, newline='') as csvfile:
+                log.queue(2, 'opening file with', file_location)
                 spam_reader = csv.reader(csvfile, delimiter=' ', quotechar='|')
                 x = 0
                 rows = []
@@ -31,7 +36,7 @@ class csv_base:
                     rows[x] = rows[x].split(',')  # takes the raw string and splits into an array
                     x += 1
         except FileNotFoundError:
-            log.queue(3,'file not found, so new file being created', file_location)
+            log.queue(3, 'file not found, so new file being created', file_location)
             with open(file_location, 'x', newline=''):
                 rows = [[]]
 
@@ -45,10 +50,10 @@ class csv_base:
                 column.pop(loc)
         self.column_first = column
         self.row_first = rows
-        self.open = open
+        self.open = new_open
 
     def get_row(self, row: int, miss: list[int] | int = None) -> list:
-        log.queue(0,'retriving row',(row, miss))
+        log.queue(0, 'retriving row', (row, miss))
         if miss is None:
             return self.row_first[row]
         elif isinstance(miss, int):
@@ -62,7 +67,7 @@ class csv_base:
                 temp.pop(index)
             return temp
         else:
-            log.queue(5,'the type of miss is not: int,list, None', miss)
+            log.queue(5, 'the type of miss is not: int,list, None', miss)
             raise TypeError
 
     def get_cell(self, row: int, column: int):
@@ -86,7 +91,7 @@ class csv_base:
         else:
             log.queue(5, 'the type of columns is not: int,list', columns)
             raise TypeError
-        log.queue(0,'new columns protected',columns)
+        log.queue(0, 'new columns protected', columns)
 
     def get_column(self, column, excluded_rows: int | list[int] = None):
         if excluded_rows is None:
@@ -100,7 +105,7 @@ class csv_base:
         return to_print
 
     def save(self):
-        log.log(2,'saving file')
+        log.queue(2, 'saving file')
         with self.open(self.file_location, 'w', newline='') as csvfile:
             spam_writer = csv.writer(csvfile, delimiter=',',
                                      quotechar=',', quoting=csv.QUOTE_MINIMAL)
@@ -120,7 +125,7 @@ class csv_base:
         else:
             return iter(self.row_first[row_from:row_to])
 
-    def index(self, val, col = 0):
+    def index(self, val, col=0):
         """
         indexes the first column of the table unless otherwise specified
         """
@@ -139,7 +144,8 @@ class csv_base:
             excluded_rows.sort()
             to_print = self.column_first[column][:]
             for index in reversed(excluded_rows):
-                to_print.pop(index)
+                if index is not None:
+                    to_print.pop(index)
             return ', '.join(to_print)
 
     def get_row_num(self, term: str, col: int):
@@ -152,15 +158,15 @@ class csv_base:
         return len(self.row_first)
 
     def add_row(self, array: list):
-        log.queue(0,'row added to table',array)
+        log.queue(0, 'row added to table', array)
         for val, item in enumerate(array):
-            array[val] = base.findandreplace(item, ' ', '-', True)
+            array[val] = base.findandreplace(str(item), ' ', '-', True)
         for x in range(len(array)):
             try:
-                self.column_first[x].append(str(array[x]))
+                self.column_first[x].append(array[x])
             except IndexError:
                 self.column_first.append([])
-                self.column_first[x].append(str(array[x]))
+                self.column_first[x].append(array[x])
         self.row_first.append(array)
 
     def add_col(self, array: list):
@@ -171,18 +177,18 @@ class csv_base:
             self.row_first[x].append(str(array[x]))
         self.column_first.append(array)
 
-
     def remove_row(self, row_num: int):
         log.queue(0, 'row removed from table', row_num)
         self.row_first.pop(row_num)
         for col in self.column_first:
             try:
                 col.pop(row_num)
-            except:
+            except Exception as e:
                 breakpoint()
+                raise e
 
     def update_value(self, term, row: int | str, column: int, col_search: int = None, bypass: bool = False):
-        #col search says what column to search in , only in the case row is a string and needs indexing
+        # col search says what column to search in , only in the case row is a string and needs indexing
         term = str(term)
         if col_search is None:
             col_search = 0
@@ -205,17 +211,35 @@ class csv_new(csv_base):
                  universe=None):
         super(csv_new, self).__init__(file_location, protected_rows, protected_cols)
         self.session_start = set_session()
+        self.open = open
         if universe is not None:
-            log.queue(1,'openning a universe file')
+            log.queue(1, 'openning a universe file')
             folder = path[0]
-            self.host_file = ''.join((folder, '\\universes\\', universe, '\\host-', universe, '.csv'))
-            self.host_file_old = csv_base(self.host_file)
-            self.prev_version_num = int(self.host_file_old.get_cell(1, 0))
+            self.host_file_loc = ''.join((folder, '\\universes\\', universe, '\\host-', universe, '.csv'))
+            self.host_file_obj = csv_base(self.host_file_loc)
+            self.prev_version_num = int(self.host_file_obj.get_cell(1, 0))
             self.universe = universe
+            self.update_count = 0
 
     def update_value_single(self, term, row: int, column: bool, bypass: bool = False):
         self.update_value(term, row, column, 0, bypass)
         self.auto_save_file()
+
+    def similar_names(self, similar_names_func: callable, *, col: int | list[int] = None, row: int | list[int] = None):
+        if col is not None:
+            if isinstance(col,int):
+                col = [col]
+            for column in col:
+                to_change = similar_names_func(self.get_column(column))
+                self.column_first[column] = to_change
+                [self.row_first[loc].__setitem__(column, item) for loc, item in enumerate(to_change)]
+        if row is not None:
+            if isinstance(row,int):
+                col = [row]
+            for row in col:
+                to_change = similar_names_func(self.get_row(row))
+                self.row_first[row] = to_change
+                [self.column_first[loc].__setitem__(row, item) for loc, item in enumerate(to_change)]
 
     def set_session(self):
         self.session_start = set_session()
@@ -255,46 +279,47 @@ class csv_new(csv_base):
     def add_row(self, array: list):
         super(csv_new, self).add_row(array)
         self.auto_save_file()
-        self.row_first = [[x for x in range(len(self.column_first))] for _ in range(len(self.column_first[0]))] # transformation due to issues with this
-        for x in range(len(self.column_first[0])):
-            for y in range(len(self.column_first)):
-                self.row_first[x][y] = self.column_first[y][x]
 
     def add_col(self, array: list):
         super(csv_new, self).add_col(array)
         self.auto_save_file()
 
+    def update_value(self, term, row: int | str, column: int, col_search: int = None, bypass: bool = False):
+        super(csv_new, self).update_value(term, row, column, col_search)
+        if not bypass:
+            self.auto_save_file()
+
     def remove_row(self, row_num: int):
         super(csv_new, self).remove_row(row_num)
         self.auto_save_file()
 
-    def auto_save_file(self):
-        log.queue(0,'file auto save starting')
+    def __del__(self):
+        self.auto_save_file(force=True)
+
+    def auto_save_file(self, *, force: bool = False):
+        self.update_count += 1
+        if self.update_count % 100 != 1 and not force:
+            return None
+        self.set_session()
+        log.queue(0, 'file auto save starting')
         filename = ''.join((self.universe, '-', str(self.session_start), '.csv'))
         folder = ''.join((path[0], '\\universes\\', self.universe, '\\'))
         cfile = ''.join((folder, filename))
-        with open(cfile, 'w', newline='') as csvfile:  # saves the file
+
+        with self.open(cfile, 'w', newline='') as csvfile:  # saves the file
             spam_writer = csv.writer(csvfile, delimiter=',',
                                      quotechar=',', quoting=csv.QUOTE_MINIMAL)
 
             for x in range(0, len(self.column_first[0])):  # number of rows # assembles the row
                 spam_writer.writerow(self.row_first[x])
-        log.queue(0,'main csv written')# writes the row  # clears the row for the next one
-        if self.host_file_old.get_cell(0, 1) == (self.prev_version_num + 1):  # checks how to record the temporary save
-            with open(self.host_file, 'w', newline='') as csvfile:  # works as if it's a second or more auto save
-                spam_writer = csv.writer(csvfile, delimiter=',',
-                                         quotechar=',', quoting=csv.QUOTE_MINIMAL)
-                spam_writer.writerow(self.host_file_old.get_row(0))
-                row = self.host_file_old.get_row(1, miss=3)
-                row.append(base.hashfile(cfile))
-                spam_writer.writerow(row)
-                for x in range(2, len(self.host_file_old.row_first)):
-                    spam_writer.writerow(self.host_file_old.get_row(x))
-        else:
-            with open(self.host_file, 'w', newline='') as csvfile:  # first auto save
-                spam_writer = csv.writer(csvfile, delimiter=',',
-                                         quotechar=',', quoting=csv.QUOTE_MINIMAL)
-                spam_writer.writerow(self.host_file_old.get_row(0))
-                spam_writer.writerow([self.prev_version_num + 1, self.session_start, filename, base.hashfile(cfile)])
-                for x in range(1, len(self.host_file_old.row_first)):
-                    spam_writer.writerow(self.host_file_old.get_row(x))
+        log.queue(0, 'main csv written')  # writes the row  # clears the row for the next one
+        with self.open(self.host_file_loc, 'w', newline='') as csvfile:  # first auto save
+            spam_writer = csv.writer(csvfile, delimiter=',',
+                                     quotechar=',', quoting=csv.QUOTE_MINIMAL)
+            spam_writer.writerow(self.host_file_obj.get_row(0))
+            spam_writer.writerow(
+                [self.prev_version_num + 1, self.session_start, filename, base.hashfile(cfile, new_open=self.open)])
+            for x in range(1, len(self.host_file_obj.row_first)):
+                spam_writer.writerow(self.host_file_obj.get_row(x))
+        self.prev_version_num += 1
+        self.host_file_obj = csv_base(self.host_file_loc, new_open=self.open)

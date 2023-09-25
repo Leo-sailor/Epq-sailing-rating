@@ -7,9 +7,15 @@ from LocalDependencies.Framework.constants import constants
 from colorama import Fore
 from LocalDependencies.Framework.base_func import findandreplace
 
-c = constants()
+file = __file__.split('\\')
+for _ in range(3):
+    file.pop()
+file.append('config.ini')
+print('\\'.join(file))
+c = constants('\\'.join(file))
 log_levels = {0: 'Debug', 1: 'Info', 2: 'Event', 3: 'Warning', 4: 'ERROR', 5: 'FATAL'}
 production_env = c.get('production')
+min_level = c.get('min_log_level')
 
 
 def green_print(*args):
@@ -35,6 +41,8 @@ def line_factory(level: Literal[0, 1, 2, 3, 4, 5], message: str, data: Callable[
 
 
 def get_stack():
+    if not c.get('stack'):
+        return []
     stack = []
     start = 1
     while True:
@@ -42,7 +50,7 @@ def get_stack():
             frame = sys._getframe(start + 1)
         except ValueError:
             return stack
-        res = f"{os.path.basename(frame.f_code.co_filename)}/{frame.f_lineno} {frame.f_code.co_name}()"
+        res = f"{frame.f_code.co_filename}/{frame.f_lineno} {frame.f_code.co_name}()"
         stack.append(res)
         start += 1
         if '<module>' in res:
@@ -65,6 +73,8 @@ def time(detail: Literal[0, 1] = 1, date=None) -> str:
 
 
 def log(file_loc: str = None):
+    if not c.get('use_log'):
+        return dud_log(file_loc)
     if _log._self is None:
         if file_loc is None:
             raise TypeError("Log missing 1 required positional argument: 'file_loc'")
@@ -95,11 +105,15 @@ class _log:
         self.open = open
 
     def log(self, level: Literal[0, 1, 2, 3, 4, 5], message: str, data: Any = None):
+        if level < min_level:
+            return None
         self.to_write = line_factory(level, message, data)
         self.flush()
         self.to_write = None
 
     def queue(self, level: Literal[0, 1, 2, 3, 4, 5], message: str, data: Any = None):
+        if level < min_level:
+            return None
         self.queue_list.append((level, message, str(data), get_stack(), datetime.utcnow()))
 
     def flush(self):
@@ -122,5 +136,25 @@ class _log:
         self.flush()
 
     @property
+    def self(self):
+        return self._self
+
+
+class dud_log(_log):
+    def __init__(self, file_loc: str):
+        return None
+
+    def log(self, level: Literal[0, 1, 2, 3, 4, 5], message: str, data: Any = None):
+        return None
+
+    def queue(self, level: Literal[0, 1, 2, 3, 4, 5], message: str, data: Any = None):
+        return None
+
+    def flush(self):
+        return None
+
+    def __del__(self):
+        return None
+
     def self(self):
         return self._self
