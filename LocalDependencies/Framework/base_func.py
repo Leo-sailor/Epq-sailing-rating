@@ -8,13 +8,17 @@ from typing import Any
 from argon2 import PasswordHasher
 import pyscrypt
 from pickle import loads as _load, dumps as _dump
+
 names = {'seb': 'sebastian', 'joe': 'joseph', 'josh': 'joshua', 'edward': 'ed', 'finlay': 'finn', 'fin': 'finn',
          'finley': 'finn', 'isabel': 'isobel', 'beth': 'elizabeth', 'dom': 'dominic', 'daniel': 'dan', 'thomas': 'tom',
          'jess': 'jessica', 'kat': 'katherine', 'natasha': 'nat', 'natalie': 'nat', 'madeline': 'maddie',
-         'matt': 'matthew', 'ollie': 'oliver','olly': 'oliver', 'piotr': 'peter', 'pete': 'peter', 'oli': 'oliver', 'william': 'will',
+         'izzy': 'isobel',
+         'matt': 'matthew', 'ollie': 'oliver', 'olly': 'oliver', 'piotr': 'peter', 'pete': 'peter', 'oli': 'oliver',
+         'william': 'will', 'mago': 'magnus', 'bronny': 'bronwen', 'samantha': 'sam', 'sammy': 'sam',
+         'annie': 'annabelle','lizzie': 'elizabeth',
          'joanna': 'jo', 'florence': 'flo', 'alfred': 'alfie', 'torqul': 'torquil', 'elie': 'ellie', 'eddie': 'ed',
-         'christopher':'chris'}
-
+         'christopher': 'chris', 'alexander': 'alex', 'samuel': 'sam', 'zachary': 'zach', 'zac': 'zach',
+         'beatrice': 'bea', 'rebeca': 'rebecca', 'emiliy': 'emily'}
 
 numbers = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
 
@@ -118,7 +122,7 @@ def password_hash(password: str, hash_method: str, salt: bytes | str = None) -> 
     return hashed, salt
 
 
-def hashfile(file: str, *, new_open = None) -> str:
+def hashfile(file: str, *, new_open=None) -> str:
     """
     This function takes a file address and opens it as a text file and produces a md5 hash of it
     :param file: the file address of the file to be hashed
@@ -132,7 +136,7 @@ def hashfile(file: str, *, new_open = None) -> str:
     return str(result)
 
 
-def check_all_nums_present(inp: list)->tuple[bool,int]:
+def check_all_nums_present(inp: list) -> tuple[bool, int]:
     s = inp
     # Get the length of the list s
     max_num = max(s)
@@ -140,18 +144,17 @@ def check_all_nums_present(inp: list)->tuple[bool,int]:
     # Create a set from the list s for faster membership checks
     s_set = set(s)
 
-
     for num in range(1, max_num + 1):
         if num not in s_set:
-            return False,num  # Number is missing, return False
+            return False, num  # Number is missing, return False
 
-    return True,max_num  # All numbers are present
+    return True, max_num  # All numbers are present
 
 
 def similar_names(inp: str | list[str]) -> str | list[str] | tuple[str]:
     def replace_names(text):
         text_bits = text.lower().split(' ')
-        for loc,text_bit in enumerate(text_bits):
+        for loc, text_bit in enumerate(text_bits):
             if text_bit in names:
                 text_bits[loc] = names[text_bit]
         return ' '.join(text_bits)
@@ -236,9 +239,10 @@ def clean_table(table: list[list[Any]], wanted_type: type = None, actions: calla
         for row_num, row in enumerate(table):
             for col_num, cell in enumerate(row):
                 table[row_num][col_num] = wanted_type(cell)
-    for row_num, row in enumerate(table):
-        for col_num, cell in enumerate(row):
-            table[row_num][col_num] = cell.lower()
+    if wanted_type == str:
+        for row_num, row in enumerate(table):
+            for col_num, cell in enumerate(row):
+                table[row_num][col_num] = cell.lower()
     return table
 
 
@@ -278,13 +282,16 @@ def can_be_type(target_type: type, term: Any):
 def catcher(func):
     def wrapper(*args, **kwargs):
         try:
+            dump = deep_copy((args, kwargs))
             return func(*args, **kwargs)
-        except:
+        except Exception as e:
+            print(dump)
             breakpoint()
+
     return wrapper
 
 
-def deep_copy(inp: Any) -> Any:
+def deep_copy(inp) -> Any:
     return _load(_dump(inp))
 
 

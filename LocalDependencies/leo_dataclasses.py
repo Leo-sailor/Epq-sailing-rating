@@ -8,6 +8,9 @@ class Results:
 
     def __init__(self, sailorids: [list[str]], positions: list[int] = None):
         self.sailorids = sailorids
+        for loc,pos in enumerate(reversed(positions)):
+            if pos >200 or pos < 1:
+                positions.pop(len(positions)-1-loc)
         if positions is None:
             self.positions = list(range(len(sailorids)))
         else:

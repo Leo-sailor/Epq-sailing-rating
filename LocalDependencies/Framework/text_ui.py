@@ -99,7 +99,7 @@ class text_ui(base_ui.callback):
             return new_str
         return self.g_str(prompt, length, chars_allowed=all_chars)
 
-    def g_int(self, prompt: str, range_low: int = None, range_high: int = None, allow_skip=False) -> int | None:
+    def g_int(self, prompt: str, range_low: int = None, range_high: int = None, allow_skip=False, default=None) -> int | None:
         if range_high is None:
             range_low = float('-inf')
         if range_low is None:
@@ -109,9 +109,9 @@ class text_ui(base_ui.callback):
                 inp = input(prompt)
                 check_breakpoint(inp)
                 if inp == '':
-                    if allow_skip:
+                    if allow_skip or default:
                         # noinspection PyTypeChecker
-                        return None
+                        return default
                     inp = 0
                 else:
                     inp = int(inp)

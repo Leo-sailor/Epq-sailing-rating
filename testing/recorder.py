@@ -18,6 +18,7 @@ def main():
     if ' ' in test_name:
         raise NameError('cannot inclue spaces')
     path = get_file_loc('Epq-sailing-rating')
+    print(f' path used is {path}')
     run_path = path + '\\main.py'
     inp_path = path + f'\\testing\\tests\\{test_name}.inp.pickle'
     out_path = path + f' \\testing\\tests\\{test_name}.out.pickle'
@@ -38,8 +39,10 @@ def main():
     main_line = f'{run_path} record text {inp_path}{out_path}'
     cmd(main_line)
     cmd('cd testing')
+
     cmd(f'un-pickler.py {inp_path} {out_path}')
     print(main_line)
+    # TODO: better at finding unpickler
     print(f'un-pickler.py {inp_path} {out_path}')
 
 

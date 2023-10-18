@@ -11,7 +11,6 @@ file = __file__.split('\\')
 for _ in range(3):
     file.pop()
 file.append('config.ini')
-print('\\'.join(file))
 c = constants('\\'.join(file))
 log_levels = {0: 'Debug', 1: 'Info', 2: 'Event', 3: 'Warning', 4: 'ERROR', 5: 'FATAL'}
 production_env = c.get('production')

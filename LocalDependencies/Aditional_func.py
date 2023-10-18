@@ -31,11 +31,12 @@ def plot_sailors(start_date: int, sailorids: str | list[str], field_num: int | s
                 loc = 0
             date = f_base.force_int(file_obj.get_cell(loc, 13))
             if start_date <= date <= end_date and loc != 0:
-                datapoint = [file_obj.get_cell(loc, field_num), date]
+                datapoint = [float(file_obj.get_cell(loc, field_num)), date]
                 to_graph[num].append(datapoint)
         to_graph[num] = f_base.sort_on_element(to_graph[num], 1, False, False)
         plt.plot([to_graph[num][x][1] for x in range(len(to_graph[num]))],
-                 [to_graph[num][x][0] for x in range(len(to_graph[num]))], 's-'+colors[num])
+                 [to_graph[num][x][0] for x in range(len(to_graph[num]))], 's-'+colors[num], label=sailor)
+    plt.legend(loc='upper left')
     plt.xlabel("Number of days since 2000 of rating")
     plt.ylabel(field_name)
     with open('\\'.join(__file__.split('\\')[:-2]) + "\\Graph.png", "wb") as graph_file:

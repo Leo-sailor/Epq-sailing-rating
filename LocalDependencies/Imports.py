@@ -13,6 +13,7 @@ from LocalDependencies.Framework.constants import constants
 from datetime import datetime
 from pickle import load as _load, dump as _dump
 import os
+import time
 
 UniverseHost = object
 
@@ -45,8 +46,8 @@ def process_link(ui: ui_obj) -> str:
     return temp_file
 
 
-def trim_table(table: list[list[str]], new_first_cell: str):
-    first_col = [str(row[0]).upper() for row in table]
+def trim_table(table: list[list[str]], new_first_cell: str,col_num:int = 0):
+    first_col = [str(row[col_num]).upper() for row in table]
     new_first_row_index = first_col.index(new_first_cell.upper())
     return table[new_first_row_index:]
 
@@ -61,7 +62,7 @@ def remove_rows_including(table: list[list[Any]], term: Any):
 
 def process_file(ui: ui_obj) -> str:
     file_loc = '______'
-    file_types = ['.htm', 'html', '.pdf']
+    file_types = ['.htm', 'html', '.pdf', 'port']
     while file_loc[-4:] not in file_types:
         if file_loc != '______':
             ui.display_text('that file is not of the correct type')
@@ -115,17 +116,18 @@ def clear_dnc(table: list[list[str]], race_cols: list[int], sailorids: list[str]
     if sailorids is None:
         sailorids = [0] * len(table)
     rows_to_remove = []
-    for row_loc, row in enumerate(table):
+    for row_loc, row in enumerate(table[1:]):
         bad_row = True
         for col in race_cols:
-            if 'dn' not in row[col]:
+            if 'dn' not in row[col] and 'ret' not in row[col]:
                 bad_row = False
                 break
         if bad_row:
-            rows_to_remove.append(row_loc)
+            rows_to_remove.append(row_loc+1)
+    shift = len(table) - len(sailorids)
     for row_num in reversed(rows_to_remove):
         table.pop(row_num)
-        sailorids.pop(row_num - 1)
+        sailorids.pop(row_num - shift)
     if sailorids is None:
         return table
     return table, sailorids
@@ -216,7 +218,7 @@ def prep_table_info(table, col_num):
     return sample_val1, sample_val2, is_number
 
 
-def discover_columns(table: list[list[str]], same_nat=None) -> dict:
+def discover_columns(table: list[list[str]], same_nat=None) -> dict[str, None | int | slice]:
     table = f_base.deep_copy(table)
     for row_num, row in enumerate(table):
         for col_num, cell in enumerate(row):
@@ -266,9 +268,12 @@ class ImportManager:
                  file_loc: str = None, full_speed: bool = False):
         self.full_speed = full_speed
         self.ui = ui
-        self.chosen_data_type = None
+        self.chosen_data_col = None
+        self.chosen_data_name = None
         self.__files_to_remove = []
         self.chosen_table = None
+        self.date = None
+        self.event_title = ''
         if file_loc is None:
             source = chose_source(ui, source)
             match source:
@@ -298,12 +303,13 @@ class ImportManager:
                 self.all = _load(f)
         elif self.type == 'pdf':
             self.all = import_pdf(file_loc)
-            with open(cache_file, 'wb') as f:
+            with open(cache_file, 'xb') as f:
                 _dump(self.all, f)
         elif self.type == 'html':
             self.all = import_html(file_loc)
-            with open(file_loc, 'wb') as f:
+            with open(cache_file, 'xb') as f:
                 _dump(self.all, f)
+            time.sleep(0.1)
         elif self.type == 'import':
             with open(file_loc, 'rb') as f:
                 self.all = _load(f)
@@ -313,7 +319,14 @@ class ImportManager:
         command = f'attrib +h "{cache_file}"'
         # print(f"using command: {command}")
         os.system(command)
-        self.all = trim_table(self.all, 'rank')
+        self.all = f_base.clean_table(self.all)
+        try:
+            self.all = trim_table(self.all, 'rank')
+        except ValueError:
+            try:
+                self.all = trim_table(self.all, 'place')
+            except ValueError:
+                self.all = trim_table(self.all, 'rank', col_num=3)
         if remove_rows_with is not None:
             self.all = remove_rows_including(self.all, remove_rows_with)
         self.tables = split_table(self.all)
@@ -344,11 +357,15 @@ class ImportManager:
             info = discover_columns(self.tables[table][:3])
         else:
             info = columns
-        if self.chosen_data_type:
+        if self.chosen_data_col:
             for key, val in info.items():
-                if val == self.chosen_data_type:
-                    field = key
-            return self.chosen_data_type, field
+                if val == self.chosen_data_col:
+                    self.chosen_data_name = key
+                    return self.chosen_data_col, self.chosen_data_name
+        if self.chosen_data_name:
+            self.chosen_data_col = info[self.chosen_data_name]
+            if self.chosen_data_col is not None:
+                return self.chosen_data_col, self.chosen_data_name
         options = []
         options_true = []
         for key, val in info.items():
@@ -361,11 +378,11 @@ class ImportManager:
                 options.append(f"field: '{key}' with column title: '{self.tables[table][0][val]}' "
                                f"with first row: '{self.tables[table][1][val]}'")
         option_chosen = self.ui.g_choose_options(options, 'Which column do you want to prioritize reading')
-        self.chosen_data_type = options_true[option_chosen]
+        self.chosen_data_col = options_true[option_chosen]
         for key, val in info.items():
-            if val == self.chosen_data_type:
-                field = key
-        return self.chosen_data_type, field
+            if val == self.chosen_data_col:
+                self.chosen_data_name = key
+        return self.chosen_data_col, self.chosen_data_name
 
     def choose_table(self):
         if self.chosen_table is not None:
@@ -415,15 +432,23 @@ class ImportManager:
             sailorids.pop(loc)
             table.pop(loc + 1)
 
+        date, event_title = self.get_event_info()
+        log.queue(0, 'importing event with:', (sailorids, self.chosen_data_col, event_title))
+        return universe.process_table(table, event_title, nat, sailorids, date,self.full_speed)
+
+    def get_event_info(self):
+        if self.date and self.event_title:
+            return self.date, self.event_title
         file_name = self.file_loc.split('/')[-1]
         if len(str(f_base.force_int(file_name[:10]))) == 8:
             event_title = file_name.split('.')[0][11:]
-            date = datetime.fromisoformat(file_name[:10])
+            date = (datetime.fromisoformat(file_name[:10]) - datetime(2000, 1, 1)).days
         else:
             date = None
             event_title = self.ui.g_str('What is the event called: ')
-        log.queue(0, 'importing event with:', (sailorids, self.chosen_data_type, event_title))
-        return universe.process_table(table, event_title, nat, sailorids, date)
+        self.date = date
+        self.event_title = event_title
+        return date, event_title
 
     def import_sailors_to_universe(self, universe, nat: str = None) -> list[str]:
         if nat is None or nat.upper() not in valid_nat:

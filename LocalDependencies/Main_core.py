@@ -1,3 +1,4 @@
+import random
 from sys import path
 from time import time
 import os
@@ -11,6 +12,7 @@ from pickle import dump as _dump
 from LocalDependencies.Framework.base_ui import callback as ui_obj
 from LocalDependencies.Framework.logger import log
 from LocalDependencies.Imports import prep_table_info, clear_dnc
+import random
 
 UNIVERSES_ = '\\universes\\'
 sys_path = path[0]
@@ -81,7 +83,8 @@ class UniverseHost:
 
     def __make_universe(self) -> str:
 
-        name = self.ui.g_str('\nPlease enter your new ranking universe name: ', char_level=1).lower()  # gets the universe name
+        name = self.ui.g_str('\nPlease enter your new ranking universe name: ',
+                             char_level=1).lower()  # gets the universe name
         log.queue(2, 'making universe started', name)
         directory = ''.join((sys_path, UNIVERSES_, name,))  # figures out the path of the new universe
         if os.path.exists(directory):  # checks whether that universe exists
@@ -102,11 +105,12 @@ class UniverseHost:
         host.add_row(['versionNumber', 'creationDate', 'fileName', 'md5'])
         host.add_row(['1', cur_time, first_file_name, base.hashfile(first_file)])
 
-        self.pass_hash, self.pass_salt = self.ui.g_make_password_with_salt('\nPlease enter a password for this universe: ', 'bcrypt')
+        self.pass_hash, self.pass_salt = self.ui.g_make_password_with_salt(
+            '\nPlease enter a password for this universe: ', 'bcrypt')
 
         log.queue(0, 'password creation success', (self.pass_hash, self.pass_salt))
         starting = self.ui.g_int('\nWhat would you like the average rating of this universe to be?(450-3100)'
-                                 '(default: 1500): ', range_high=3100, range_low=450)
+                                 '(default: 1500): ', range_high=3100, range_low=450, )
         k = self.ui.g_float('\nWhat would you like the speed of rating change to be?(0.3 - 4)(Recommended - 1): ',
                             range_low=0.3, range_high=4)  # random comment
         # generic input collecting
@@ -172,6 +176,7 @@ class UniverseHost:
     def getinfo(self, sailorid: str, result_type: str | int):
         if sailorid == '' or sailorid == 'nan':
             return 'aborted'
+        sailorid = sailorid.replace(' ', '-')
         try:
             row = self.file.get_row_num(sailorid, 0)  # figures out what row the sailor id it
         except ValueError:
@@ -187,7 +192,12 @@ class UniverseHost:
             i = []
             for x in range(14):
                 i.append(self.file.get_cell(row, x))
-            result = ', '.join(i)  # basically outputs the raw csv line
+            result = ', '.join(i)
+        elif find_type_loc == -3:
+            i = []
+            for x in range(14):
+                i.append(self.file.get_cell(row, x))
+            result = ', '.join(i)
         elif find_type_loc > -1:  # pull the data from the row and column decided earlier
             result = self.file.get_cell(row, find_type_loc)
         else:
@@ -201,7 +211,10 @@ class UniverseHost:
         term = str(term)  # makes sure the term to be searched for is a string
         if term.endswith('.0'):
             term = term[:-2]
+        if term.endswith('nan'):
+            term = term[:-3]
         term.strip('0')
+        term.strip()
         if type(field_num) == str:
             field_num = custom_funcs.get_field_number(field_num)
         log.queue(0, 'searching for info', (term, field_num))
@@ -210,7 +223,7 @@ class UniverseHost:
             new_term = term.lower().strip().split(' ', 1)
             new_term[0] = base.similar_names(new_term[0])
             try:
-                new_term[1] = new_term[1].replace(' ','-')
+                new_term[1] = new_term[1].replace(' ', '-')
             except IndexError:
                 breakpoint()
             locations = []
@@ -218,7 +231,8 @@ class UniverseHost:
             for loc, val in enumerate(self.file.get_column(3)):
                 if val == new_term[0]:
                     locations.append(loc)
-            locations = [loc for loc in locations if new_term[1].replace('-','') == (self.file.get_cell(loc, 4).replace('-',''))]
+            locations = [loc for loc in locations if
+                         new_term[1].replace('-', '') == (self.file.get_cell(loc, 4).replace('-', ''))]
         else:
             locations = base.multiindex(self.file.get_column(field_num), term)
         log.queue(0, 'sarch completed and found n items', len(locations))
@@ -292,6 +306,7 @@ class UniverseHost:
 
         def auto_tie_break() -> str:
             log.queue(0, 'automatic tie break triggered')
+            breakpoint()
             points_tracker = []
             sailorids = []
             dates = []
@@ -338,22 +353,24 @@ class UniverseHost:
             else:
                 return auto_tie_break()
 
-    def add_sailor(self, sailorid: str, first: str, sur: str, champ, sailno:str, region: str, nat: str) -> tuple[bool, str]:
+    def add_sailor(self, sailorid: str, first: str, sur: str, champ, sailno: str, region: str, nat: str) -> tuple[
+        bool, str]:
         log.queue(2, 'adding new sailor with info:', (sailorid, first, sur, champ, sailno, region, nat))
         starting = ((self.elo.deviation - 100) * 5)
         day = 0
         if not base.multiindex(self.file.get_column(0), sailorid):  # chcks the sailor id doesnt already exist
             self.file.add_row(
-                [sailorid, int(float(champ)), int(float(sailno)), first, sur, region, nat, starting, starting, starting,
+                [sailorid, base.force_int(champ), base.force_int(sailno), first, sur, region, nat, starting, starting,
+                 starting,
                  starting,
                  0, 0, day])
             return True, sailorid
         else:
             log.queue(1, 'new sailor id already exists', sailorid)
 
-            x = lambda field: self.getinfo(sailorid,field)
-            if (sailorid,first,sur,champ,sailno) == (sailorid,x("f"),x("surname"),x("c"),x("s")):
-                return False, sailorid
+            x = lambda field: self.getinfo(sailorid, field)
+            if (sailorid, first, sur, champ, sailno) == (sailorid, x("f"), x("surname"), x("c"), x("s")):
+                return False, sailorid # TODO: make matcher here better so it catches that 0 == anything
             t = (f'That sailor id already exists \nThe original sailors information is: {self.getinfo(sailorid, "a")}',
                  f'\nThe new sailors information is: {sailorid}, {first} {sur}, {champ} and {sailno}')
             options = ['Append "-1" to the new sailor id and proceed to add', 'Abort adding new sailor id', 'overwrite']
@@ -375,29 +392,35 @@ class UniverseHost:
                              0, 0, day])
                 return True, sailorid
             elif inp == 2:
-                self.file.remove_row(self.file.get_row_num(sailorid,0))
-                self.file.add_row([sailorid, champ, sailno, first, sur, region, nat, starting, starting, starting, starting,
-                             0, 0, day])
+                self.file.remove_row(self.file.get_row_num(sailorid, 0))
+                self.file.add_row(
+                    [sailorid, champ, sailno, first, sur, region, nat, starting, starting, starting, starting,
+                     0, 0, day])
                 return True, sailorid
             else:
                 return False, sailorid
 
-    def process_table(self, table: list[list[str]], event_title:str, nat:str, sailorids:list[str], date:int = None) -> dat.Event:
+    def process_table(self, table: list[list[str]], event_title: str, nat: str, sailorids: list[str],
+                      date: int = None, fullspeed:bool = False) -> dat.Event:
         race_columns = []
         numbers = '0123456789'
         for loc, val in enumerate(table[0]):  # goes through the headers looking for races and the search colum
-            sample_val1, sample_val2, is_number = prep_table_info(table,loc)
+            sample_val1, sample_val2, is_number = prep_table_info(table[1:], loc)
             if (val[0].upper() == 'R' and val[1] in numbers and is_number) or 'race' in val or \
-                    ('unnamed:' in val and is_number and (len(sample_val1) <2 or len(sample_val2)<2)):
+                    ('unnamed:' in val and is_number and (len(sample_val1) < 2 or len(sample_val2) < 2)):
                 race_columns.append(loc)
-        table,sailorids = clear_dnc(table,race_columns,sailorids)
+        table, sailorids = clear_dnc(table, race_columns, sailorids)
 
         races = []
         if date is None:
             date = self.ui.g_date_int(f"of the last day of {event_title}: ")
-        self.ui.display_text('1 - Light\n2- Medium\n3 - Heavy')
+        if not fullspeed:
+            self.ui.display_text('1 - Light\n2- Medium\n3 - Heavy')
         for race in race_columns:
-            wind = self.ui.g_int(f'What was the wind of {table[0][race]}: ', range_low=1, range_high=3)
+            if fullspeed:
+                wind = random.choice([1,2,3])
+            else:
+                wind = self.ui.g_int(f'What was the wind of {table[0][race]}: ', range_low=1, range_high=3)
             result = [base.force_int(table[x][race]) for x in range(1, len(table))]
             # goes through the table and gets the positions of people, knowing that the table order wont change
             # it them marrys them with theyre sailor ids in order with dat.results
@@ -407,11 +430,11 @@ class UniverseHost:
     def import_sailor(self, field: int, data: str, row: list[str], info: dict[str:slice | int | None], nat: str,
                       full_speed: bool = False,
                       *extra_info) -> str:
-        if isinstance(data,list):
+        if isinstance(data, list):
             data = ' '.join(data)
         sailor_info = [None if x is None else row[x] for x in info.values()]
         for loc, item in enumerate(sailor_info):
-            if isinstance(item,list):
+            if isinstance(item, list):
                 sailor_info[loc] = ' '.join(item)
         if nat is not None:
             try:
@@ -420,13 +443,16 @@ class UniverseHost:
                 sailor_info.append(nat)
         if data == 'nan':
             return 'nan'
+        if data.endswith(' nan'):
+            data = data[:-4]
         if len(self.get_data_locations(data, field)) == 0:
             self.ui.display_text(f'creating sailor from {data}')
             log.queue(1, 'creating new sailor', sailor_info)
             res = 0
             if not full_speed:
                 res = self.user_select_sailor(data, field, True, full_speed)
-            if isinstance(res, int) or full_speed: # if were going at full speed then we return when were making a new salor
+            if isinstance(res,
+                          int) or full_speed:  # if were going at full speed then we return when were making a new salor
                 while True:
                     from LocalDependencies.Hosts import HostScript
                     a = HostScript.make_new_sailor(self.ui, *sailor_info, full_speed=full_speed)
@@ -439,7 +465,7 @@ class UniverseHost:
         else:
 
             log.queue(0, 'sailor importing success')
-            res = self.get_sailor_id(field, data, *sailor_info ,*extra_info)
+            res = self.get_sailor_id(field, data, *sailor_info, *extra_info)
             self.ui.display_text(f'matched {data}, to sailor {res}')
             return res
 
@@ -484,8 +510,8 @@ class UniverseHost:
             for sailor in sailorids:  # gets the current information on all the current sailors
                 cur_rats.append(float(self.getinfo(sailor, column_num)))
                 curr_events.append(int(self.getinfo(sailor, 'e')))
-            for loc,sailor in enumerate(sailorids):  # gets the current information on all the current sailors
-                old_rats.append((float(old_results.getinfo(sailor, column_num)) + (cur_rats[loc] *2))/3)
+            for loc, sailor in enumerate(sailorids):  # gets the current information on all the current sailors
+                old_rats.append((float(old_results.getinfo(sailor, column_num)) + (cur_rats[loc] * 3)) / 4)
 
             new_rat = self.elo.cycle(old_rats, curr_events, positions, cur_rats)  # executes the maths
             log.queue(1, 'race added to file', (sailorids, old_rats, new_rat))

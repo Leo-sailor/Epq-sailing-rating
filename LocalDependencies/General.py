@@ -11,6 +11,8 @@ def get_field_number(result_type: str) -> int:
     except AttributeError:
         pass
     match result_type:
+        case 'p' | 'personal info':
+            find_type_loc = -3
         case 'n' | 'name':
             find_type_loc = -1  # makes sure the next bit will be bypassed
         case 'sail number' | 's' | 'sail' | 'sail num':

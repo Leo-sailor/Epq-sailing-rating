@@ -7,10 +7,11 @@ import LocalDependencies.leo_dataclasses as dat
 import datetime
 from pickle import load as _load
 from time import sleep as _sleep
-from LocalDependencies.Imports import ImportManager,chose_source
+from LocalDependencies.Imports import ImportManager, chose_source
 from LocalDependencies.Framework.base_ui import callback as ui_obj
 from LocalDependencies.Framework.logger import log
 import traceback
+
 log = log()
 
 global universe_csv
@@ -37,14 +38,16 @@ class HostScript:
             universe_csv = UniverseHost(self.ui, args[1], args[2])
         else:
             universe_csv = UniverseHost(self.ui)
+        self.universe = universe_csv
         self.set_nat()
         while True:
             options = ['add a new event', 'add a new sailor', 'get a sailors information', 'quit',
                        'get sailor info over time', 'print the universe', 'switch universe', 'import sailors',
-                       'graph sailors over time', 'change a sailors information', 'Get admin rights']
+                       'graph sailors over time', 'change a sailors information', 'Get admin rights',
+                       'Add multiple events from files']
             choice = self.ui.g_choose_options(options, 'What would you like to do: ') + 1
             log.flush()
-            log.queue(2, f'user choses {options[choice-1]}')
+            log.queue(2, f'user choses {options[choice - 1]}')
             match choice:
                 case 1:
                     event = self.import_event()
@@ -76,7 +79,8 @@ class HostScript:
                     self.edit_sailor_info(universe_csv)
                 case 11:
                     universe_csv.admin_rights()
-
+                case 12:
+                    self.add_multiple_events()
 
     def import_sailors(self, ui: ui_obj):
         sailors = set()
@@ -84,28 +88,71 @@ class HostScript:
         if source == 'F':
             files = ui.g_many_file_locs()
             imp_mgrs = []
-            for file_num,file in enumerate(files):
-                ui.display_text(f"Now loading: {file_num+1} / {len(files)}")
+            options = ['name', 'sail num', 'champ num']
+            option_chosen = self.ui.g_choose_options(options, 'Which column do you want read as a default')
+            chosen_data_type = options[option_chosen]
+            for file_num, file in enumerate(files):
+                ui.display_text(f"Now loading: {file_num + 1} / {len(files)}")
                 try:
                     imp = ImportManager(ui, source, file_loc=file, full_speed=True)
+                    imp.chosen_data_name = chosen_data_type
                     imp.choose_table()
-                    imp_mgrs.append((file,imp))
+                    imp_mgrs.append((file, imp))
                     log.flush()
                 except Exception as err:
                     ui.display_text(f"Error importing {file}:")
                     traceback.print_exception(err)
                     ui.display_text('Program will now resume with next file')
-            imp_mgrs.sort(key = lambda mgr: mgr[1].get_data_quantity() * 1000 + len(mgr[1][mgr[1].choose_table()]),
+                    breakpoint()
+                    imp = ImportManager(ui, source, file_loc=file, full_speed=True)
+                    imp.chosen_data_name = chosen_data_type
+                    imp.choose_table()
+                    imp_mgrs.append((file, imp))
+                    log.flush()
+            imp_mgrs.sort(key=lambda mgr: mgr[1].get_data_quantity() * 1000 + len(mgr[1][mgr[1].choose_table()]),
                           reverse=True)
-            for num,imp in enumerate(imp_mgrs):
+            for num, imp in enumerate(imp_mgrs):
                 ui.display_text(f'\nNow importing {num}/{len(imp_mgrs)} {imp[0]}')
                 sailors.update(imp[1].import_sailors_to_universe(universe_csv, self.nat))
         else:
-            imp_mgr = ImportManager(ui,source)
+            imp_mgr = ImportManager(ui, source)
             sailors += imp_mgr.import_sailors_to_universe(universe_csv)
         ui.display_text(f'The following {len(sailors)} sailors have been imported')
         for line in sailors:
             ui.display_text(universe_csv.getinfo(line, 'all'))
+
+    def add_multiple_events(self):
+        events = set()
+        files = self.ui.g_many_file_locs()
+        imp_mgrs_list = []
+        options = ['name', 'sail num', 'champ num']
+        option_chosen = self.ui.g_choose_options(options, 'Which column do you want read as a default')
+        chosen_data_type = options[option_chosen]
+        for file_num, file in enumerate(files):
+            self.ui.display_text(f"Now loading: {file_num + 1} / {len(files)}")
+            try:
+                imp = ImportManager(self.ui, 'F', file_loc=file, full_speed=True)
+                imp.chosen_data_name = chosen_data_type
+                imp.get_event_info()
+                imp_mgrs_list.append((file, imp))
+                log.flush()
+            except Exception as err:
+                self.ui.display_text(f"Error importing {file}:")
+                traceback.print_exception(err)
+                self.ui.display_text('Program will now resume with next file')
+        imp_mgrs_list.sort(key=lambda mgr: mgr[1].date)
+        for num, imp in enumerate(imp_mgrs_list):
+            self.ui.display_text(f'\nNow importing {num}/{len(imp_mgrs_list)} {imp[0]}')
+            try:
+                events.update(imp[1].to_event(universe_csv, self.nat))
+            except Exception as err:
+                self.ui.display_text(f"Error importing {imp[1].file_loc}:")
+                traceback.print_exception(err)
+                self.ui.display_text('Program will now resume with next file')
+        self.ui.display_text(f'The following {len(events)} events have been imported')
+        for event in events:
+            self.universe.add_event(event)
+            self.ui.display_text(f'{event.event_title}: {len(event)} races, {len(event.all_sailors)} sailors')
 
     def edit_sailor_info(self, universe: UniverseHost):
         info_codes = ['Championship Number', 'Sail Number', 'Name', 'sailorid', 'Total events',
@@ -139,21 +186,26 @@ class HostScript:
     def sailor_rating_over_time(self):
         global universe_csv
         inp_method = self.__get_input_method()
-        inp_list = self.ui.g_str(f'Please enter the sailor\'s {self.input_method_name} seperated by commas: ').split(',')
+        inp_list = self.ui.g_str(f'Please enter the sailor\'s {self.input_method_name} seperated by commas: ').split(
+            ',')
         sailorid = []
         for inp in inp_list:
             sailorid.append(universe_csv.get_sailor_id(inp_method, inp.strip()))
         universe_name = universe_csv.universe
-        start_date = self.ui.g_date_int('of the first day of your range')
-        end_date = self.ui.g_date_int('of the last day of your range')
-        info_codes = ['Championship Number', 'Sail Number', 'Light wind rating', 'Medium wind rating',
-                      'Heavy wind rating', 'sailorid', 'Overall rating', 'Rank', 'Total events', 'Zone/Region',
-                      'Territory/country']
-        out_codes = ['c', 's', 'l', 'm', 'h', 'i', 'o', 'r', 'e', 'z', 't']
+        choice = self.ui.g_choose_options(['All-Time', 'Specific range'], 'What date range would you like')
+        if choice == 1:
+            start_date = self.ui.g_date_int('of the first day of your range')
+            end_date = self.ui.g_date_int('of the last day of your range')
+        else:
+            start_date = 1
+            end_date = 10000000
+        info_codes = ['Light wind rating', 'Medium wind rating',
+                      'Heavy wind rating', 'Overall rating', 'Rank', 'Total events']
+        out_codes = ['l', 'm', 'h', 'o', 'r', 'e']
         selected = self.ui.g_choose_options(info_codes, 'please enter type of information you would like to receive')
-        file_loc = addFunc.plot_sailors(start_date, sailorid, out_codes[selected], universe_name, end_date, info_codes[selected])
+        file_loc = addFunc.plot_sailors(start_date, sailorid, out_codes[selected], universe_name, end_date,
+                                        info_codes[selected])
         self.ui.display_text(f"Graph file has been saved to : {file_loc}")
-
 
     def get_sailor_info(self):
         info_codes = ['Championship Number', 'Sail Number', 'Light wind rating', 'Medium wind rating',
@@ -230,7 +282,9 @@ class HostScript:
 
         else:
             region = 'NA'
-        sur = sur.replace(' ','-')
+        sur = sur.replace(' ', '-')
+        sur = sur.strip('()0123456789-')
+        sur = sur.replace('-nan','')
         return universe_csv.add_sailor(sailorid, first, sur, champ, sailno, region, nat)
 
     def add_event_lazy(self):
@@ -394,7 +448,7 @@ class HostScript:
                    'entering individual race results (higher accuracy - slower)'
                    'importing previous race csv (needs previously entered csv)',
                    'importing an online results file (needs internet - html/htm/pdf)',
-                   'importing an local file (html/htm/pdf)', 'importing a .event file']
+                   'importing an local file (html/htm/pdf)', 'importing a .event file', 'importing multiple local files']
         inp = self.ui.g_choose_options(options, 'How would you like to import the event?') + 1
         match inp:
             case 1:
@@ -409,15 +463,17 @@ class HostScript:
                 event = self.add_event_local()
             case 6:
                 event = self.import_pickled_event(self.ui)
+            case 7:
+                event = None
+                self.add_multiple_events()
             case _:
                 event = None
         return event
 
     def add_event_local(self) -> dat.Event:
-        inp_mgr = ImportManager(self.ui, 'F',)
+        inp_mgr = ImportManager(self.ui, 'F', )
         return inp_mgr.to_event(universe_csv, self.nat)
-
 
     def add_online_event(self) -> dat.Event:
         inp_mgr = ImportManager(self.ui, 'L')
-        return inp_mgr.to_event(universe_csv,self.nat)
+        return inp_mgr.to_event(universe_csv, self.nat)
