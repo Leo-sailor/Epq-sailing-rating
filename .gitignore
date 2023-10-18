@@ -2,9 +2,8 @@
 /.idea/
 *.pyc
 *.temp
+/Data Validation suite/files/
 *.log
 /universes/
-!/universes/host.csv
 !/universes/demo/
-/Data Validation suite/files/
-
+!/universes/host.csv
