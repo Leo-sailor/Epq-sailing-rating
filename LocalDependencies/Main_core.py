@@ -1,4 +1,3 @@
-import random
 from sys import path
 from time import time
 import os
@@ -188,14 +187,14 @@ class UniverseHost:
         if find_type_loc == -1:
             result = ' '.join(
                 (self.file.get_cell(row, 3), self.file.get_cell(row, 4)))  # adds the 2 names with a space in the middle
-        elif find_type_loc == -2:
+        elif find_type_loc == -2:  # case for all info
             i = []
             for x in range(14):
                 i.append(self.file.get_cell(row, x))
             result = ', '.join(i)
-        elif find_type_loc == -3:
+        elif find_type_loc == -3:  # case for sailor info
             i = []
-            for x in range(14):
+            for x in [1, 2, 3, 4, 5, 6]:
                 i.append(self.file.get_cell(row, x))
             result = ', '.join(i)
         elif find_type_loc > -1:  # pull the data from the row and column decided earlier
@@ -317,7 +316,7 @@ class UniverseHost:
                 points_tracker.append(0.0)
                 sailorids.append(self.file.get_cell(locations[x], 0))
                 dates.append(int(self.getinfo(sailorids[x], 'd')))
-                sailor_infos.append([self.getinfo(sailorids[x], 'a')])
+                sailor_infos.append([self.getinfo(sailorids[x], 'p')])
             diff = (max(dates) - min(dates)) / 365
             points_tracker[dates.index(max(dates))] += diff
             points_tracker[dates.index(min(dates))] -= diff
@@ -370,8 +369,8 @@ class UniverseHost:
 
             x = lambda field: self.getinfo(sailorid, field)
             if (sailorid, first, sur, champ, sailno) == (sailorid, x("f"), x("surname"), x("c"), x("s")):
-                return False, sailorid # TODO: make matcher here better so it catches that 0 == anything
-            t = (f'That sailor id already exists \nThe original sailors information is: {self.getinfo(sailorid, "a")}',
+                return False, sailorid  # TODO: make matcher here better so it catches that 0 == anything
+            t = (f'That sailor id already exists \nThe original sailors information is: {self.getinfo(sailorid, "p")}',
                  f'\nThe new sailors information is: {sailorid}, {first} {sur}, {champ} and {sailno}')
             options = ['Append "-1" to the new sailor id and proceed to add', 'Abort adding new sailor id', 'overwrite']
             inp = self.ui.g_choose_options(options, ''.join(t))
@@ -401,7 +400,7 @@ class UniverseHost:
                 return False, sailorid
 
     def process_table(self, table: list[list[str]], event_title: str, nat: str, sailorids: list[str],
-                      date: int = None, fullspeed:bool = False) -> dat.Event:
+                      date: int = None, fullspeed: bool = False) -> dat.Event:
         race_columns = []
         numbers = '0123456789'
         for loc, val in enumerate(table[0]):  # goes through the headers looking for races and the search colum
@@ -418,7 +417,7 @@ class UniverseHost:
             self.ui.display_text('1 - Light\n2- Medium\n3 - Heavy')
         for race in race_columns:
             if fullspeed:
-                wind = random.choice([1,2,3])
+                wind = random.choice([1, 2, 3])
             else:
                 wind = self.ui.g_int(f'What was the wind of {table[0][race]}: ', range_low=1, range_high=3)
             result = [base.force_int(table[x][race]) for x in range(1, len(table))]
@@ -469,7 +468,7 @@ class UniverseHost:
             self.ui.display_text(f'matched {data}, to sailor {res}')
             return res
 
-    def add_event(self, event: dat.Event | None):
+    def add_event(self, event: dat.Event | None,print_rat_change=None):
         log.queue(2, 'adding event to universe', event)
         old_results = dat.old_results(self)
         if event is None:
@@ -479,7 +478,10 @@ class UniverseHost:
         self.__end_event(event.all_sailors, event.date)
         if not event.imported:
             export_event(event, self.universe)
-        out = self.ui.g_bool('Would you like to print the rating changes from this event')
+        if print_rat_change is None:
+            out = self.ui.g_bool('Would you like to print the rating changes from this event')
+        else:
+            out = print_rat_change
         self.file.set_session()
         log.queue(2, 'event adding success')
         if out:

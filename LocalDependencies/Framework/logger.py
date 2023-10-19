@@ -91,7 +91,7 @@ class _log:
         self.to_write = None
         self.log_levels = log_levels
         file_loc = '    ' + file_loc
-        if file_loc[-4:] != '.log':
+        if file_loc.endswith('.log'):
             file_loc += '.log'
         file_loc = file_loc.split('\\')
         if len(file_loc) == 0:

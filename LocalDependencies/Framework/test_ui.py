@@ -214,6 +214,7 @@ class record(test_ui):
 
     def __init__(self, inp_file: str, out_file: str|None, original_ui: callback):
         log.queue(2, ' input and output recording started')
+        inp_file.strip('"')
         if ('        ' + inp_file)[-7:] != '.pickle':
             inp_file += '.pickle'
         if out_file is not None and ('        ' + out_file)[-7:] != '.pickle':

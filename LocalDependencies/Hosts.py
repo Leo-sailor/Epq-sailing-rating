@@ -1,3 +1,5 @@
+import pickle
+
 import LocalDependencies.Aditional_func as addFunc
 from LocalDependencies.Main_core import UniverseHost
 import LocalDependencies.General as Base
@@ -119,10 +121,10 @@ class HostScript:
             sailors += imp_mgr.import_sailors_to_universe(universe_csv)
         ui.display_text(f'The following {len(sailors)} sailors have been imported')
         for line in sailors:
-            ui.display_text(universe_csv.getinfo(line, 'all'))
+            ui.display_text(universe_csv.getinfo(line, 'p'))
 
     def add_multiple_events(self):
-        events = set()
+        events = []
         files = self.ui.g_many_file_locs()
         imp_mgrs_list = []
         options = ['name', 'sail num', 'champ num']
@@ -132,6 +134,7 @@ class HostScript:
             self.ui.display_text(f"Now loading: {file_num + 1} / {len(files)}")
             try:
                 imp = ImportManager(self.ui, 'F', file_loc=file, full_speed=True)
+
                 imp.chosen_data_name = chosen_data_type
                 imp.get_event_info()
                 imp_mgrs_list.append((file, imp))
@@ -140,18 +143,34 @@ class HostScript:
                 self.ui.display_text(f"Error importing {file}:")
                 traceback.print_exception(err)
                 self.ui.display_text('Program will now resume with next file')
+                loc = log.file.split('\\')[:-1]
+                loc.append(file.replace('/','--'))
+                with open('\\'.join(loc),'wb') as f:
+                    try:
+                        pickle.dump(imp,f)
+                    except Exception:
+                        pass
         imp_mgrs_list.sort(key=lambda mgr: mgr[1].date)
         for num, imp in enumerate(imp_mgrs_list):
             self.ui.display_text(f'\nNow importing {num}/{len(imp_mgrs_list)} {imp[0]}')
             try:
-                events.update(imp[1].to_event(universe_csv, self.nat))
+                events.append(imp[1].to_event(universe_csv, self.nat))
             except Exception as err:
                 self.ui.display_text(f"Error importing {imp[1].file_loc}:")
                 traceback.print_exception(err)
                 self.ui.display_text('Program will now resume with next file')
+                loc = log.file.split('\\')[:-1]
+                loc.append(imp[1].file_loc.replace('/','--'))
+                with open('\\'.join(loc), 'wb') as f:
+                    try:
+                        pickle.dump(imp,f)
+                    except Exception:
+                        pass
         self.ui.display_text(f'The following {len(events)} events have been imported')
+        breakpoint()
+        print_rat_change = self.ui.g_bool('Do you want to print the rating changes for each of the events?')
         for event in events:
-            self.universe.add_event(event)
+            self.universe.add_event(event,print_rat_change=print_rat_change)
             self.ui.display_text(f'{event.event_title}: {len(event)} races, {len(event.all_sailors)} sailors')
 
     def edit_sailor_info(self, universe: UniverseHost):

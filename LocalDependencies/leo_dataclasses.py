@@ -6,11 +6,17 @@ from pickle import dumps as _dumps, loads as _loads
 
 class Results:
 
+    @f_base.copy_method_args
     def __init__(self, sailorids: [list[str]], positions: list[int] = None):
         self.sailorids = sailorids
-        for loc,pos in enumerate(reversed(positions)):
-            if pos >200 or pos < 1:
-                positions.pop(len(positions)-1-loc)
+        try:
+            start_len = len(positions)
+            for loc,pos in enumerate(reversed(positions)):
+                if pos >200 or pos < 1:
+                    positions.pop(start_len-1-loc)
+                    self.sailorids.pop(start_len-1-loc)
+        except IndexError:
+            breakpoint()
         if positions is None:
             self.positions = list(range(len(sailorids)))
         else:
@@ -22,9 +28,6 @@ class Results:
                 raise ValueError("Sailorids must be strings")
             if not(all(isinstance(x, int) for x in self.positions)):
                 raise ValueError("Positions must be integers")
-            if len(set(sailorids)) != len(self.sailorids):
-                print(sailorids)
-                raise ValueError("Sailorids must be unique")
         except ValueError:
             breakpoint()
         while not f_base.check_all_nums_present(self.positions)[0]:
@@ -130,6 +133,7 @@ class old_results:
         self.cols_first = _loads(_dumps(universe.file.column_first))
 
     def getinfo(self, sailorid: str, result_type: str):
+        sailorid = sailorid.replace(' ', '-')
         try:
             row = self.cols_first[0].index(sailorid)  # figures out what row the sailor id it
         except ValueError:

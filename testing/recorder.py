@@ -35,15 +35,15 @@ def main():
                 'Press (1) to not record an expected output file(useful if likely to change: ')
     if int(inp) == 1:
         out_path= ''
-    cmd(f'cd {path}')
-    main_line = f'{run_path} record text {inp_path}{out_path}'
+    cmd(f'cd "{path}"')
+    main_line = f'"{run_path}" record text "{inp_path}""{out_path}"'
     cmd(main_line)
     cmd('cd testing')
 
-    cmd(f'un-pickler.py {inp_path} {out_path}')
+    cmd(f'un-pickler.py "{inp_path}" "{out_path}"')
     print(main_line)
     # TODO: better at finding unpickler
-    print(f'un-pickler.py {inp_path} {out_path}')
+    print(f'un-pickler.py "{inp_path}" "{out_path}"')
 
 
 if __name__ == '__main__':

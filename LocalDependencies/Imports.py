@@ -113,7 +113,7 @@ def check_for_alternate_nan(table: list[list[Any]]) -> bool:
 
 @f_base.catcher
 def clear_dnc(table: list[list[str]], race_cols: list[int], sailorids: list[str] = None):
-    if sailorids is None:
+    if not sailorids:
         sailorids = [0] * len(table)
     rows_to_remove = []
     for row_loc, row in enumerate(table[1:]):
@@ -168,7 +168,12 @@ def split_table(table: list[list[Any]]):
     if table is None:
         return None
     table_start_points = [1]  # the array which stores the locations of each new set of data
-    first_col = [f_base.force_int(row[0]) for row in table]
+    first_col = [f_base.force_int(row[0], -239) for row in table]
+    try:
+        if first_col[13] == first_col[14] == -239:
+            first_col = [f_base.force_int(row[3]) for row in table]
+    except IndexError:
+        pass
     log.queue(0, "splitting table with first col")
     previous = 0
     for val, curr in enumerate(first_col[1:]):
@@ -329,6 +334,8 @@ class ImportManager:
                 self.all = trim_table(self.all, 'rank', col_num=3)
         if remove_rows_with is not None:
             self.all = remove_rows_including(self.all, remove_rows_with)
+
+
         self.tables = split_table(self.all)
         for table in self.tables:
             if str(table[0]) == str(table[1]):
@@ -434,15 +441,16 @@ class ImportManager:
 
         date, event_title = self.get_event_info()
         log.queue(0, 'importing event with:', (sailorids, self.chosen_data_col, event_title))
+        table = f_base.clean_table(table)
         return universe.process_table(table, event_title, nat, sailorids, date,self.full_speed)
 
     def get_event_info(self):
         if self.date and self.event_title:
             return self.date, self.event_title
         file_name = self.file_loc.split('/')[-1]
-        if len(str(f_base.force_int(file_name[:10]))) == 8:
-            event_title = file_name.split('.')[0][11:]
-            date = (datetime.fromisoformat(file_name[:10]) - datetime(2000, 1, 1)).days
+        if len(str(f_base.force_int(file_name[:11],expect_decimal=False))) == 8:
+            event_title = file_name.split('.')[0][11:].strip()
+            date = (datetime.fromisoformat(file_name[:11].strip(' .')) - datetime(2000, 1, 1)).days
         else:
             date = None
             event_title = self.ui.g_str('What is the event called: ')

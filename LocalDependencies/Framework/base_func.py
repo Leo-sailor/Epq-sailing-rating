@@ -201,10 +201,11 @@ def findandreplace(inp, find: str, replace: str, preserve_type=False):
                 raise TypeError('Expected type list or str or struct which str() can be applied not ' + str(type(inp)))
 
 
-def force_int(inp: str | float | int, default: int = None) -> int:
+def force_int(inp: str | float | int, default: int = None, expect_decimal:bool = True) -> int:
     inp = str(inp)
     numbers_new = numbers[:]
-    numbers_new.append('.')
+    if expect_decimal:
+        numbers_new.append('.')
     new_str = []
     for char in inp:
         if char in numbers_new:
@@ -218,9 +219,20 @@ def force_int(inp: str | float | int, default: int = None) -> int:
 
 
 def clean_table(table: list[list[Any]], wanted_type: type = None, actions: callable = None):
-    initial_vals = table[1]
+    if wanted_type is not None:
+        for row_num, row in enumerate(table):
+            for col_num, cell in enumerate(row):
+                table[row_num][col_num] = wanted_type(cell)
+    if wanted_type == str:
+        for row_num, row in enumerate(table):
+            for col_num, cell in enumerate(row):
+                table[row_num][col_num] = cell.lower()
+    try:
+        initial_vals = table[1]
+    except IndexError:
+        breakpoint()
     cols_to_remove = list(range(len(table[1])))
-    for row_index in range(1, len(table)):
+    for row_index in range(1, len(table)-5):
         good_cols = []
         for col in cols_to_remove:
             if table[row_index][col] != initial_vals[col]:
@@ -235,14 +247,6 @@ def clean_table(table: list[list[Any]], wanted_type: type = None, actions: calla
                 table.pop(loc)
             except IndexError:
                 pass
-    if wanted_type is not None:
-        for row_num, row in enumerate(table):
-            for col_num, cell in enumerate(row):
-                table[row_num][col_num] = wanted_type(cell)
-    if wanted_type == str:
-        for row_num, row in enumerate(table):
-            for col_num, cell in enumerate(row):
-                table[row_num][col_num] = cell.lower()
     return table
 
 
@@ -287,9 +291,32 @@ def catcher(func):
         except Exception as e:
             print(dump)
             breakpoint()
+            out = func(*args, **kwargs)
+            return out
 
     return wrapper
 
+def copy_args(func):
+    def wrapper(*args:tuple, **kwargs:dict):
+        new_args = []
+        new_kwargs = {}
+        for arg in args:
+            new_args.append(deep_copy(arg))
+        for key,val in kwargs.values():
+            new_kwargs[key] = deep_copy(val)
+        return func(*new_args, **new_kwargs)
+    return wrapper
+
+def copy_method_args(func):
+    def wrapper(*args:tuple, **kwargs:dict):
+        new_args = [args[0]]
+        new_kwargs = {}
+        for arg in args[1:]:
+            new_args.append(deep_copy(arg))
+        for key,val in kwargs.values():
+            new_kwargs[key] = deep_copy(val)
+        return func(*new_args, **new_kwargs)
+    return wrapper
 
 def deep_copy(inp) -> Any:
     return _load(_dump(inp))
