@@ -1,27 +1,50 @@
 import datetime
 import LocalDependencies.General as Base
+import LocalDependencies.Framework.base_func as f_base
 from pickle import dumps as _dumps, loads as _loads
+
+
 class Results:
 
+    @f_base.copy_method_args
     def __init__(self, sailorids: [list[str]], positions: list[int] = None):
         self.sailorids = sailorids
+        try:
+            start_len = len(positions)
+            for loc,pos in enumerate(reversed(positions)):
+                if pos >200 or pos < 1:
+                    if not (str(pos).endswith('2022') or str(pos).endswith('2023') or str(pos).endswith('2021')):
+                        self.sailorids.pop(start_len - 1 - loc)
+                    positions.pop(start_len-1-loc)
+
+        except IndexError:
+            breakpoint()
         if positions is None:
             self.positions = list(range(len(sailorids)))
         else:
             self.positions = positions
-        if len(self.sailorids) != len(self.positions):
-            raise ValueError("Sailorids and positions must be the same length")
-        if not(all(isinstance(x, str) for x in self.sailorids)):
-            raise ValueError("Sailorids must be strings")
-        if not(all(isinstance(x, int) for x in self.positions)):
-            raise ValueError("Positions must be integers")
-        if len(set(sailorids)) != len(self.sailorids):
-            raise ValueError("Sailorids must be unique")
+        try:
+            if len(self.sailorids) != len(self.positions):
+                raise ValueError("Sailorids and positions must be the same length")
+            if not(all(isinstance(x, str) for x in self.sailorids)):
+                raise ValueError("Sailorids must be strings")
+            if not(all(isinstance(x, int) for x in self.positions)):
+                raise ValueError("Positions must be integers")
+        except ValueError as error:
+            breakpoint()
+        while not f_base.check_all_nums_present(self.positions)[0]:
+            num = f_base.check_all_nums_present(self.positions)[1]
+            for loc, val in enumerate(self.positions):
+                if num < val:
+                    self.positions[loc] -= 1
 
     def __str__(self):
         things_to_join = []
-        for x in range(1, len(self.positions)+1):
-            things_to_join.append(str(x) + " - " + str(self.sailorids[self.positions.index(x)]))
+        try:
+            for place,sailor in enumerate(self):
+                things_to_join.append(str(place +1) + " - " + str(sailor))
+        except ValueError:
+            breakpoint()
         return "\n".join(things_to_join)
 
     def __len__(self) -> int:
@@ -29,10 +52,13 @@ class Results:
 
     def __getitem__(self, item) -> tuple[str, int]:
         return self.sailorids[self.positions.index(item)], item
+
     def __make_proxy_for_sort(self, sailorid):
         return self.positions[self.sailorids.index(sailorid)]
+
     def __iter__(self):
         return iter(sorted(self.sailorids, key=self.__make_proxy_for_sort))
+
 
 class Race:
     def __init__(self, results: Results, wind: int, date: int | datetime.datetime):
@@ -65,8 +91,10 @@ class Race:
     def __add__(self, other):
         return Event([self, other], max(self.date, other.date))
 
+
 class Event:
-    def __init__(self, races: list[Race], date: int | datetime.datetime, imported: bool = False, event_title: str = '',nation = None):
+    def __init__(self, races: list[Race], date: int | datetime.datetime, imported: bool = False, event_title: str = '',
+                 nation=None):
         self.imported = imported
         self.races = races
         if isinstance(date, int):
@@ -99,33 +127,38 @@ class Event:
     def __iter__(self):
         return iter(self.races)
 
-class oldResults:
+
+class old_results:
     def __init__(self, universe):
         self.universe = universe
-        self.rowsfirst = _loads(_dumps(universe.file.rowfirst))
-        self.colsfirst = _loads(_dumps(universe.file.columnfirst))
-    def getinfo(self, sailorid: str, resulttype: str):
+        self.rows_first = _loads(_dumps(universe.file.row_first))
+        self.cols_first = _loads(_dumps(universe.file.column_first))
+
+    def getinfo(self, sailorid: str, result_type: str):
+        sailorid = sailorid.replace(' ', '-')
         try:
-            row = self.colsfirst[0].index(sailorid)  # figures out what row the sailor id it
+            row = self.cols_first[0].index(sailorid)  # figures out what row the sailor id it
         except ValueError:
             raise IndexError('the sailor id {} could not be found'.format(sailorid))
 
-        findtypeloc = self.universe.getfieldnumber(resulttype)
+        find_type_loc = Base.get_field_number(result_type)
 
-        if findtypeloc == -1:
-            result = ' '.join((self.rowsfirst[row][3], self.rowsfirst[row][4])) # adds the 2 names with a space in the middle
-        elif findtypeloc == -2:
+        if find_type_loc == -1:
+            result = ' '.join((self.rows_first[row][3], self.rows_first[row][4]))
+        elif find_type_loc == -2:
             i = []
             for x in range(14):
-                i.append(self.rowsfirst[row][x])
-            result = ', '.join(i)  # bassicly outputs the raw csv line
-        elif findtypeloc > -1:  # pull the data from the row and column decided earlier
-            result = self.rowsfirst[row][findtypeloc]
+                i.append(self.rows_first[row][x])
+            result = ', '.join(i)  # basically outputs the raw csv line
+        elif find_type_loc > -1:  # pull the data from the row and column decided earlier
+            result = self.rows_first[row][find_type_loc]
         else:
             result = '0.1'
         return result
+
+
 def main():
-    # theres not even any point doing tests
+    # there's not even any point doing tests
     pass
     
 
