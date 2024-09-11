@@ -2,7 +2,7 @@ countryinfo==0.1.2
 future==0.18.3
 requests==2.32.2
 bcrypt==4.0.1
-pandas==2.1.1
+pandas==2.2.2
 numpy==1.26.0
 tabula-py==2.8.1
 matplotlib==3.8.0
