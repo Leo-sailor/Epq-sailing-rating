@@ -5,7 +5,7 @@ bcrypt==4.0.1
 pandas==2.2.2
 numpy==1.26.0
 tabula-py==2.8.1
-matplotlib==3.8.0
+matplotlib==3.9.2
 pyscrypt~=1.6.2
 argon2-cffi==23.1.0
 colorama==0.4.6
